@@ -18,7 +18,12 @@ export interface AuthResponse {
         id: string;
         email: string;
         name: string | null;
+        role?: string;
     };
+    /** Returned when registering/logging in via a project gateway with tenantOwnedAuth */
+    projectToken?: string;
+    /** Returned on registration when email verification is enabled */
+    emailVerificationToken?: string;
 }
 
 const AuthService = {

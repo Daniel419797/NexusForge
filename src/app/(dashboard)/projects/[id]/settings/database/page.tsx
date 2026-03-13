@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useProjectStore } from "@/store/projectStore";
 import ProjectService from "@/services/ProjectService";
 
@@ -20,6 +21,7 @@ export default function ProjectDatabaseSettingsPage() {
     const [poolSize, setPoolSize] = useState<number>(10);
     const [schemaName, setSchemaName] = useState<string>("public");
     const [tenantOwnedAuth, setTenantOwnedAuth] = useState<boolean>(false);
+    const [jwtSecret, setJwtSecret] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
@@ -89,15 +91,20 @@ export default function ProjectDatabaseSettingsPage() {
         setPoolSize(settings.poolSize ?? 10);
         setSchemaName(settings.schemaName || "public");
         setTenantOwnedAuth(settings.tenantOwnedAuth === true);
+        setJwtSecret(settings.jwtSecret || "");
     }
 
     function buildSettings(): Record<string, any> {
-        return {
+        const s: Record<string, any> = {
             sslMode,
             poolSize,
             schemaName,
             tenantOwnedAuth,
         };
+        if (tenantOwnedAuth && jwtSecret.trim()) {
+            s.jwtSecret = jwtSecret.trim();
+        }
+        return s;
     }
 
     const handleSave = async () => {
@@ -190,13 +197,86 @@ export default function ProjectDatabaseSettingsPage() {
 
                     <div className="flex items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5">
-                            <Label>Tenant-Owned Auth</Label>
+                            <div className="flex items-center gap-2">
+                                <Label>Tenant-Owned Auth</Label>
+                                {tenantOwnedAuth && <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-400">Active</Badge>}
+                            </div>
                             <p className="text-xs text-muted-foreground">
-                                Store auth tables (users, refresh tokens) in this project&apos;s database instead of the platform DB.
+                                Store auth tables (users, refresh tokens, audit logs) in this project&apos;s database instead of the platform DB.
+                                End-user credentials never leave your database.
                             </p>
                         </div>
                         <Switch checked={tenantOwnedAuth} onCheckedChange={setTenantOwnedAuth} />
                     </div>
+
+                    {tenantOwnedAuth && (
+                        <div className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+                            <div>
+                                <Label>JWT Signing Secret</Label>
+                                <p className="text-xs text-muted-foreground mb-2">
+                                    Optional. Provide a custom secret (min 16 chars) to sign tenant JWTs independently of the platform.
+                                    If left blank, the platform secret is used.
+                                </p>
+                                <Input
+                                    type="password"
+                                    value={jwtSecret}
+                                    onChange={(e: any) => setJwtSecret(e.target.value)}
+                                    placeholder="your-secret-key-min-16-chars"
+                                    minLength={16}
+                                />
+                                {jwtSecret.length > 0 && jwtSecret.length < 16 && (
+                                    <p className="text-xs text-destructive mt-1">Secret must be at least 16 characters.</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <Label className="text-xs font-medium">What gets stored in your database</Label>
+                                <div className="mt-1.5 grid grid-cols-3 gap-2">
+                                    {["users", "refresh_tokens", "audit_logs"].map((table) => (
+                                        <div key={table} className="rounded-md bg-background/60 border px-2.5 py-1.5 text-center">
+                                            <code className="text-[11px] font-mono text-muted-foreground">{table}</code>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="text-[11px] text-muted-foreground mt-1.5">
+                                    These tables are auto-created on first auth request. Lockout keys are project-scoped in Redis.
+                                </p>
+                            </div>
+
+                            <div>
+                                <Label className="text-xs font-medium">Security features</Label>
+                                <ul className="mt-1 space-y-1 text-[11px] text-muted-foreground list-disc list-inside">
+                                    <li>Per-project JWT signing (access + refresh tokens scoped to this project)</li>
+                                    <li>Project-scoped account lockout (cross-tenant poisoning prevented)</li>
+                                    <li>Tenant-aware email verification (verification tokens route to your DB)</li>
+                                    <li>Audit logs written directly to your database</li>
+                                    <li>Refresh token rotation with reuse detection</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <Label className="text-xs font-medium">Gateway auth endpoints</Label>
+                                <p className="text-[11px] text-muted-foreground mt-1">
+                                    Your end-users authenticate via the project gateway:
+                                </p>
+                                <div className="mt-1.5 space-y-1">
+                                    {[
+                                        { method: "POST", path: "auth/register" },
+                                        { method: "POST", path: "auth/login" },
+                                        { method: "POST", path: "auth/refresh" },
+                                        { method: "POST", path: "auth/logout" },
+                                        { method: "GET",  path: "auth/me" },
+                                        { method: "POST", path: "auth/verify-email" },
+                                    ].map(({ method, path }) => (
+                                        <code key={path} className="block text-[10px] font-mono text-muted-foreground">
+                                            <span className={method === "GET" ? "text-emerald-400" : "text-amber-400"}>{method}</span>{" "}
+                                            /api/v1/p/{activeProject.id}/{path}
+                                        </code>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="flex gap-2">
                         <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>

@@ -60,38 +60,73 @@ function buildModuleDocs(projectId: string): ModuleDef[] {
             moduleId: "auth",
             label: "Authentication",
             segment: "auth",
-            description: "User registration, login, JWT management",
+            description: "User registration, login, JWT management, email verification, tenant-owned auth",
             endpoints: [
                 {
                     method: "POST",
                     path: `/api/v1/p/${projectId}/auth/register`,
                     title: "Register User",
-                    description: "Create a new user account for your app",
+                    description: "Create a new user account. With tenant-owned auth, the user is stored in your project DB. Response includes accessToken, refreshToken, and (for tenant projects) a projectToken.",
                     auth: "none",
-                    body: { email: "user@example.com", password: "securePass123", name: "Jane Doe" },
+                    body: { email: "user@example.com", password: "securePass123!", name: "Jane Doe" },
+                    responsePreview: {
+                        user: { id: "uuid", email: "user@example.com", name: "Jane Doe", role: "user" },
+                        accessToken: "eyJ...",
+                        refreshToken: "eyJ...",
+                        projectToken: "eyJ... (tenant-owned auth only)",
+                    },
                 },
                 {
                     method: "POST",
                     path: `/api/v1/p/${projectId}/auth/login`,
                     title: "Login",
-                    description: "Authenticate and receive a JWT token",
+                    description: "Authenticate and receive JWT tokens. Access tokens include projectId when using tenant-owned auth. Lockout is project-scoped.",
                     auth: "none",
-                    body: { email: "user@example.com", password: "securePass123" },
+                    body: { email: "user@example.com", password: "securePass123!" },
+                    responsePreview: {
+                        user: { id: "uuid", email: "user@example.com", name: "Jane Doe", role: "user" },
+                        accessToken: "eyJ...",
+                        refreshToken: "eyJ...",
+                        projectToken: "eyJ... (tenant-owned auth only)",
+                    },
                 },
                 {
                     method: "GET",
                     path: `/api/v1/p/${projectId}/auth/me`,
                     title: "Get Current User",
-                    description: "Retrieve the authenticated user's profile",
+                    description: "Retrieve the authenticated user's profile. Resolves from tenant DB when using tenant-owned auth.",
                     auth: "bearer",
                 },
                 {
                     method: "POST",
                     path: `/api/v1/p/${projectId}/auth/refresh`,
                     title: "Refresh Token",
-                    description: "Exchange a refresh token for a new access token",
-                    auth: "bearer",
+                    description: "Exchange a refresh token for a new access + refresh token pair. Performs rotation with reuse detection — reused tokens revoke the entire family.",
+                    auth: "none",
                     body: { refreshToken: "<refresh_token>" },
+                },
+                {
+                    method: "POST",
+                    path: `/api/v1/p/${projectId}/auth/logout`,
+                    title: "Logout",
+                    description: "Revoke all refresh tokens for the current user. For tenant-owned auth, tokens are revoked in the tenant DB.",
+                    auth: "bearer",
+                },
+                {
+                    method: "POST",
+                    path: `/api/v1/p/${projectId}/auth/verify-email`,
+                    title: "Verify Email",
+                    description: "Verify a user's email address using the token from the registration email. The token is project-scoped and routes to the correct database.",
+                    auth: "none",
+                    body: { token: "<verification_token>" },
+                },
+                {
+                    method: "POST",
+                    path: `/api/v1/p/${projectId}/auth/resend-verification`,
+                    title: "Resend Verification Email",
+                    description: "Resend the email verification token. Rate-limited to 3 per minute.",
+                    auth: "none",
+                    body: { email: "user@example.com" },
                 },
             ],
         },
@@ -841,6 +876,14 @@ function EndpointCard({
                         </pre>
                         <CopyBtn text={codeSnippet} />
                     </div>
+                    {endpoint.responsePreview && (
+                        <div>
+                            <p className="text-[10px] text-white/25 mb-1">Response shape:</p>
+                            <pre className="p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/10 text-[10px] font-mono text-emerald-300/60 overflow-x-auto whitespace-pre-wrap">
+                                {JSON.stringify(endpoint.responsePreview, null, 2)}
+                            </pre>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
@@ -866,19 +909,26 @@ function QuickStartSnippet({
         curl: `# 1. Register a user
 curl -X POST "${gateway}/auth/register" \\
   -H "Content-Type: application/json" \\
-  -d '{"email": "user@example.com", "password": "securePass123", "name": "Jane Doe"}'
+  -d '{"email": "user@example.com", "password": "securePass123!", "name": "Jane Doe"}'
+
+# Response: { accessToken, refreshToken, user, projectToken? }
 
 # 2. Login and get a token
 TOKEN=$(curl -s -X POST "${gateway}/auth/login" \\
   -H "Content-Type: application/json" \\
-  -d '{"email": "user@example.com", "password": "securePass123"}' | jq -r '.data.accessToken')
+  -d '{"email": "user@example.com", "password": "securePass123!"}' | jq -r '.data.accessToken')
 
 # 3. Use the token to call protected endpoints
 curl "${gateway}/auth/me" \\
   -H "Authorization: Bearer $TOKEN"
 
-# 4. List your notifications
-curl "${gateway}/notifications" \\
+# 4. Refresh tokens (automatic rotation with reuse detection)
+curl -X POST "${gateway}/auth/refresh" \\
+  -H "Content-Type: application/json" \\
+  -d '{"refreshToken": "<your_refresh_token>"}'
+
+# 5. Logout (revokes all refresh tokens for this user)
+curl -X POST "${gateway}/auth/logout" \\
   -H "Authorization: Bearer $TOKEN"`,
 
         js: `// 1. Register a user
@@ -887,11 +937,12 @@ const registerRes = await fetch("${gateway}/auth/register", {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
         email: "user@example.com",
-        password: "securePass123",
+        password: "securePass123!",
         name: "Jane Doe",
     }),
 });
 const { data: registerData } = await registerRes.json();
+// registerData: { accessToken, refreshToken, user, projectToken? }
 
 // 2. Login and get a token
 const loginRes = await fetch("${gateway}/auth/login", {
@@ -899,7 +950,7 @@ const loginRes = await fetch("${gateway}/auth/login", {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
         email: "user@example.com",
-        password: "securePass123",
+        password: "securePass123!",
     }),
 });
 const { data: loginData } = await loginRes.json();
@@ -912,11 +963,19 @@ const meRes = await fetch("${gateway}/auth/me", {
 const me = await meRes.json();
 console.log("Current user:", me.data);
 
-// 4. List notifications
-const notifRes = await fetch("${gateway}/notifications", {
-    headers: { "Authorization": \`Bearer \${token}\` },
+// 4. Refresh tokens (rotate automatically)
+const refreshRes = await fetch("${gateway}/auth/refresh", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken: loginData.refreshToken }),
 });
-console.log("Notifications:", (await notifRes.json()).data);`,
+const { data: newTokens } = await refreshRes.json();
+
+// 5. Logout
+await fetch("${gateway}/auth/logout", {
+    method: "POST",
+    headers: { "Authorization": \`Bearer \${token}\` },
+});`,
 
         python: `import requests
 
@@ -925,15 +984,16 @@ BASE = "${gateway}"
 # 1. Register a user
 register = requests.post(f"{BASE}/auth/register", json={
     "email": "user@example.com",
-    "password": "securePass123",
+    "password": "securePass123!",
     "name": "Jane Doe",
 })
 print("Registered:", register.json())
+# response: { accessToken, refreshToken, user, projectToken? }
 
 # 2. Login and get a token
 login = requests.post(f"{BASE}/auth/login", json={
     "email": "user@example.com",
-    "password": "securePass123",
+    "password": "securePass123!",
 })
 token = login.json()["data"]["accessToken"]
 headers = {"Authorization": f"Bearer {token}"}
@@ -942,9 +1002,15 @@ headers = {"Authorization": f"Bearer {token}"}
 me = requests.get(f"{BASE}/auth/me", headers=headers)
 print("Current user:", me.json()["data"])
 
-# 4. List notifications
-notifs = requests.get(f"{BASE}/notifications", headers=headers)
-print("Notifications:", notifs.json()["data"])`,
+# 4. Refresh tokens
+refresh = requests.post(f"{BASE}/auth/refresh", json={
+    "refreshToken": login.json()["data"]["refreshToken"],
+})
+print("New tokens:", refresh.json()["data"])
+
+# 5. Logout (revokes all sessions)
+requests.post(f"{BASE}/auth/logout", headers=headers)
+print("Logged out")`,
     };
 
     const code = snippets[lang] || snippets.curl;

@@ -48,6 +48,11 @@ export default function ProjectDashboard() {
                                             <span className={project.status === "active" ? "w-2 h-2 rounded-full bg-emerald-400" : "w-1 h-1 rounded-full bg-muted-foreground"} />
                                             <span className="text-sm font-semibold capitalize">{project.status}</span>
                                         </div>
+                                        {project.config?.settings?.tenantOwnedAuth && (
+                                            <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-400 mt-1.5">
+                                                Tenant Auth
+                                            </Badge>
+                                        )}
                                     </div>
                                 </div>
                             </div>

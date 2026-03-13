@@ -20,7 +20,15 @@ export interface Project {
         dbType: string;
         dbUrl?: string | null;
         dbConnected?: boolean;
-        settings?: Record<string, any>;
+        settings?: {
+            tenantOwnedAuth?: boolean;
+            jwtSecret?: string;
+            sslMode?: string;
+            poolSize?: number;
+            schemaName?: string;
+            allowedOrigins?: string[];
+            [key: string]: any;
+        };
     } | null;
     membership?: { role: string; joinedAt: string } | null;
     createdAt: string;
