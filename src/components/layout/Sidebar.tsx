@@ -49,7 +49,7 @@ export default function Sidebar({
             )}
 
             {/* Nav items */}
-            <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
+            <nav aria-label="Sidebar navigation" className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
                 {items.map((item, index) => {
                     const isActive = pathname.startsWith(item.href);
                     return (
@@ -77,8 +77,7 @@ export default function Sidebar({
                     onClick={onToggleCollapse}
                     className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground w-full transition-colors duration-200"
                 >
-                    <svg
-                        className={`w-5 h-5 transition-transform duration-300 ${
+                    <svg aria-hidden="true" className={`w-5 h-5 transition-transform duration-300 ${
                             collapsed ? "rotate-180" : ""
                         }`}
                         fill="none"

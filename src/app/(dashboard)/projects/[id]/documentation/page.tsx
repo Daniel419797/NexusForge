@@ -792,8 +792,7 @@ function ModuleSection({
                     <span className="text-[10px] text-white/20">
                         {mod.endpoints.length} endpoint{mod.endpoints.length !== 1 ? "s" : ""}
                     </span>
-                    <svg
-                        className={`w-4 h-4 text-white/20 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                    <svg aria-hidden="true" className={`w-4 h-4 text-white/20 transition-transform ${isExpanded ? "rotate-180" : ""}`}
                         fill="none"
                         viewBox="0 0 24 24"
                         strokeWidth={1.5}

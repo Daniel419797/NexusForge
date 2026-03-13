@@ -57,8 +57,7 @@ export default function CTA() {
                         className="inline-flex items-center px-8 py-3.5 text-sm font-semibold rounded-xl bg-primary text-primary-foreground btn-glow transition-all duration-300 hover:translate-y-[-2px]"
                     >
                         Get Started Free
-                        <svg
-                            className="ml-2 w-4 h-4"
+                        <svg aria-hidden="true" className="ml-2 w-4 h-4"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth={2}

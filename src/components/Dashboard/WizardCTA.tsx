@@ -73,7 +73,7 @@ export default function WizardCTA({ onOpenWizard }: WizardCTAProps) {
               }}
             />
             <span className="relative z-10 flex items-center gap-2">
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg aria-hidden="true" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
               Open Wizard

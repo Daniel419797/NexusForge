@@ -46,8 +46,7 @@ export default function AuthProvider({
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <svg
-                        className="animate-spin w-8 h-8 text-primary"
+                    <svg aria-hidden="true" className="animate-spin w-8 h-8 text-primary"
                         viewBox="0 0 24 24"
                         fill="none"
                     >

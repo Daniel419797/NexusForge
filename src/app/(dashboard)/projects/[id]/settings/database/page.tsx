@@ -147,10 +147,10 @@ export default function ProjectDatabaseSettingsPage() {
                     <CardDescription>Connect and configure your project&apos;s database.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {message && <div className="p-2 rounded bg-primary/10 text-primary">{message}</div>}
+                    {message && <div role="status" aria-live="polite" className="p-2 rounded bg-primary/10 text-primary">{message}</div>}
                     <div>
-                        <Label>DB Type</Label>
-                        <Select value={dbType} onValueChange={(v) => setDbType(v)}>
+                        <Label htmlFor="dbType">DB Type</Label>
+                        <Select value={dbType} onValueChange={(v) => setDbType(v)} name="dbType">
                             <SelectTrigger className="w-full">
                                 <SelectValue />
                             </SelectTrigger>
@@ -164,13 +164,13 @@ export default function ProjectDatabaseSettingsPage() {
                     </div>
 
                     <div>
-                        <Label>Database URL</Label>
-                        <Input value={dbUrl} onChange={(e: any) => setDbUrl(e.target.value)} placeholder={currentPlaceholder} />
+                        <Label htmlFor="dbUrl">Database URL</Label>
+                        <Input id="dbUrl" value={dbUrl} onChange={(e: any) => setDbUrl(e.target.value)} placeholder={currentPlaceholder} />
                     </div>
 
                     <div>
-                        <Label>SSL Mode</Label>
-                        <Select value={sslMode} onValueChange={(v) => setSslMode(v)}>
+                        <Label htmlFor="sslMode">SSL Mode</Label>
+                        <Select value={sslMode} onValueChange={(v) => setSslMode(v)} name="sslMode">
                             <SelectTrigger className="w-full">
                                 <SelectValue />
                             </SelectTrigger>
@@ -185,8 +185,9 @@ export default function ProjectDatabaseSettingsPage() {
                     </div>
 
                     <div>
-                        <Label>Connection Pool Size</Label>
+                        <Label htmlFor="poolSize">Connection Pool Size</Label>
                         <Input
+                            id="poolSize"
                             type="number"
                             min={1}
                             max={100}
@@ -196,8 +197,9 @@ export default function ProjectDatabaseSettingsPage() {
                     </div>
 
                     <div>
-                        <Label>Schema Name</Label>
+                        <Label htmlFor="schemaName">Schema Name</Label>
                         <Input
+                            id="schemaName"
                             value={schemaName}
                             onChange={(e: any) => setSchemaName(e.target.value)}
                             placeholder="public"
@@ -208,7 +210,7 @@ export default function ProjectDatabaseSettingsPage() {
                     <div className="flex items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5 flex-1 mr-4">
                             <div className="flex items-center gap-2">
-                                <Label>Encryption Key</Label>
+                                <Label htmlFor="encryptionKey">Encryption Key</Label>
                                 {hasEncryptionKey && <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-400">Configured</Badge>}
                             </div>
                             <p className="text-xs text-muted-foreground">
@@ -217,6 +219,7 @@ export default function ProjectDatabaseSettingsPage() {
                             </p>
                             <div className="mt-2">
                                 <Input
+                                    id="encryptionKey"
                                     type="password"
                                     value={encryptionKey}
                                     onChange={(e: any) => setEncryptionKey(e.target.value)}
@@ -247,12 +250,13 @@ export default function ProjectDatabaseSettingsPage() {
                     {tenantOwnedAuth && (
                         <div className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
                             <div>
-                                <Label>JWT Signing Secret</Label>
+                                <Label htmlFor="jwtSecret">JWT Signing Secret</Label>
                                 <p className="text-xs text-muted-foreground mb-2">
                                     Optional. Provide a custom secret (min 16 chars) to sign tenant JWTs independently of the platform.
                                     If left blank, the platform secret is used.
                                 </p>
                                 <Input
+                                    id="jwtSecret"
                                     type="password"
                                     value={jwtSecret}
                                     onChange={(e: any) => setJwtSecret(e.target.value)}
@@ -328,7 +332,7 @@ export default function ProjectDatabaseSettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {migrationStatus && (
-                        <div className={`p-2 rounded text-sm ${migrationStatus.startsWith("failed") ? "bg-destructive/10 text-destructive" : migrationStatus === "completed" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-primary/10 text-primary"}`}>
+                        <div role="status" aria-live="polite" className={`p-2 rounded text-sm ${migrationStatus.startsWith("failed") ? "bg-destructive/10 text-destructive" : migrationStatus === "completed" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-primary/10 text-primary"}`}>
                             {migrationStatus}
                         </div>
                     )}
@@ -377,7 +381,7 @@ export default function ProjectDatabaseSettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {rotateMessage && (
-                        <div className={`p-2 rounded text-sm ${rotateMessage.startsWith("Error") ? "bg-destructive/10 text-destructive" : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"}`}>
+                        <div role="status" aria-live="polite" className={`p-2 rounded text-sm ${rotateMessage.startsWith("Error") ? "bg-destructive/10 text-destructive" : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"}`}>
                             {rotateMessage}
                         </div>
                     )}
@@ -412,7 +416,7 @@ export default function ProjectDatabaseSettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {userMigrationStatus && (
-                        <div className={`p-2 rounded text-sm ${userMigrationStatus.startsWith("failed") ? "bg-destructive/10 text-destructive" : userMigrationStatus === "completed" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-primary/10 text-primary"}`}>
+                        <div role="status" aria-live="polite" className={`p-2 rounded text-sm ${userMigrationStatus.startsWith("failed") ? "bg-destructive/10 text-destructive" : userMigrationStatus === "completed" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-primary/10 text-primary"}`}>
                             {userMigrationStatus}
                         </div>
                     )}

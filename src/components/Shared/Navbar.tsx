@@ -20,7 +20,7 @@ export default function Navbar() {
                     : "bg-transparent"
                 }`}
         >
-            <nav className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <nav aria-label="Main navigation" className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2 group">
                     <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center group-hover:glow-violet transition-shadow duration-300">

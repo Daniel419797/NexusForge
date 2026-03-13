@@ -125,7 +125,7 @@ export default function DashboardLayout({
                         onMenuToggle={toggleMobileDrawer}
                         isMobile={isMobile}
                     />
-                    <main className="px-4 py-5 sm:p-6">{children}</main>
+                    <main id="main-content" className="px-4 py-5 sm:p-6">{children}</main>
                 </div>
             </div>
         </AuthProvider>

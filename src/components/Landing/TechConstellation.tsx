@@ -91,7 +91,7 @@ export default function TechConstellation() {
         {/* Constellation map */}
         <div className="relative w-full aspect-video max-h-125">
           {/* SVG connections */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+          <svg aria-hidden="true" className="absolute inset-0 w-full h-full pointer-events-none">
             {connections.map(([a, b], i) => {
               const from = techItems[a];
               const to = techItems[b];

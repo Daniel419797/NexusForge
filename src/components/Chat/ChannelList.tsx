@@ -25,7 +25,7 @@ export default function ChannelList({
             <div className="p-4 border-b border-border flex items-center justify-between">
                 <h3 className="font-semibold text-sm">Channels</h3>
                 <Button variant="ghost" size="icon" className="w-6 h-6" onClick={onCreateRoom}>
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <svg aria-hidden="true" className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
                 </Button>

@@ -112,7 +112,7 @@ function CleanDashboard() {
           className="flex items-start gap-3 px-4 py-3 rounded-xl border border-cyan-500/20 bg-cyan-500/4 mt-2"
         >
           <div className="w-6 h-6 rounded-lg bg-linear-to-br from-cyan-500 to-purple-500 flex items-center justify-center shrink-0 mt-0.5">
-            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <svg aria-hidden="true" className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
             </svg>
           </div>

@@ -137,7 +137,7 @@ export default function AIAssistantOrb() {
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         aria-label={open ? "Close AI assistant" : "Open AI assistant"}
       >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2}>
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2}>
           {open ? (
             <path d="M18 6L6 18M6 6l12 12" />
           ) : (
@@ -286,7 +286,7 @@ export default function AIAssistantOrb() {
                 whileHover={{ scale: sending ? 1 : 1.05 }}
                 whileTap={{ scale: sending ? 1 : 0.95 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2}>
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2}>
                   <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
                 </svg>
               </motion.button>

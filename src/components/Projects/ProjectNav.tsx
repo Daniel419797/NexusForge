@@ -7,7 +7,7 @@ interface Props {
 
 export default async function ProjectNav({ projectId }: Props) {
     return (
-        <nav className="">
+        <nav aria-label="Project navigation" className="">
         </nav>
     );
 }
