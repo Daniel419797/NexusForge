@@ -35,6 +35,7 @@ export default function CompliancePage() {
     const [deleteConfirm, setDeleteConfirm] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
     const [togglingConsent, setTogglingConsent] = useState<string | null>(null);
+    const [togglingHipaa, setTogglingHipaa] = useState(false);
 
     const loadData = useCallback(async () => {
         try {
@@ -56,6 +57,21 @@ export default function CompliancePage() {
     }, []);
 
     useEffect(() => { loadData(); }, [loadData]);
+
+    const handleToggleHipaa = async () => {
+        if (!hipaaStatus) return;
+        setTogglingHipaa(true);
+        try {
+            const newMode = !hipaaStatus.hipaaMode;
+            await ComplianceService.toggleHipaaMode(newMode);
+            await loadData();
+            setMessage(`HIPAA mode ${newMode ? "enabled" : "disabled"} for this project`);
+        } catch {
+            setMessage("Failed to toggle HIPAA mode");
+        } finally {
+            setTogglingHipaa(false);
+        }
+    };
 
     const handleToggleConsent = async (type: ConsentType, currentlyGranted: boolean) => {
         setTogglingConsent(type);
@@ -140,20 +156,32 @@ export default function CompliancePage() {
             {hipaaStatus && (
                 <Card className={hipaaStatus.hipaaMode ? "border-emerald-500/20" : "border-yellow-500/20"}>
                     <CardHeader>
-                        <div className="flex items-center gap-2">
-                            <CardTitle>HIPAA Compliance</CardTitle>
-                            <Badge
-                                variant="outline"
-                                className={`text-[10px] ${hipaaStatus.hipaaMode ? "border-emerald-500/30 text-emerald-400" : "border-yellow-500/30 text-yellow-400"}`}
-                            >
-                                {hipaaStatus.hipaaMode ? "ENABLED" : "DISABLED"}
-                            </Badge>
-                            <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">45 CFR § 164.312</Badge>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <CardTitle>HIPAA Compliance</CardTitle>
+                                <Badge
+                                    variant="outline"
+                                    className={`text-[10px] ${hipaaStatus.hipaaMode ? "border-emerald-500/30 text-emerald-400" : "border-yellow-500/30 text-yellow-400"}`}
+                                >
+                                    {hipaaStatus.hipaaMode ? "ENABLED" : "DISABLED"}
+                                </Badge>
+                                <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">45 CFR § 164.312</Badge>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Label className="text-sm text-muted-foreground">
+                                    {hipaaStatus.hipaaMode ? "On" : "Off"}
+                                </Label>
+                                <Switch
+                                    checked={hipaaStatus.hipaaMode}
+                                    onCheckedChange={handleToggleHipaa}
+                                    disabled={togglingHipaa}
+                                />
+                            </div>
                         </div>
                         <CardDescription>
                             {hipaaStatus.hipaaMode
-                                ? "HIPAA technical safeguards are active. The following controls are enforced."
-                                : "HIPAA mode is not enabled. Set HIPAA_MODE=true in environment variables to activate."}
+                                ? "HIPAA technical safeguards are active for this project. The following controls are enforced."
+                                : "Enable HIPAA compliance mode to enforce strict security controls for this project. Required if handling Protected Health Information (PHI)."}
                         </CardDescription>
                     </CardHeader>
                     {hipaaStatus.hipaaMode && (
@@ -397,8 +425,8 @@ export default function CompliancePage() {
                         and are responsible for your end-users&apos; privacy rights.
                     </p>
                     <p className="text-xs text-muted-foreground/60">
-                        Neither deployment model is HIPAA compliant out of the box. Do not store Protected Health
-                        Information on the platform-hosted service. Self-hosted users must deploy on HIPAA-eligible
+                        HIPAA compliance mode can be enabled per-project via the toggle above. Do not store Protected Health
+                        Information on the platform-hosted service without enabling HIPAA mode. Self-hosted users must deploy on HIPAA-eligible
                         infrastructure and implement additional safeguards.
                     </p>
                 </CardContent>

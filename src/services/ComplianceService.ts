@@ -57,6 +57,7 @@ export interface AuditLogEntry {
 
 export interface HipaaStatus {
     hipaaMode: boolean;
+    projectId: string | null;
     controls: {
         httpsEnforced: boolean;
         sessionTimeoutSeconds: number | null;
@@ -109,6 +110,12 @@ const ComplianceService = {
     // HIPAA Status
     async getHipaaStatus(): Promise<HipaaStatus> {
         const { data } = await api.get("/compliance/hipaa-status");
+        return data.data;
+    },
+
+    // HIPAA Toggle (per-project)
+    async toggleHipaaMode(enabled: boolean): Promise<{ hipaaMode: boolean; projectId: string }> {
+        const { data } = await api.post("/compliance/hipaa-toggle", { enabled });
         return data.data;
     },
 };
