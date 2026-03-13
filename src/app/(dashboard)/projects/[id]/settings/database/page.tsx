@@ -22,6 +22,8 @@ export default function ProjectDatabaseSettingsPage() {
     const [schemaName, setSchemaName] = useState<string>("public");
     const [tenantOwnedAuth, setTenantOwnedAuth] = useState<boolean>(false);
     const [jwtSecret, setJwtSecret] = useState<string>("");
+    const [encryptionKey, setEncryptionKey] = useState<string>("");
+    const [hasEncryptionKey, setHasEncryptionKey] = useState<boolean>(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
@@ -92,6 +94,9 @@ export default function ProjectDatabaseSettingsPage() {
         setSchemaName(settings.schemaName || "public");
         setTenantOwnedAuth(settings.tenantOwnedAuth === true);
         setJwtSecret(settings.jwtSecret || "");
+        // encryptionKey comes back as ***REDACTED*** from the API when set
+        setHasEncryptionKey(settings.encryptionKey === '***REDACTED***' || (typeof settings.encryptionKey === 'string' && settings.encryptionKey.length > 0));
+        setEncryptionKey("");
     }
 
     function buildSettings(): Record<string, any> {
@@ -103,6 +108,10 @@ export default function ProjectDatabaseSettingsPage() {
         };
         if (tenantOwnedAuth && jwtSecret.trim()) {
             s.jwtSecret = jwtSecret.trim();
+        }
+        // Only send encryptionKey if user typed a new one
+        if (encryptionKey.trim()) {
+            s.encryptionKey = encryptionKey.trim();
         }
         return s;
     }
@@ -193,6 +202,32 @@ export default function ProjectDatabaseSettingsPage() {
                             onChange={(e: any) => setSchemaName(e.target.value)}
                             placeholder="public"
                         />
+                    </div>
+
+                    {/* ── Encryption Key ── */}
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5 flex-1 mr-4">
+                            <div className="flex items-center gap-2">
+                                <Label>Encryption Key</Label>
+                                {hasEncryptionKey && <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-400">Configured</Badge>}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Provide your own AES-256 encryption key for this project. Used to encrypt sensitive data (PHI fields, secrets).
+                                Your key is encrypted at rest by the platform and never exposed in API responses.
+                            </p>
+                            <div className="mt-2">
+                                <Input
+                                    type="password"
+                                    value={encryptionKey}
+                                    onChange={(e: any) => setEncryptionKey(e.target.value)}
+                                    placeholder={hasEncryptionKey ? "••••••••  (leave blank to keep current)" : "64-char hex or passphrase (min 16 chars)"}
+                                    minLength={16}
+                                />
+                                {encryptionKey.length > 0 && encryptionKey.length < 16 && (
+                                    <p className="text-xs text-destructive mt-1">Encryption key must be at least 16 characters.</p>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     <div className="flex items-center justify-between rounded-lg border p-4">
