@@ -133,13 +133,13 @@ export default function FooterLanding() {
           </p>
           <div className="flex items-center gap-6">
             <Link
-              href="#"
+              href="/privacy"
               className="text-[11px] text-white/20 hover:text-white/40 transition-colors font-mono"
             >
               Privacy
             </Link>
             <Link
-              href="#"
+              href="/terms"
               className="text-[11px] text-white/20 hover:text-white/40 transition-colors font-mono"
             >
               Terms

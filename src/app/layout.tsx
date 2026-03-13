@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import CookieConsentBanner from "@/components/CookieConsentBanner";
 
 export const metadata: Metadata = {
   title: "NexusForge — Forge Your Backend. No Code. Full Power.",
@@ -42,7 +43,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${dmSans.variable} ${jetbrainsMono.variable} antialiased grain relative`}>{children}</body>
+      <body className={`${dmSans.variable} ${jetbrainsMono.variable} antialiased grain relative`}>
+        {children}
+        <CookieConsentBanner />
+      </body>
     </html>
   );
 }
