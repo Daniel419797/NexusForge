@@ -314,17 +314,24 @@ export default function CompliancePage() {
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground space-y-2">
                     <p>
-                        Unlike cloud BaaS platforms that manage compliance for users, this platform is self-hosted.
-                        This gives developers full control and data ownership, but also places the responsibility
-                        of GDPR and HIPAA compliance on the operator.
+                        This platform provides built-in GDPR tooling — data export, consent management, audit
+                        logging, and account deletion — regardless of how it is deployed.
                     </p>
                     <p>
-                        The platform provides tools (data export, deletion, consent management, audit logs)
-                        to make compliance easier, but final responsibility lies with the user running the instance.
+                        <strong className="text-foreground/80">Self-hosted:</strong> You control the infrastructure
+                        and bear full responsibility for GDPR/HIPAA compliance. The platform provides the tools;
+                        you ensure encryption, TLS, backups, and regulatory requirements are met.
+                    </p>
+                    <p>
+                        <strong className="text-foreground/80">Platform-hosted:</strong> The platform team manages
+                        infrastructure, TLS, and DB encryption. We act as a data processor under GDPR Art. 28.
+                        A Data Processing Agreement (DPA) is available on request. You remain the data controller
+                        and are responsible for your end-users&apos; privacy rights.
                     </p>
                     <p className="text-xs text-muted-foreground/60">
-                        This platform is not HIPAA compliant out of the box. Users running healthcare applications
-                        must implement additional controls, encryption, audit logging, and sign legal agreements themselves.
+                        Neither deployment model is HIPAA compliant out of the box. Do not store Protected Health
+                        Information on the platform-hosted service. Self-hosted users must deploy on HIPAA-eligible
+                        infrastructure and implement additional safeguards.
                     </p>
                 </CardContent>
             </Card>
