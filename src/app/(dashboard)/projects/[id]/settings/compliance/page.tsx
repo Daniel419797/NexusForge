@@ -12,6 +12,7 @@ import ComplianceService, {
     type ConsentStatus,
     type ConsentRecord,
     type AuditLogEntry,
+    type HipaaStatus,
 } from "@/services/ComplianceService";
 
 const CONSENT_TYPES: { type: ConsentType; label: string; description: string }[] = [
@@ -27,6 +28,7 @@ export default function CompliancePage() {
     const [consents, setConsents] = useState<ConsentStatus[]>([]);
     const [history, setHistory] = useState<ConsentRecord[]>([]);
     const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+    const [hipaaStatus, setHipaaStatus] = useState<HipaaStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [exporting, setExporting] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -36,14 +38,16 @@ export default function CompliancePage() {
 
     const loadData = useCallback(async () => {
         try {
-            const [consentStatus, consentHistory, logs] = await Promise.all([
+            const [consentStatus, consentHistory, logs, hipaa] = await Promise.all([
                 ComplianceService.getConsentStatus(),
                 ComplianceService.getConsentHistory(),
                 ComplianceService.getAuditLogs(50),
+                ComplianceService.getHipaaStatus().catch(() => null),
             ]);
             setConsents(consentStatus);
             setHistory(consentHistory);
             setAuditLogs(logs);
+            setHipaaStatus(hipaa);
         } catch {
             setMessage("Failed to load compliance data");
         } finally {
@@ -130,6 +134,70 @@ export default function CompliancePage() {
                     {message}
                     <button className="ml-2 text-xs underline" onClick={() => setMessage(null)}>dismiss</button>
                 </div>
+            )}
+
+            {/* ── HIPAA Status Panel ── */}
+            {hipaaStatus && (
+                <Card className={hipaaStatus.hipaaMode ? "border-emerald-500/20" : "border-yellow-500/20"}>
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <CardTitle>HIPAA Compliance</CardTitle>
+                            <Badge
+                                variant="outline"
+                                className={`text-[10px] ${hipaaStatus.hipaaMode ? "border-emerald-500/30 text-emerald-400" : "border-yellow-500/30 text-yellow-400"}`}
+                            >
+                                {hipaaStatus.hipaaMode ? "ENABLED" : "DISABLED"}
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">45 CFR § 164.312</Badge>
+                        </div>
+                        <CardDescription>
+                            {hipaaStatus.hipaaMode
+                                ? "HIPAA technical safeguards are active. The following controls are enforced."
+                                : "HIPAA mode is not enabled. Set HIPAA_MODE=true in environment variables to activate."}
+                        </CardDescription>
+                    </CardHeader>
+                    {hipaaStatus.hipaaMode && (
+                        <CardContent>
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                                {[
+                                    { label: "HTTPS Enforced", active: hipaaStatus.controls.httpsEnforced },
+                                    { label: "Password Complexity", active: hipaaStatus.controls.passwordComplexity },
+                                    { label: "PHI Field Encryption", active: hipaaStatus.controls.phiEncryption },
+                                    { label: "No-Cache Headers", active: hipaaStatus.controls.noCacheHeaders },
+                                ].map((ctrl) => (
+                                    <div key={ctrl.label} className="flex items-center gap-2">
+                                        <div className={`w-2 h-2 rounded-full ${ctrl.active ? "bg-emerald-400" : "bg-muted-foreground/30"}`} />
+                                        <span className="text-muted-foreground">{ctrl.label}</span>
+                                    </div>
+                                ))}
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                                    <span className="text-muted-foreground">
+                                        Session Timeout: {hipaaStatus.controls.sessionTimeoutSeconds}s
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                                    <span className="text-muted-foreground">
+                                        Audit Retention: {hipaaStatus.controls.auditRetentionDays} days
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                                    <span className="text-muted-foreground">
+                                        Access Token: {hipaaStatus.controls.maxAccessTokenExpiry}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                                    <span className="text-muted-foreground">
+                                        Refresh Token: {hipaaStatus.controls.maxRefreshTokenExpiry}
+                                    </span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    )}
+                </Card>
             )}
 
             {/* ── Consent Management ── */}

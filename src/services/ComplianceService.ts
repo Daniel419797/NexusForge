@@ -55,6 +55,20 @@ export interface AuditLogEntry {
     createdAt: string;
 }
 
+export interface HipaaStatus {
+    hipaaMode: boolean;
+    controls: {
+        httpsEnforced: boolean;
+        sessionTimeoutSeconds: number | null;
+        passwordComplexity: boolean;
+        phiEncryption: boolean;
+        auditRetentionDays: number | null;
+        noCacheHeaders: boolean;
+        maxAccessTokenExpiry: string;
+        maxRefreshTokenExpiry: string;
+    };
+}
+
 const ComplianceService = {
     // Data Export
     async exportData(): Promise<DataExport> {
@@ -89,6 +103,12 @@ const ComplianceService = {
     // Audit Logs
     async getAuditLogs(limit = 100): Promise<AuditLogEntry[]> {
         const { data } = await api.get(`/compliance/audit-logs?limit=${limit}`);
+        return data.data;
+    },
+
+    // HIPAA Status
+    async getHipaaStatus(): Promise<HipaaStatus> {
+        const { data } = await api.get("/compliance/hipaa-status");
         return data.data;
     },
 };
