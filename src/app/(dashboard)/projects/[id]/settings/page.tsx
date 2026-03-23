@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Database, ShieldCheck, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -279,6 +281,38 @@ export default function ProjectSettingsPage() {
                     >
                         {savingX402 ? "Saving..." : "Save x402 Config"}
                     </Button>
+                </CardContent>
+            </Card>
+
+            <Separator />
+
+            {/* Advanced Configuration */}
+            <Card className="card-hover animate-in-up stagger-5">
+                <CardHeader>
+                    <CardTitle className="font-display tracking-tight">Advanced Configuration</CardTitle>
+                    <CardDescription>
+                        Manage database connections, compliance settings, and other advanced configurations.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4 sm:grid-cols-2">
+                    <Link href={`/projects/${activeProject.id}/settings/database`} className="flex items-start gap-4 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                        <div className="shrink-0 p-2 rounded-md bg-primary/10 text-primary">
+                            <Database className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 space-y-1">
+                            <p className="font-medium flex items-center gap-2">Database <ArrowRight className="w-4 h-4 text-muted-foreground" /></p>
+                            <p className="text-sm text-muted-foreground">Configure connection credentials and pools.</p>
+                        </div>
+                    </Link>
+                    <Link href={`/projects/${activeProject.id}/settings/compliance`} className="flex items-start gap-4 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                        <div className="shrink-0 p-2 rounded-md bg-emerald-500/10 text-emerald-500">
+                            <ShieldCheck className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 space-y-1">
+                            <p className="font-medium flex items-center gap-2">Compliance <ArrowRight className="w-4 h-4 text-muted-foreground" /></p>
+                            <p className="text-sm text-muted-foreground">Manage GDPR, HIPAA, and data residency.</p>
+                        </div>
+                    </Link>
                 </CardContent>
             </Card>
 
