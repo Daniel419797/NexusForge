@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
+import { ToastProvider } from "@/components/ui/toast-provider";
 
 export const metadata: Metadata = {
   title: "NexusForge — Forge Your Backend. No Code. Full Power.",
@@ -44,11 +45,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${dmSans.variable} ${jetbrainsMono.variable} antialiased grain relative`}>
+        <ToastProvider>
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg">
           Skip to main content
         </a>
         {children}
         <CookieConsentBanner />
+        </ToastProvider>
       </body>
     </html>
   );

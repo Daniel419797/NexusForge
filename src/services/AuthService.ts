@@ -65,6 +65,16 @@ const AuthService = {
         const { data } = await api.post("/auth/resend-verification", { email });
         return data.data;
     },
+
+    async forgotPassword(email: string) {
+        const { data } = await api.post("/auth/forgot-password", { email });
+        return data.data;
+    },
+
+    async resetPassword(token: string, password: string) {
+        const { data } = await api.post("/auth/reset-password", { token, password });
+        return data.data;
+    },
 };
 
 export default AuthService;

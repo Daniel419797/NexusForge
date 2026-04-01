@@ -2,6 +2,17 @@ import axios from "axios";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
+// ── Global error event emitter for toast integration ──
+type ErrorListener = (message: string) => void;
+const errorListeners = new Set<ErrorListener>();
+export function onApiError(listener: ErrorListener) {
+    errorListeners.add(listener);
+    return () => { errorListeners.delete(listener); };
+}
+function emitApiError(message: string) {
+    errorListeners.forEach((fn) => fn(message));
+}
+
 /**
  * Pre-configured Axios instance for backend communication.
  * Interceptors handle auth token injection and auto-refresh.
@@ -99,6 +110,23 @@ api.interceptors.response.use(
 
         return Promise.reject(error);
     }
+);
+
+// ── Separate interceptor for global error toasts ──
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        // Skip 401 (handled by auth interceptor) and aborted requests
+        if (!error.response || error.response.status === 401 || axios.isCancel(error)) {
+            return Promise.reject(error);
+        }
+        const msg =
+            error.response?.data?.message ||
+            error.response?.data?.error ||
+            (error.response.status >= 500 ? "Server error. Please try again later." : "Request failed.");
+        emitApiError(msg);
+        return Promise.reject(error);
+    },
 );
 
 export default api;

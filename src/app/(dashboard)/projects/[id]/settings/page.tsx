@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Database, ShieldCheck, ArrowRight } from "lucide-react";
+import { Database, ShieldCheck, ArrowRight, Users, Blocks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -311,6 +311,24 @@ export default function ProjectSettingsPage() {
                         <div className="flex-1 space-y-1">
                             <p className="font-medium flex items-center gap-2">Compliance <ArrowRight className="w-4 h-4 text-muted-foreground" /></p>
                             <p className="text-sm text-muted-foreground">Manage GDPR, HIPAA, and data residency.</p>
+                        </div>
+                    </Link>
+                    <Link href={`/projects/${activeProject.id}/settings/members`} className="flex items-start gap-4 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                        <div className="shrink-0 p-2 rounded-md bg-blue-500/10 text-blue-500">
+                            <Users className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 space-y-1">
+                            <p className="font-medium flex items-center gap-2">Members <ArrowRight className="w-4 h-4 text-muted-foreground" /></p>
+                            <p className="text-sm text-muted-foreground">Manage team members and access roles.</p>
+                        </div>
+                    </Link>
+                    <Link href={`/projects/${activeProject.id}/settings/modules`} className="flex items-start gap-4 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                        <div className="shrink-0 p-2 rounded-md bg-amber-500/10 text-amber-500">
+                            <Blocks className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 space-y-1">
+                            <p className="font-medium flex items-center gap-2">Modules <ArrowRight className="w-4 h-4 text-muted-foreground" /></p>
+                            <p className="text-sm text-muted-foreground">Enable or disable core API modules.</p>
                         </div>
                     </Link>
                 </CardContent>
