@@ -14,6 +14,30 @@ export default function NotificationsPage() {
     const [devices, setDevices] = useState<PushDevice[]>([]);
     const [devicesLoading, setDevicesLoading] = useState(false);
     const [showDevices, setShowDevices] = useState(false);
+    const [showPrefs, setShowPrefs] = useState(false);
+
+    // Notification preferences (persisted in localStorage)
+    const [prefs, setPrefs] = useState({
+        emailEnabled: true,
+        pushEnabled: true,
+        inAppEnabled: true,
+        deployAlerts: true,
+        securityAlerts: true,
+        usageAlerts: true,
+    });
+
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem("notification-prefs");
+            if (saved) setPrefs(JSON.parse(saved));
+        } catch { /* ignore */ }
+    }, []);
+
+    const updatePref = (key: keyof typeof prefs) => {
+        const next = { ...prefs, [key]: !prefs[key] };
+        setPrefs(next);
+        localStorage.setItem("notification-prefs", JSON.stringify(next));
+    };
 
     const fetchNotifications = async () => {
         try {
@@ -64,6 +88,13 @@ export default function NotificationsPage() {
                 </div>
                 <div className="flex gap-2">
                     <ElectricRippleButton
+                        accent="emerald"
+                        className="px-4 py-2 text-sm rounded-xl border border-white/10 bg-white/[0.04] text-white/70 hover:text-white"
+                        onClick={() => setShowPrefs(!showPrefs)}
+                    >
+                        {showPrefs ? "Hide Preferences" : "Preferences"}
+                    </ElectricRippleButton>
+                    <ElectricRippleButton
                         accent="cyan"
                         className="px-4 py-2 text-sm rounded-xl border border-white/10 bg-white/[0.04] text-white/70 hover:text-white"
                         onClick={() => { setShowDevices(!showDevices); if (!showDevices && devices.length === 0) fetchDevices(); }}
@@ -89,6 +120,52 @@ export default function NotificationsPage() {
                     </div>
                 </ScrollReveal>
             )}
+
+            {/* Notification preferences section */}
+            <AnimatePresence>
+                {showPrefs && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mb-8 overflow-hidden"
+                    >
+                        <GlassPanel accent="emerald">
+                            <h2 className="text-sm font-semibold text-white/70 mb-4">Notification Preferences</h2>
+                            <div className="space-y-3">
+                                {([
+                                    { key: "emailEnabled" as const, label: "Email Notifications", desc: "Receive notifications via email" },
+                                    { key: "pushEnabled" as const, label: "Push Notifications", desc: "Receive browser/device push notifications" },
+                                    { key: "inAppEnabled" as const, label: "In-App Notifications", desc: "Show notifications in the dashboard" },
+                                    { key: "deployAlerts" as const, label: "Deploy Alerts", desc: "Deployment success/failure notifications" },
+                                    { key: "securityAlerts" as const, label: "Security Alerts", desc: "Login attempts, API key rotations" },
+                                    { key: "usageAlerts" as const, label: "Usage Alerts", desc: "Quota warnings and rate limit events" },
+                                ]).map(({ key, label, desc }) => (
+                                    <div key={key} className="flex items-center justify-between py-2">
+                                        <div>
+                                            <p className="text-sm font-medium text-white/80">{label}</p>
+                                            <p className="text-xs text-white/40">{desc}</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={prefs[key]}
+                                            onClick={() => updatePref(key)}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                                prefs[key] ? "bg-emerald-500" : "bg-white/10"
+                                            }`}
+                                        >
+                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                                prefs[key] ? "translate-x-6" : "translate-x-1"
+                                            }`} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </GlassPanel>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Push devices section */}
             <AnimatePresence>
