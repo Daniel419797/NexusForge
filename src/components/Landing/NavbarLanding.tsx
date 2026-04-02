@@ -20,7 +20,7 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isLoading } = useAuthStore();
 
   useEffect(() => {
     let ticking = false;
@@ -87,7 +87,9 @@ export default function Navbar() {
             GitHub
           </Link>
 
-          {isAuthenticated ? (
+          {isLoading ? (
+            <div className="w-24 h-8 rounded-xl bg-white/5 animate-pulse" />
+          ) : isAuthenticated ? (
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Link
                 href="/projects"
@@ -166,7 +168,9 @@ export default function Navbar() {
                 </motion.div>
               ))}
               <div className="pt-3 border-t border-white/6">
-                {isAuthenticated ? (
+                {isLoading ? (
+                  <div className="w-full h-10 rounded-xl bg-white/5 animate-pulse" />
+                ) : isAuthenticated ? (
                   <Link
                     href="/projects"
                     className="block w-full text-center px-5 py-2.5 text-sm font-medium rounded-xl bg-purple-500 text-white"

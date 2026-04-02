@@ -8,10 +8,25 @@ const nextConfig: NextConfig = {
     optimizeCss: true,
   },
   async rewrites() {
+    const backendUrl = (
+      process.env.NEXT_PUBLIC_BACKEND_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      ''
+    ).replace(/\/+$/, '');
+
+    if (!backendUrl) {
+      console.warn(
+        '[next.config] No backend URL env var set (NEXT_PUBLIC_BACKEND_URL / NEXT_PUBLIC_API_URL / NEXT_PUBLIC_BASE_URL). ' +
+        'API rewrites disabled.',
+      );
+      return [];
+    }
+
     return [
       {
         source: '/api/v1/:path*',
-        destination: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/:path*`,
+        destination: `${backendUrl}/api/v1/:path*`,
       },
     ];
   },
