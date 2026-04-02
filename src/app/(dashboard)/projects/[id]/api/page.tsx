@@ -41,12 +41,6 @@ export default function ProjectApiPage() {
                             </Badge>
                         )}
                     </div>
-                    <CardDescription>
-                        {isTenantAuth
-                            ? "Users are stored in your project database."
-                            : "User registration, login, and token management."
-                        }
-                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
                     {[

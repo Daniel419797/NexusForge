@@ -178,11 +178,6 @@ export default function CompliancePage() {
                                 />
                             </div>
                         </div>
-                        <CardDescription>
-                            {hipaaStatus.hipaaMode
-                                ? "HIPAA safeguards are active."
-                                : "Required if handling Protected Health Information (PHI)."}
-                        </CardDescription>
                     </CardHeader>
                     {hipaaStatus.hipaaMode && (
                         <CardContent>
