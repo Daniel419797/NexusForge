@@ -75,6 +75,11 @@ const AuthService = {
         const { data } = await api.post("/auth/reset-password", { token, password });
         return data.data;
     },
+
+    async exchangeOAuthCode(code: string): Promise<AuthResponse> {
+        const { data } = await api.post<{ data: AuthResponse }>("/auth/oauth/exchange", { code });
+        return data.data;
+    },
 };
 
 export default AuthService;

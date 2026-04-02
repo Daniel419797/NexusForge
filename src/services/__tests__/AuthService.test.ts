@@ -126,4 +126,18 @@ describe('AuthService', () => {
             expect(result).toEqual({ reset: true });
         });
     });
+
+    describe('exchangeOAuthCode', () => {
+        it('posts code and returns auth data', async () => {
+            mockPost.mockResolvedValue(mockAuthResponse);
+            const result = await AuthService.exchangeOAuthCode('abc123');
+            expect(mockPost).toHaveBeenCalledWith('/auth/oauth/exchange', { code: 'abc123' });
+            expect(result).toEqual(mockAuthResponse.data.data);
+        });
+
+        it('propagates API errors', async () => {
+            mockPost.mockRejectedValue(new Error('invalid or expired code'));
+            await expect(AuthService.exchangeOAuthCode('bad-code')).rejects.toThrow('invalid or expired code');
+        });
+    });
 });
