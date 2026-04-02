@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -180,8 +180,8 @@ export default function CompliancePage() {
                         </div>
                         <CardDescription>
                             {hipaaStatus.hipaaMode
-                                ? "HIPAA technical safeguards are active for this project. The following controls are enforced."
-                                : "Enable HIPAA compliance mode to enforce strict security controls for this project. Required if handling Protected Health Information (PHI)."}
+                                ? "HIPAA safeguards are active."
+                                : "Required if handling Protected Health Information (PHI)."}
                         </CardDescription>
                     </CardHeader>
                     {hipaaStatus.hipaaMode && (
@@ -235,9 +235,6 @@ export default function CompliancePage() {
                         <CardTitle>Consent Preferences</CardTitle>
                         <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">GDPR Art. 7</Badge>
                     </div>
-                    <CardDescription>
-                        Control how your data is used. You can grant or revoke consent at any time. Each change is recorded immutably.
-                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {CONSENT_TYPES.map(({ type, label, description }) => {
@@ -275,9 +272,6 @@ export default function CompliancePage() {
                         <CardTitle>Data Export</CardTitle>
                         <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">GDPR Art. 15 &amp; 20</Badge>
                     </div>
-                    <CardDescription>
-                        Download a complete copy of your personal data in JSON format. Includes your profile, consent history, and activity log.
-                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Button onClick={handleExport} disabled={exporting} variant="outline">
@@ -293,9 +287,6 @@ export default function CompliancePage() {
                         <CardTitle>Activity Log</CardTitle>
                         <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">GDPR Art. 12</Badge>
                     </div>
-                    <CardDescription>
-                        A record of actions performed on or with your account. You can request a full copy via data export.
-                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     {auditLogs.length === 0 ? (
@@ -327,9 +318,6 @@ export default function CompliancePage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Consent Change History</CardTitle>
-                        <CardDescription>
-                            Immutable log of all consent changes. This record cannot be modified or deleted.
-                        </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="max-h-60 overflow-y-auto space-y-1">
@@ -363,10 +351,6 @@ export default function CompliancePage() {
                         <CardTitle className="text-red-400">Delete Account</CardTitle>
                         <Badge variant="outline" className="text-[10px] border-red-500/30 text-red-400">GDPR Art. 17</Badge>
                     </div>
-                    <CardDescription>
-                        Permanently delete your account and all associated data. This action cannot be undone.
-                        Audit logs will be anonymized (not deleted) per GDPR Art. 17(3) record-keeping exception.
-                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     {!deleteConfirm ? (
@@ -404,11 +388,7 @@ export default function CompliancePage() {
             </Card>
 
             {/* ── Compliance Statement ── */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Compliance Notice</CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground space-y-2">
+            <div className="text-sm text-muted-foreground space-y-2 pt-2">
                     <p>
                         This platform provides built-in GDPR tooling — data export, consent management, audit
                         logging, and account deletion — regardless of how it is deployed.
@@ -429,8 +409,7 @@ export default function CompliancePage() {
                         Information on the platform-hosted service without enabling HIPAA mode. Self-hosted users must deploy on HIPAA-eligible
                         infrastructure and implement additional safeguards.
                     </p>
-                </CardContent>
-            </Card>
+            </div>
         </div>
     );
 }

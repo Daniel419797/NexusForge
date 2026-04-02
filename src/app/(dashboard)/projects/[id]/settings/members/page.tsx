@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MemberService, { ProjectMember } from "@/services/MemberService";
 import { useAuthStore } from "@/store/authStore";
 
@@ -110,7 +110,6 @@ export default function MembersPage() {
                 <Card className="card-hover animate-in-up">
                     <CardHeader>
                         <CardTitle className="font-display tracking-tight">Add Member</CardTitle>
-                        <CardDescription>Invite a user by their email address.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleAddMember} className="flex flex-col sm:flex-row gap-3">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
@@ -144,7 +144,6 @@ export default function ProjectDatabaseSettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Database</CardTitle>
-                    <CardDescription>Connect and configure your project&apos;s database.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {message && <div role="status" aria-live="polite" className="p-2 rounded bg-primary/10 text-primary">{message}</div>}
@@ -328,7 +327,6 @@ export default function ProjectDatabaseSettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Run Migrations</CardTitle>
-                    <CardDescription>Apply pending schema migrations to the project database. Migrations are managed server-side and run in order.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {migrationStatus && (
@@ -377,7 +375,6 @@ export default function ProjectDatabaseSettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Rotate Database URL</CardTitle>
-                    <CardDescription>Generate a new encrypted database connection URL. The old URL will be invalidated.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {rotateMessage && (
@@ -412,7 +409,6 @@ export default function ProjectDatabaseSettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Migrate Users to Tenant Database</CardTitle>
-                    <CardDescription>Migrate all project users into the tenant-specific database. Runs as a background job.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {userMigrationStatus && (

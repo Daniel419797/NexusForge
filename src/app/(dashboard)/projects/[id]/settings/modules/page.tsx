@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Lock } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ModuleService, { type ModuleInfo } from "@/services/ModuleService";
 
 export default function ModulesSettingsPage() {
@@ -78,9 +78,6 @@ export default function ModulesSettingsPage() {
             <Card className="card-hover animate-in-up">
                 <CardHeader>
                     <CardTitle className="font-display tracking-tight">Available Modules</CardTitle>
-                    <CardDescription>
-                        Modules provide core API capabilities exposed through the project gateway.
-                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     {loading
