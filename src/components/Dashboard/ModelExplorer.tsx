@@ -2,7 +2,7 @@
 
 import { motion, useInView } from "framer-motion";
 import { useRef, useState, useEffect, useCallback } from "react";
-import GlassPanel from "./GlassPanel";
+
 import DashboardService, { type DataModelInfo } from "@/services/DashboardService";
 import { useProjectStore } from "@/store/projectStore";
 
@@ -49,7 +49,7 @@ export default function ModelExplorer() {
 
   return (
     <div ref={ref}>
-      <GlassPanel accent="cyan" hover3d={false}>
+      <div>
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-sm font-semibold text-white/80 tracking-wide uppercase">
             Data Models
@@ -157,7 +157,7 @@ export default function ModelExplorer() {
             ))}
           </div>
         )}
-      </GlassPanel>
+      </div>
     </div>
   );
 }
