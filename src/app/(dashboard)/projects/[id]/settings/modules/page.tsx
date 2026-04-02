@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Lock } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import ModuleService, { type ModuleInfo } from "@/services/ModuleService";
 
 export default function ModulesSettingsPage() {
@@ -75,11 +75,9 @@ export default function ModulesSettingsPage() {
                 </div>
             )}
 
-            <Card className="card-hover animate-in-up">
-                <CardHeader>
-                    <CardTitle className="font-display tracking-tight">Available Modules</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
+            <section className="animate-in-up">
+                <h2 className="text-sm font-semibold font-display tracking-tight mb-4">Available Modules</h2>
+                <div className="space-y-3">
                     {loading
                         ? Array.from({ length: 5 }).map((_, i) => (
                               <div
@@ -128,8 +126,8 @@ export default function ModulesSettingsPage() {
                                   </button>
                               </div>
                           ))}
-                </CardContent>
-            </Card>
+                </div>
+            </section>
 
             <p className="text-xs text-muted-foreground">
                 Note: Required modules (Auth, API Keys, Compliance) cannot be disabled. Module changes

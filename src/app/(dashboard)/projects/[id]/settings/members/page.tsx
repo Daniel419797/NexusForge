@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import MemberService, { ProjectMember } from "@/services/MemberService";
 import { useAuthStore } from "@/store/authStore";
 
@@ -107,55 +107,46 @@ export default function MembersPage() {
 
             {/* Add Member */}
             {isOwnerOrAdmin && (
-                <Card className="card-hover animate-in-up">
-                    <CardHeader>
-                        <CardTitle className="font-display tracking-tight">Add Member</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleAddMember} className="flex flex-col sm:flex-row gap-3">
-                            <div className="flex-1 space-y-1">
-                                <Label htmlFor="member-email" className="sr-only">Email</Label>
-                                <Input
-                                    id="member-email"
-                                    type="email"
-                                    placeholder="user@example.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="w-32 space-y-1">
-                                <Label htmlFor="member-role" className="sr-only">Role</Label>
-                                <select
-                                    id="member-role"
-                                    value={role}
-                                    onChange={(e) => setRole(e.target.value)}
-                                    className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-                                >
-                                    <option value="viewer">Viewer</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
-                            <Button type="submit" disabled={adding}>
-                                {adding ? "Adding..." : "Add"}
-                            </Button>
-                        </form>
-                        {addMessage && (
-                            <p className="mt-3 text-sm text-muted-foreground">{addMessage}</p>
-                        )}
-                    </CardContent>
-                </Card>
+                <section className="animate-in-up">
+                    <h2 className="text-sm font-semibold font-display tracking-tight mb-4">Add Member</h2>
+                    <form onSubmit={handleAddMember} className="flex flex-col sm:flex-row gap-3">
+                        <div className="flex-1 space-y-1">
+                            <Label htmlFor="member-email" className="sr-only">Email</Label>
+                            <Input
+                                id="member-email"
+                                type="email"
+                                placeholder="user@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div className="w-32 space-y-1">
+                            <Label htmlFor="member-role" className="sr-only">Role</Label>
+                            <select
+                                id="member-role"
+                                value={role}
+                                onChange={(e) => setRole(e.target.value)}
+                                className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                            >
+                                <option value="viewer">Viewer</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <Button type="submit" disabled={adding}>
+                            {adding ? "Adding..." : "Add"}
+                        </Button>
+                    </form>
+                    {addMessage && (
+                        <p className="mt-3 text-sm text-muted-foreground">{addMessage}</p>
+                    )}
+                </section>
             )}
 
             {/* Member List */}
-            <Card className="animate-in-up stagger-2">
-                <CardHeader>
-                    <CardTitle className="font-display tracking-tight">
-                        Team ({members.length})
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="divide-y divide-border">
+            <section className="animate-in-up stagger-2">
+                <h2 className="text-sm font-semibold font-display tracking-tight mb-4">Team ({members.length})</h2>
+                <div className="divide-y divide-border">
                         {members.map((member) => (
                             <div key={member.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                                 <div className="flex items-center gap-3 min-w-0">
@@ -210,8 +201,7 @@ export default function MembersPage() {
                             <p className="text-sm text-muted-foreground py-4 text-center">No members found.</p>
                         )}
                     </div>
-                </CardContent>
-            </Card>
+            </section>
         </div>
     );
 }

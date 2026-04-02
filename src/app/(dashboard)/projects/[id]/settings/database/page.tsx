@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
@@ -24,7 +24,6 @@ export default function ProjectDatabaseSettingsPage() {
     const [jwtSecret, setJwtSecret] = useState<string>("");
     const [encryptionKey, setEncryptionKey] = useState<string>("");
     const [hasEncryptionKey, setHasEncryptionKey] = useState<boolean>(false);
-    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
 
@@ -79,8 +78,9 @@ export default function ProjectDatabaseSettingsPage() {
                     setSettingsFromConfig(cfg.settings || {});
                 }
             })
-            .catch(() => { })
-            .finally(() => mounted && setLoading(false));
+            .catch(() => {
+                if (mounted) setMessage("Failed to load database configuration.");
+            });
         return () => {
             mounted = false;
         };
@@ -128,24 +128,34 @@ export default function ProjectDatabaseSettingsPage() {
             // update store
             const setActive = useProjectStore.getState().setActiveProject;
             const current = useProjectStore.getState().activeProject;
-            if (current && current.id === activeProject.id) {
+            if (current?.id === activeProject.id) {
                 setActive({ ...current, config: updated });
             }
             setMessage("Saved successfully.");
-        } catch (e) {
+        } catch {
             setMessage("Failed to save configuration.");
         } finally {
             setSaving(false);
         }
     };
 
+    const migrationStatusClass = migrationStatus?.startsWith("failed")
+        ? "bg-destructive/10 text-destructive"
+        : migrationStatus === "completed"
+        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+        : "bg-primary/10 text-primary";
+
+    const userMigrationStatusClass = userMigrationStatus?.startsWith("failed")
+        ? "bg-destructive/10 text-destructive"
+        : userMigrationStatus === "completed"
+        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+        : "bg-primary/10 text-primary";
+
     return (
         <div className="space-y-6 max-w-3xl">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Database</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+            <section>
+                <h2 className="text-sm font-semibold font-display tracking-tight mb-4">Database</h2>
+                <div className="space-y-4">
                     {message && <div role="status" aria-live="polite" className="p-2 rounded bg-primary/10 text-primary">{message}</div>}
                     <div>
                         <Label htmlFor="dbType">DB Type</Label>
@@ -191,7 +201,7 @@ export default function ProjectDatabaseSettingsPage() {
                             min={1}
                             max={100}
                             value={poolSize}
-                            onChange={(e: any) => setPoolSize(parseInt(e.target.value) || 10)}
+                            onChange={(e: any) => setPoolSize(Number.parseInt(e.target.value) || 10)}
                         />
                     </div>
 
@@ -320,17 +330,15 @@ export default function ProjectDatabaseSettingsPage() {
                         <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
                         <Button variant="ghost" onClick={() => router.push(`/projects/${activeProject.id}/settings`)}>Back</Button>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </section>
 
             {/* Run Migrations */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Run Migrations</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+            <section>
+                <h2 className="text-sm font-semibold font-display tracking-tight mb-4">Run Migrations</h2>
+                <div className="space-y-4">
                     {migrationStatus && (
-                        <div role="status" aria-live="polite" className={`p-2 rounded text-sm ${migrationStatus.startsWith("failed") ? "bg-destructive/10 text-destructive" : migrationStatus === "completed" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-primary/10 text-primary"}`}>
+                        <div role="status" aria-live="polite" className={`p-2 rounded text-sm ${migrationStatusClass}`}>
                             {migrationStatus}
                         </div>
                     )}
@@ -353,7 +361,8 @@ export default function ProjectDatabaseSettingsPage() {
                                             setMigrationRunning(false);
                                             if (migrationPollRef.current) clearInterval(migrationPollRef.current);
                                         } else {
-                                            setMigrationStatus(`${status.state}${status.progress != null ? ` (${status.progress}%)` : ""}`);
+                                            const progressSuffix = status.progress != null ? ` (${status.progress}%)` : "";
+                                            setMigrationStatus(`${status.state}${progressSuffix}`);
                                         }
                                     } catch {
                                         // keep polling
@@ -368,15 +377,13 @@ export default function ProjectDatabaseSettingsPage() {
                     >
                         {migrationRunning ? "Running..." : "Run Migrations"}
                     </Button>
-                </CardContent>
-            </Card>
+                </div>
+            </section>
 
             {/* DB URL Rotation */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Rotate Database URL</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+            <section>
+                <h2 className="text-sm font-semibold font-display tracking-tight mb-4">Rotate Database URL</h2>
+                <div className="space-y-4">
                     {rotateMessage && (
                         <div role="status" aria-live="polite" className={`p-2 rounded text-sm ${rotateMessage.startsWith("Error") ? "bg-destructive/10 text-destructive" : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"}`}>
                             {rotateMessage}
@@ -385,75 +392,76 @@ export default function ProjectDatabaseSettingsPage() {
                     <Button
                         variant="destructive"
                         onClick={async () => {
-                            if (!confirm("Are you sure? The current database URL will be invalidated.")) return;
-                            setRotating(true);
-                            setRotateMessage(null);
-                            try {
-                                const { dbUrl: newUrl } = await ProjectService.rotateDbUrl(activeProject.id);
-                                setDbUrl(newUrl);
-                                setRotateMessage("Database URL rotated successfully.");
-                            } catch {
-                                setRotateMessage("Error: failed to rotate database URL.");
-                            } finally {
-                                setRotating(false);
+                            if (confirm("Are you sure? The current database URL will be invalidated.")) {
+                                setRotating(true);
+                                setRotateMessage(null);
+                                try {
+                                    const { dbUrl: newUrl } = await ProjectService.rotateDbUrl(activeProject.id);
+                                    setDbUrl(newUrl);
+                                    setRotateMessage("Database URL rotated successfully.");
+                                } catch {
+                                    setRotateMessage("Error: failed to rotate database URL.");
+                                } finally {
+                                    setRotating(false);
+                                }
                             }
                         }}
                         disabled={rotating}
                     >
                         {rotating ? "Rotating..." : "Rotate DB URL"}
                     </Button>
-                </CardContent>
-            </Card>
+                </div>
+            </section>
 
             {/* Migrate Users to Tenant DB */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Migrate Users to Tenant Database</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+            <section>
+                <h2 className="text-sm font-semibold font-display tracking-tight mb-4">Migrate Users to Tenant Database</h2>
+                <div className="space-y-4">
                     {userMigrationStatus && (
-                        <div role="status" aria-live="polite" className={`p-2 rounded text-sm ${userMigrationStatus.startsWith("failed") ? "bg-destructive/10 text-destructive" : userMigrationStatus === "completed" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-primary/10 text-primary"}`}>
+                        <div role="status" aria-live="polite" className={`p-2 rounded text-sm ${userMigrationStatusClass}`}>
                             {userMigrationStatus}
                         </div>
                     )}
                     <Button
                         variant="outline"
                         onClick={async () => {
-                            if (!confirm("This will migrate all users to the tenant database. Continue?")) return;
-                            setMigratingUsers(true);
-                            setUserMigrationStatus("starting...");
-                            try {
-                                const { jobId } = await ProjectService.migrateUsers(activeProject.id);
-                                setUserMigrationStatus(`running (job ${jobId})`);
-                                userMigrationPollRef.current = setInterval(async () => {
-                                    try {
-                                        const status = await ProjectService.getJobStatus(activeProject.id, jobId);
-                                        if (status.state === "completed") {
-                                            setUserMigrationStatus("completed");
-                                            setMigratingUsers(false);
-                                            if (userMigrationPollRef.current) clearInterval(userMigrationPollRef.current);
-                                        } else if (status.state === "failed") {
-                                            setUserMigrationStatus(`failed: ${status.failedReason || "unknown error"}`);
-                                            setMigratingUsers(false);
-                                            if (userMigrationPollRef.current) clearInterval(userMigrationPollRef.current);
-                                        } else {
-                                            setUserMigrationStatus(`${status.state}${status.progress != null ? ` (${status.progress}%)` : ""}`);
+                            if (confirm("This will migrate all users to the tenant database. Continue?")) {
+                                setMigratingUsers(true);
+                                setUserMigrationStatus("starting...");
+                                try {
+                                    const { jobId } = await ProjectService.migrateUsers(activeProject.id);
+                                    setUserMigrationStatus(`running (job ${jobId})`);
+                                    userMigrationPollRef.current = setInterval(async () => {
+                                        try {
+                                            const status = await ProjectService.getJobStatus(activeProject.id, jobId);
+                                            if (status.state === "completed") {
+                                                setUserMigrationStatus("completed");
+                                                setMigratingUsers(false);
+                                                if (userMigrationPollRef.current) clearInterval(userMigrationPollRef.current);
+                                            } else if (status.state === "failed") {
+                                                setUserMigrationStatus(`failed: ${status.failedReason || "unknown error"}`);
+                                                setMigratingUsers(false);
+                                                if (userMigrationPollRef.current) clearInterval(userMigrationPollRef.current);
+                                            } else {
+                                                const progressSuffix = status.progress != null ? ` (${status.progress}%)` : "";
+                                                setUserMigrationStatus(`${status.state}${progressSuffix}`);
+                                            }
+                                        } catch {
+                                            // keep polling
                                         }
-                                    } catch {
-                                        // keep polling
-                                    }
-                                }, 3000);
-                            } catch {
-                                setUserMigrationStatus("failed to start user migration");
-                                setMigratingUsers(false);
+                                    }, 3000);
+                                } catch {
+                                    setUserMigrationStatus("failed to start user migration");
+                                    setMigratingUsers(false);
+                                }
                             }
                         }}
                         disabled={migratingUsers}
                     >
                         {migratingUsers ? "Migrating..." : "Migrate Users"}
                     </Button>
-                </CardContent>
-            </Card>
+                </div>
+            </section>
         </div>
     );
 }
