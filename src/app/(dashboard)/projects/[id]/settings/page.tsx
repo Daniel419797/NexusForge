@@ -7,7 +7,7 @@ import { Database, ShieldCheck, ArrowRight, Users, Blocks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import ProjectService from "@/services/ProjectService";
 import X402Service, { type X402Config } from "@/services/X402Service";
@@ -121,7 +121,6 @@ export default function ProjectSettingsPage() {
             <Card className="card-hover animate-in-up">
                 <CardHeader>
                     <CardTitle className="font-display tracking-tight">General</CardTitle>
-                    <CardDescription>Update your project name and details.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSave} className="space-y-4">
@@ -152,10 +151,6 @@ export default function ProjectSettingsPage() {
             <Card className="card-hover animate-in-up stagger-2">
                 <CardHeader>
                     <CardTitle className="font-display tracking-tight">API Access (CORS)</CardTitle>
-                    <CardDescription>
-                        Specify which external domains can call the API using this project's keys.
-                        Use <code>*</code> to allow all domains (not recommended for production).
-                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {corsMessage && (
@@ -200,9 +195,6 @@ export default function ProjectSettingsPage() {
             <Card className="card-hover animate-in-up stagger-4">
                 <CardHeader>
                     <CardTitle className="font-display tracking-tight">Payment Enforcement (x402)</CardTitle>
-                    <CardDescription>
-                        Configure HTTP 402 on-chain payment requirements for your API endpoints.
-                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {x402Message && (
@@ -287,14 +279,9 @@ export default function ProjectSettingsPage() {
             <Separator />
 
             {/* Advanced Configuration */}
-            <Card className="card-hover animate-in-up stagger-5">
-                <CardHeader>
-                    <CardTitle className="font-display tracking-tight">Advanced Configuration</CardTitle>
-                    <CardDescription>
-                        Manage database connections, compliance settings, and other advanced configurations.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-4 sm:grid-cols-2">
+            <div>
+                <h3 className="font-display tracking-tight font-semibold mb-4">Advanced Configuration</h3>
+                <div className="grid gap-4 sm:grid-cols-2">
                     <Link href={`/projects/${activeProject.id}/settings/database`} className="flex items-start gap-4 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors">
                         <div className="shrink-0 p-2 rounded-md bg-primary/10 text-primary">
                             <Database className="w-5 h-5" />
@@ -331,8 +318,8 @@ export default function ProjectSettingsPage() {
                             <p className="text-sm text-muted-foreground">Enable or disable core API modules.</p>
                         </div>
                     </Link>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             <Separator />
 
@@ -340,9 +327,6 @@ export default function ProjectSettingsPage() {
             <Card className="border-destructive/30 animate-in-up stagger-6">
                 <CardHeader>
                     <CardTitle className="text-destructive">Danger Zone</CardTitle>
-                    <CardDescription>
-                        Archiving a project will disable all API access. You can restore it later.
-                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Button

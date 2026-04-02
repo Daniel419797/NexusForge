@@ -1,5 +1,5 @@
 "use client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import { useProjectStore } from "@/store/projectStore";
@@ -25,7 +25,6 @@ export default function ProjectApiPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Gateway Base URL</CardTitle>
-                    <CardDescription>All your project&apos;s API requests go through the project gateway.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <code className="block p-2 rounded bg-card border border-border font-mono">{gatewayBase}</code>
@@ -44,8 +43,8 @@ export default function ProjectApiPage() {
                     </div>
                     <CardDescription>
                         {isTenantAuth
-                            ? "Users are stored in your project database. JWTs are signed with your project-specific secret and include the projectId claim."
-                            : "User registration, login, and token management via the project gateway."
+                            ? "Users are stored in your project database."
+                            : "User registration, login, and token management."
                         }
                     </CardDescription>
                 </CardHeader>
@@ -74,7 +73,6 @@ export default function ProjectApiPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Tenant Auth Details</CardTitle>
-                        <CardDescription>How tenant-owned authentication differs from platform auth.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3 text-sm text-muted-foreground">
                         <ul className="space-y-1.5 list-disc list-inside">
