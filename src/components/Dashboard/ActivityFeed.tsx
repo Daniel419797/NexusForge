@@ -2,7 +2,7 @@
 
 import { motion, useInView } from "framer-motion";
 import { useRef, useEffect, useState, useCallback } from "react";
-import GlassPanel from "./GlassPanel";
+
 import DashboardService, { type ActivityEntry } from "@/services/DashboardService";
 import { useProjectStore } from "@/store/projectStore";
 
@@ -77,7 +77,7 @@ export default function ActivityFeed() {
 
   return (
     <div ref={ref}>
-      <GlassPanel accent="purple" hover3d={false} className="h-full">
+      <div className="h-full">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-white/80 tracking-wide uppercase">
             Activity Feed
@@ -151,7 +151,7 @@ export default function ActivityFeed() {
             })}
           </div>
         )}
-      </GlassPanel>
+      </div>
     </div>
   );
 }
