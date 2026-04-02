@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuthStore } from "@/store/authStore";
 
 /* ─────────────────────────────────────────
    NAVBAR – NexusForge cinematic nav
@@ -19,6 +20,7 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     let ticking = false;
@@ -85,21 +87,34 @@ export default function Navbar() {
             GitHub
           </Link>
 
-          <Link
-            href="/login"
-            className="text-sm text-white/50 hover:text-white transition-colors duration-200"
-          >
-            Sign In
-          </Link>
+          {isAuthenticated ? (
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+              <Link
+                href="/projects"
+                className="inline-flex items-center px-5 py-2 text-sm font-medium rounded-xl bg-purple-500 text-white hover:shadow-lg hover:shadow-purple-500/20 transition-shadow duration-300"
+              >
+                Dashboard
+              </Link>
+            </motion.div>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-sm text-white/50 hover:text-white transition-colors duration-200"
+              >
+                Sign In
+              </Link>
 
-          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-            <Link
-              href="/register"
-              className="inline-flex items-center px-5 py-2 text-sm font-medium rounded-xl bg-purple-500 text-white hover:shadow-lg hover:shadow-purple-500/20 transition-shadow duration-300"
-            >
-              Get Started
-            </Link>
-          </motion.div>
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                <Link
+                  href="/register"
+                  className="inline-flex items-center px-5 py-2 text-sm font-medium rounded-xl bg-purple-500 text-white hover:shadow-lg hover:shadow-purple-500/20 transition-shadow duration-300"
+                >
+                  Get Started
+                </Link>
+              </motion.div>
+            </>
+          )}
         </div>
 
         {/* Mobile hamburger */}
@@ -151,12 +166,21 @@ export default function Navbar() {
                 </motion.div>
               ))}
               <div className="pt-3 border-t border-white/6">
-                <Link
-                  href="/register"
-                  className="block w-full text-center px-5 py-2.5 text-sm font-medium rounded-xl bg-purple-500 text-white"
-                >
-                  Get Started
-                </Link>
+                {isAuthenticated ? (
+                  <Link
+                    href="/projects"
+                    className="block w-full text-center px-5 py-2.5 text-sm font-medium rounded-xl bg-purple-500 text-white"
+                  >
+                    Dashboard
+                  </Link>
+                ) : (
+                  <Link
+                    href="/register"
+                    className="block w-full text-center px-5 py-2.5 text-sm font-medium rounded-xl bg-purple-500 text-white"
+                  >
+                    Get Started
+                  </Link>
+                )}
               </div>
             </div>
           </motion.div>

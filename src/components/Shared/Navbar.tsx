@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuthStore } from "@/store/authStore";
 
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const { isAuthenticated } = useAuthStore();
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -51,18 +53,29 @@ export default function Navbar() {
                     >
                         Pricing
                     </Link>
-                    <Link
-                        href="/login"
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
-                    >
-                        Sign In
-                    </Link>
-                    <Link
-                        href="/register"
-                        className="inline-flex items-center justify-center px-5 py-2 text-sm font-medium rounded-xl bg-primary text-primary-foreground btn-glow transition-all duration-200"
-                    >
-                        Get Started
-                    </Link>
+                    {isAuthenticated ? (
+                        <Link
+                            href="/projects"
+                            className="inline-flex items-center justify-center px-5 py-2 text-sm font-medium rounded-xl bg-primary text-primary-foreground btn-glow transition-all duration-200"
+                        >
+                            Dashboard
+                        </Link>
+                    ) : (
+                        <>
+                            <Link
+                                href="/login"
+                                className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
+                            >
+                                Sign In
+                            </Link>
+                            <Link
+                                href="/register"
+                                className="inline-flex items-center justify-center px-5 py-2 text-sm font-medium rounded-xl bg-primary text-primary-foreground btn-glow transition-all duration-200"
+                            >
+                                Get Started
+                            </Link>
+                        </>
+                    )}
                 </div>
 
                 {/* Mobile Hamburger */}
@@ -98,15 +111,26 @@ export default function Navbar() {
                     <Link href="#pricing" className="block text-sm text-muted-foreground hover:text-foreground">
                         Pricing
                     </Link>
-                    <Link href="/login" className="block text-sm text-muted-foreground hover:text-foreground">
-                        Sign In
-                    </Link>
-                    <Link
-                        href="/register"
-                        className="block w-full text-center px-5 py-2 text-sm font-medium rounded-xl bg-primary text-primary-foreground btn-glow"
-                    >
-                        Get Started
-                    </Link>
+                    {isAuthenticated ? (
+                        <Link
+                            href="/projects"
+                            className="block w-full text-center px-5 py-2 text-sm font-medium rounded-xl bg-primary text-primary-foreground btn-glow"
+                        >
+                            Dashboard
+                        </Link>
+                    ) : (
+                        <>
+                            <Link href="/login" className="block text-sm text-muted-foreground hover:text-foreground">
+                                Sign In
+                            </Link>
+                            <Link
+                                href="/register"
+                                className="block w-full text-center px-5 py-2 text-sm font-medium rounded-xl bg-primary text-primary-foreground btn-glow"
+                            >
+                                Get Started
+                            </Link>
+                        </>
+                    )}
                 </div>
             )}
         </header>
