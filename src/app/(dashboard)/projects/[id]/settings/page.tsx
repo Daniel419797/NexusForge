@@ -7,7 +7,7 @@ import { Database, ShieldCheck, ArrowRight, Users, Blocks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { Separator } from "@/components/ui/separator";
 import ProjectService from "@/services/ProjectService";
 import X402Service, { type X402Config } from "@/services/X402Service";
@@ -118,41 +118,35 @@ export default function ProjectSettingsPage() {
     return (
         <div className="space-y-6 max-w-2xl">
             {/* General settings */}
-            <Card className="card-hover animate-in-up">
-                <CardHeader>
-                    <CardTitle className="font-display tracking-tight">General</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSave} className="space-y-4">
-                        {message && (
-                            <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm">
-                                {message}
-                            </div>
-                        )}
-                        <div className="space-y-2">
-                            <Label htmlFor="settingsName">Project Name</Label>
-                            <Input
-                                id="settingsName"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                required
-                            />
+            <section className="animate-in-up">
+                <h2 className="text-sm font-semibold font-display tracking-tight mb-4">General</h2>
+                <form onSubmit={handleSave} className="space-y-4">
+                    {message && (
+                        <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm">
+                            {message}
                         </div>
-                        <Button type="submit" disabled={saving}>
-                            {saving ? "Saving..." : "Save Changes"}
-                        </Button>
-                    </form>
-                </CardContent>
-            </Card>
+                    )}
+                    <div className="space-y-2">
+                        <Label htmlFor="settingsName">Project Name</Label>
+                        <Input
+                            id="settingsName"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <Button type="submit" disabled={saving}>
+                        {saving ? "Saving..." : "Save Changes"}
+                    </Button>
+                </form>
+            </section>
 
             <Separator />
 
             {/* CORS settings */}
-            <Card className="card-hover animate-in-up stagger-2">
-                <CardHeader>
-                    <CardTitle className="font-display tracking-tight">API Access (CORS)</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+            <section className="animate-in-up stagger-2">
+                <h2 className="text-sm font-semibold font-display tracking-tight mb-4">API Access (CORS)</h2>
+                <div className="space-y-4">
                     {corsMessage && (
                         <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm">
                             {corsMessage}
@@ -186,17 +180,15 @@ export default function ProjectSettingsPage() {
                     <Button className="mt-4" onClick={handleSaveCors} disabled={savingCors}>
                         {savingCors ? "Saving..." : "Save CORS Settings"}
                     </Button>
-                </CardContent>
-            </Card>
+                </div>
+            </section>
 
             <Separator />
 
             {/* x402 Payment Config */}
-            <Card className="card-hover animate-in-up stagger-4">
-                <CardHeader>
-                    <CardTitle className="font-display tracking-tight">Payment Enforcement (x402)</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+            <section className="animate-in-up stagger-4">
+                <h2 className="text-sm font-semibold font-display tracking-tight mb-4">Payment Enforcement (x402)</h2>
+                <div className="space-y-4">
                     {x402Message && (
                         <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm">
                             {x402Message}
@@ -273,8 +265,8 @@ export default function ProjectSettingsPage() {
                     >
                         {savingX402 ? "Saving..." : "Save x402 Config"}
                     </Button>
-                </CardContent>
-            </Card>
+                </div>
+            </section>
 
             <Separator />
 
@@ -324,20 +316,16 @@ export default function ProjectSettingsPage() {
             <Separator />
 
             {/* Danger zone */}
-            <Card className="border-destructive/30 animate-in-up stagger-6">
-                <CardHeader>
-                    <CardTitle className="text-destructive">Danger Zone</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Button
-                        variant="destructive"
-                        onClick={handleDelete}
-                        disabled={deleting}
-                    >
-                        {deleting ? "Archiving..." : "Archive Project"}
-                    </Button>
-                </CardContent>
-            </Card>
+            <section className="animate-in-up stagger-6">
+                <p className="text-sm font-medium text-destructive mb-3">Danger Zone</p>
+                <Button
+                    variant="destructive"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                >
+                    {deleting ? "Archiving..." : "Archive Project"}
+                </Button>
+            </section>
         </div>
     );
 }

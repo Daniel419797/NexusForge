@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProjectStore } from "@/store/projectStore";
 import ProjectService from "@/services/ProjectService";
 import DashboardService from "@/services/DashboardService";
@@ -209,45 +208,29 @@ export default function ProjectOverviewPage() {
                 <p className="text-sm text-muted-foreground mt-1">Project overview and quick access</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="card-3d animate-in-up stagger-1">
-                    <CardHeader>
-                        <CardTitle className="text-sm text-muted-foreground">Status</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <div className="text-2xl font-bold capitalize mono">{project.status || "unknown"}</div>
-                                <div className="text-xs text-muted-foreground mono mt-1">{new Date(project.createdAt).toLocaleDateString()}</div>
-                            </div>
-                            <span className={`status-dot ${project.status === "active" ? "status-active" : "status-inactive"}`} />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="card-3d animate-in-up stagger-2">
-                    <CardHeader>
-                        <CardTitle className="text-sm text-muted-foreground">Plugins</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-center justify-between">
-                            <div className="text-3xl font-bold mono">{project.enabledModules?.length || 0}</div>
-                            <Link href={`/projects/${project.id}/plugins`} className="text-sm text-primary hover:underline">Manage</Link>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="card-3d animate-in-up stagger-3">
-                    <CardHeader>
-                        <CardTitle className="text-sm text-muted-foreground">API Keys</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-center justify-between">
-                            <div className="text-lg font-semibold">View</div>
-                            <Link href={`/projects/${project.id}/api-keys`} className="text-sm text-primary hover:underline">Manage</Link>
-                        </div>
-                    </CardContent>
-                </Card>
+            <div className="flex flex-wrap items-center gap-0 divide-x divide-border border rounded-lg overflow-hidden animate-in-up stagger-1">
+                <div className="flex items-center gap-3 px-5 py-3.5 flex-1 min-w-0">
+                    <span className={`status-dot shrink-0 ${project.status === "active" ? "status-active" : "status-inactive"}`} />
+                    <div className="min-w-0">
+                        <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-mono">Status</p>
+                        <p className="text-base font-bold capitalize mono truncate">{project.status || "unknown"}</p>
+                        <p className="text-[11px] text-muted-foreground/60 mono">{new Date(project.createdAt).toLocaleDateString()}</p>
+                    </div>
+                </div>
+                <div className="flex items-center justify-between px-5 py-3.5 flex-1 min-w-0">
+                    <div>
+                        <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-mono">Plugins</p>
+                        <p className="text-2xl font-bold mono">{project.enabledModules?.length || 0}</p>
+                    </div>
+                    <Link href={`/projects/${project.id}/plugins`} className="text-xs text-primary hover:underline shrink-0">Manage</Link>
+                </div>
+                <div className="flex items-center justify-between px-5 py-3.5 flex-1 min-w-0">
+                    <div>
+                        <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-mono">API Keys</p>
+                        <p className="text-sm font-semibold">Active</p>
+                    </div>
+                    <Link href={`/projects/${project.id}/api-keys`} className="text-xs text-primary hover:underline shrink-0">Manage</Link>
+                </div>
             </div>
 
             {/* ── Data Visualization ──────────────────────────── */}
@@ -288,38 +271,30 @@ export default function ProjectOverviewPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-in-up stagger-4">
-                <Card className="lg:col-span-2 card-hover">
-                    <CardHeader>
-                        <CardTitle>Recent Activity</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {loading ? (
-                            <div className="text-sm text-muted-foreground">Loading…</div>
-                        ) : recent.length === 0 ? (
-                            <div className="text-sm text-muted-foreground">No recent activity.</div>
-                        ) : (
-                            <ul className="space-y-2">
-                                {recent.map((r, i) => (
-                                    <li key={i} className="text-sm">{r.title || JSON.stringify(r)}</li>
-                                ))}
-                            </ul>
-                        )}
-                    </CardContent>
-                </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in-up stagger-4">
+                <div className="lg:col-span-2">
+                    <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-3">Recent Activity</h3>
+                    {loading ? (
+                        <p className="text-sm text-muted-foreground">Loading…</p>
+                    ) : recent.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No recent activity.</p>
+                    ) : (
+                        <ul className="space-y-2 divide-y divide-border">
+                            {recent.map((r, i) => (
+                                <li key={i} className="text-sm pt-2 first:pt-0">{r.title || JSON.stringify(r)}</li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Quick Actions</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-col gap-2">
-                            <Link href={`/projects/${project.id}/api`} className="text-sm text-primary">View API</Link>
-                            <Link href={`/projects/${project.id}/settings`} className="text-sm">Settings</Link>
-                            <Link href={`/projects/${project.id}/documentation`} className="text-sm">Documentation</Link>
-                        </div>
-                    </CardContent>
-                </Card>
+                <div>
+                    <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-3">Quick Actions</h3>
+                    <div className="flex flex-col gap-2">
+                        <Link href={`/projects/${project.id}/api`} className="text-sm text-primary hover:underline">View API</Link>
+                        <Link href={`/projects/${project.id}/settings`} className="text-sm hover:text-foreground transition-colors">Settings</Link>
+                        <Link href={`/projects/${project.id}/documentation`} className="text-sm hover:text-foreground transition-colors">Documentation</Link>
+                    </div>
+                </div>
             </div>
         </div>
     );

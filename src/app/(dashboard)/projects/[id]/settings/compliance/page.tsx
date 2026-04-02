@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -78,7 +77,7 @@ export default function CompliancePage() {
         try {
             await ComplianceService.recordConsent(type, !currentlyGranted);
             await loadData();
-            setMessage(`Consent ${!currentlyGranted ? "granted" : "revoked"} for ${type.replace(/_/g, " ")}`);
+            setMessage(`Consent ${currentlyGranted ? "revoked" : "granted"} for ${type.replaceAll("_", " ")}`);
         } catch {
             setMessage("Failed to update consent");
         } finally {
@@ -110,10 +109,10 @@ export default function CompliancePage() {
         try {
             await ComplianceService.deleteAccount();
             // Clear tokens and redirect
-            if (typeof window !== "undefined") {
+            if (globalThis.window !== undefined) {
                 localStorage.removeItem("accessToken");
                 localStorage.removeItem("refreshToken");
-                window.location.href = "/";
+                globalThis.window.location.href = "/";
             }
         } catch {
             setMessage("Failed to delete account");
@@ -154,84 +153,78 @@ export default function CompliancePage() {
 
             {/* ── HIPAA Status Panel ── */}
             {hipaaStatus && (
-                <Card className={hipaaStatus.hipaaMode ? "border-emerald-500/20" : "border-yellow-500/20"}>
-                    <CardHeader>
-                        <div className="flex items-center justify-between">
+                <section>
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-sm font-semibold font-display tracking-tight">HIPAA Compliance</h2>
+                            <Badge
+                                variant="outline"
+                                className={`text-[10px] ${hipaaStatus.hipaaMode ? "border-emerald-500/30 text-emerald-400" : "border-yellow-500/30 text-yellow-400"}`}
+                            >
+                                {hipaaStatus.hipaaMode ? "ENABLED" : "DISABLED"}
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">45 CFR § 164.312</Badge>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Label className="text-sm text-muted-foreground">
+                                {hipaaStatus.hipaaMode ? "On" : "Off"}
+                            </Label>
+                            <Switch
+                                checked={hipaaStatus.hipaaMode}
+                                onCheckedChange={handleToggleHipaa}
+                                disabled={togglingHipaa}
+                            />
+                        </div>
+                    </div>
+                    {hipaaStatus.hipaaMode && (
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                            {[
+                                { label: "HTTPS Enforced", active: hipaaStatus.controls.httpsEnforced },
+                                { label: "Password Complexity", active: hipaaStatus.controls.passwordComplexity },
+                                { label: "PHI Field Encryption", active: hipaaStatus.controls.phiEncryption },
+                                { label: "No-Cache Headers", active: hipaaStatus.controls.noCacheHeaders },
+                            ].map((ctrl) => (
+                                <div key={ctrl.label} className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full ${ctrl.active ? "bg-emerald-400" : "bg-muted-foreground/30"}`} />
+                                    <span className="text-muted-foreground">{ctrl.label}</span>
+                                </div>
+                            ))}
                             <div className="flex items-center gap-2">
-                                <CardTitle>HIPAA Compliance</CardTitle>
-                                <Badge
-                                    variant="outline"
-                                    className={`text-[10px] ${hipaaStatus.hipaaMode ? "border-emerald-500/30 text-emerald-400" : "border-yellow-500/30 text-yellow-400"}`}
-                                >
-                                    {hipaaStatus.hipaaMode ? "ENABLED" : "DISABLED"}
-                                </Badge>
-                                <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">45 CFR § 164.312</Badge>
+                                <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                                <span className="text-muted-foreground">
+                                    Session Timeout: {hipaaStatus.controls.sessionTimeoutSeconds}s
+                                </span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Label className="text-sm text-muted-foreground">
-                                    {hipaaStatus.hipaaMode ? "On" : "Off"}
-                                </Label>
-                                <Switch
-                                    checked={hipaaStatus.hipaaMode}
-                                    onCheckedChange={handleToggleHipaa}
-                                    disabled={togglingHipaa}
-                                />
+                                <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                                <span className="text-muted-foreground">
+                                    Audit Retention: {hipaaStatus.controls.auditRetentionDays} days
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                                <span className="text-muted-foreground">
+                                    Access Token: {hipaaStatus.controls.maxAccessTokenExpiry}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                                <span className="text-muted-foreground">
+                                    Refresh Token: {hipaaStatus.controls.maxRefreshTokenExpiry}
+                                </span>
                             </div>
                         </div>
-                    </CardHeader>
-                    {hipaaStatus.hipaaMode && (
-                        <CardContent>
-                            <div className="grid grid-cols-2 gap-3 text-sm">
-                                {[
-                                    { label: "HTTPS Enforced", active: hipaaStatus.controls.httpsEnforced },
-                                    { label: "Password Complexity", active: hipaaStatus.controls.passwordComplexity },
-                                    { label: "PHI Field Encryption", active: hipaaStatus.controls.phiEncryption },
-                                    { label: "No-Cache Headers", active: hipaaStatus.controls.noCacheHeaders },
-                                ].map((ctrl) => (
-                                    <div key={ctrl.label} className="flex items-center gap-2">
-                                        <div className={`w-2 h-2 rounded-full ${ctrl.active ? "bg-emerald-400" : "bg-muted-foreground/30"}`} />
-                                        <span className="text-muted-foreground">{ctrl.label}</span>
-                                    </div>
-                                ))}
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                                    <span className="text-muted-foreground">
-                                        Session Timeout: {hipaaStatus.controls.sessionTimeoutSeconds}s
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                                    <span className="text-muted-foreground">
-                                        Audit Retention: {hipaaStatus.controls.auditRetentionDays} days
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                                    <span className="text-muted-foreground">
-                                        Access Token: {hipaaStatus.controls.maxAccessTokenExpiry}
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                                    <span className="text-muted-foreground">
-                                        Refresh Token: {hipaaStatus.controls.maxRefreshTokenExpiry}
-                                    </span>
-                                </div>
-                            </div>
-                        </CardContent>
                     )}
-                </Card>
+                </section>
             )}
 
             {/* ── Consent Management ── */}
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center gap-2">
-                        <CardTitle>Consent Preferences</CardTitle>
-                        <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">GDPR Art. 7</Badge>
-                    </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
+            <section>
+                <div className="flex items-center gap-2 mb-4">
+                    <h2 className="text-sm font-semibold font-display tracking-tight">Consent Preferences</h2>
+                    <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">GDPR Art. 7</Badge>
+                </div>
+                <div className="space-y-4">
                     {CONSENT_TYPES.map(({ type, label, description }) => {
                         const granted = getConsentGranted(type);
                         const isToggling = togglingConsent === type;
@@ -257,33 +250,26 @@ export default function CompliancePage() {
                             </div>
                         );
                     })}
-                </CardContent>
-            </Card>
+                </div>
+            </section>
 
             {/* ── Data Export ── */}
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center gap-2">
-                        <CardTitle>Data Export</CardTitle>
-                        <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">GDPR Art. 15 &amp; 20</Badge>
-                    </div>
-                </CardHeader>
-                <CardContent>
+            <section>
+                <div className="flex items-center gap-2 mb-4">
+                    <h2 className="text-sm font-semibold font-display tracking-tight">Data Export</h2>
+                    <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">GDPR Art. 15 &amp; 20</Badge>
+                </div>
                     <Button onClick={handleExport} disabled={exporting} variant="outline">
                         {exporting ? "Exporting..." : "Export My Data"}
                     </Button>
-                </CardContent>
-            </Card>
+            </section>
 
             {/* ── Audit Log ── */}
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center gap-2">
-                        <CardTitle>Activity Log</CardTitle>
-                        <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">GDPR Art. 12</Badge>
-                    </div>
-                </CardHeader>
-                <CardContent>
+            <section>
+                <div className="flex items-center gap-2 mb-4">
+                    <h2 className="text-sm font-semibold font-display tracking-tight">Activity Log</h2>
+                    <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">GDPR Art. 12</Badge>
+                </div>
                     {auditLogs.length === 0 ? (
                         <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
                     ) : (
@@ -305,16 +291,12 @@ export default function CompliancePage() {
                             ))}
                         </div>
                     )}
-                </CardContent>
-            </Card>
+            </section>
 
             {/* ── Consent History ── */}
             {history.length > 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Consent Change History</CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                <section>
+                    <h2 className="text-sm font-semibold font-display tracking-tight mb-4">Consent Change History</h2>
                         <div className="max-h-60 overflow-y-auto space-y-1">
                             {history.map((entry) => (
                                 <div key={entry.id} className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/5 text-sm">
@@ -325,7 +307,7 @@ export default function CompliancePage() {
                                         >
                                             {entry.granted ? "Granted" : "Revoked"}
                                         </Badge>
-                                        <span className="text-xs font-mono">{entry.consentType.replace(/_/g, " ")}</span>
+                                        <span className="text-xs font-mono">{entry.consentType.replaceAll("_", " ")}</span>
                                     </div>
                                     <span className="text-xs text-muted-foreground/60">
                                         {new Date(entry.createdAt).toLocaleString()}
@@ -333,30 +315,18 @@ export default function CompliancePage() {
                                 </div>
                             ))}
                         </div>
-                    </CardContent>
-                </Card>
+                </section>
             )}
 
             <Separator />
 
             {/* ── Account Deletion ── */}
-            <Card className="border-red-500/20">
-                <CardHeader>
-                    <div className="flex items-center gap-2">
-                        <CardTitle className="text-red-400">Delete Account</CardTitle>
-                        <Badge variant="outline" className="text-[10px] border-red-500/30 text-red-400">GDPR Art. 17</Badge>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    {!deleteConfirm ? (
-                        <Button
-                            variant="outline"
-                            className="border-red-500/30 text-red-400 hover:bg-red-500/10"
-                            onClick={() => setDeleteConfirm(true)}
-                        >
-                            Request Account Deletion
-                        </Button>
-                    ) : (
+            <section>
+                <div className="flex items-center gap-2 mb-4">
+                    <h2 className="text-sm font-semibold font-display tracking-tight text-red-400">Delete Account</h2>
+                    <Badge variant="outline" className="text-[10px] border-red-500/30 text-red-400">GDPR Art. 17</Badge>
+                </div>
+                    {deleteConfirm ? (
                         <div className="space-y-3">
                             <p className="text-sm text-red-400">
                                 Are you sure? This will permanently delete your account, tokens, and consent records. Audit logs will be anonymized.
@@ -378,11 +348,16 @@ export default function CompliancePage() {
                                 </Button>
                             </div>
                         </div>
+                    ) : (
+                        <Button
+                            variant="outline"
+                            className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+                            onClick={() => setDeleteConfirm(true)}
+                        >
+                            Request Account Deletion
+                        </Button>
                     )}
-                </CardContent>
-            </Card>
-
-            {/* ── Compliance Statement ── */}
+            </section>
             <div className="text-sm text-muted-foreground space-y-2 pt-2">
                     <p>
                         This platform provides built-in GDPR tooling — data export, consent management, audit

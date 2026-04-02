@@ -1,5 +1,5 @@
 "use client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import { useProjectStore } from "@/store/projectStore";
@@ -22,27 +22,21 @@ export default function ProjectApiPage() {
                 <p className="text-sm text-muted-foreground">Base endpoints and example requests for this project.</p>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Gateway Base URL</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <code className="block p-2 rounded bg-card border border-border font-mono">{gatewayBase}</code>
-                </CardContent>
-            </Card>
+            <section>
+                <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-2">Gateway Base URL</h3>
+                <code className="block p-2 rounded bg-muted/5 border border-border font-mono">{gatewayBase}</code>
+            </section>
 
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center gap-2">
-                        <CardTitle>Authentication Endpoints</CardTitle>
-                        {isTenantAuth && (
-                            <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-400">
-                                Tenant-Owned
-                            </Badge>
-                        )}
-                    </div>
-                </CardHeader>
-                <CardContent className="space-y-2">
+            <section>
+                <div className="flex items-center gap-2 mb-3">
+                    <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider">Authentication Endpoints</h3>
+                    {isTenantAuth && (
+                        <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-400">
+                            Tenant-Owned
+                        </Badge>
+                    )}
+                </div>
+                <div className="space-y-2">
                     {[
                         { method: "POST", path: "/auth/register", desc: "Register a new user" },
                         { method: "POST", path: "/auth/login", desc: "Login and receive JWT tokens" },
@@ -60,15 +54,13 @@ export default function ProjectApiPage() {
                             <span className="text-[11px] text-muted-foreground/60 hidden sm:inline">{desc}</span>
                         </div>
                     ))}
-                </CardContent>
-            </Card>
+                </div>
+            </section>
 
             {isTenantAuth && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Tenant Auth Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <section>
+                    <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-3">Tenant Auth Details</h3>
+                    <div className="space-y-3 text-sm text-muted-foreground">
                         <ul className="space-y-1.5 list-disc list-inside">
                             <li><strong>Per-project JWT signing</strong> &mdash; Access and refresh tokens are signed with your project&apos;s own secret</li>
                             <li><strong>Project-scoped lockout</strong> &mdash; Failed login attempts are isolated per project (no cross-tenant interference)</li>
@@ -85,25 +77,21 @@ export default function ProjectApiPage() {
   "projectToken": "eyJ..."    // project-scoped token for API access
 }`}</pre>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </section>
             )}
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Example: Submit Data</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-sm text-muted-foreground mb-2">POST /events</p>
-                    <pre className="p-3 rounded bg-muted/5 border border-border text-sm overflow-auto">{
+            <section>
+                <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-3">Example: Submit Data</h3>
+                <p className="text-sm text-muted-foreground mb-2">POST /events</p>
+                <pre className="p-3 rounded bg-muted/5 border border-border text-sm overflow-auto">{
                         `POST ${gatewayBase}/events
 {
   "type": "message.created",
   "payload": { "text": "Hello" }
 }`
                     }</pre>
-                </CardContent>
-            </Card>
+            </section>
         </div>
     );
 }
