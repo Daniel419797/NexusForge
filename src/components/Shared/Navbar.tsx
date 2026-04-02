@@ -7,7 +7,7 @@ import { useAuthStore } from "@/store/authStore";
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
-    const { isAuthenticated } = useAuthStore();
+    const { isAuthenticated, isLoading } = useAuthStore();
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -53,7 +53,9 @@ export default function Navbar() {
                     >
                         Pricing
                     </Link>
-                    {isAuthenticated ? (
+                    {isLoading ? (
+                        <div className="w-24 h-8 rounded-xl bg-muted animate-pulse" />
+                    ) : isAuthenticated ? (
                         <Link
                             href="/projects"
                             className="inline-flex items-center justify-center px-5 py-2 text-sm font-medium rounded-xl bg-primary text-primary-foreground btn-glow transition-all duration-200"
@@ -111,7 +113,9 @@ export default function Navbar() {
                     <Link href="#pricing" className="block text-sm text-muted-foreground hover:text-foreground">
                         Pricing
                     </Link>
-                    {isAuthenticated ? (
+                    {isLoading ? (
+                        <div className="w-full h-9 rounded-xl bg-muted animate-pulse" />
+                    ) : isAuthenticated ? (
                         <Link
                             href="/projects"
                             className="block w-full text-center px-5 py-2 text-sm font-medium rounded-xl bg-primary text-primary-foreground btn-glow"
