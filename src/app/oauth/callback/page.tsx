@@ -1,41 +1,55 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
 import AuthService from "@/services/AuthService";
 import { useAuthStore } from "@/store/authStore";
+
+// Module-level dedup set — survives React Strict Mode remounts (unlike useRef).
+const inFlight = new Set<string>();
 
 function OAuthCallbackInner() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const setUser = useAuthStore((s) => s.setUser);
-    const setLoading = useAuthStore((s) => s.setLoading);
+    const logout = useAuthStore((s) => s.logout);
+    // Secondary guard: prevents re-entry within the same component instance
+    // (e.g. if searchParams identity changes without the code changing).
     const exchanged = useRef(false);
 
     useEffect(() => {
-        if (exchanged.current) return;
-        exchanged.current = true;
-
         const code = searchParams.get("code");
 
         if (!code) {
+            logout();
             router.replace("/login?error=oauth_failed");
             return;
         }
 
+        // Primary dedup: module-level set survives Strict Mode remounts.
+        // Secondary dedup: ref guards within the same instance.
+        if (inFlight.has(code) || exchanged.current) return;
+        exchanged.current = true;
+        inFlight.add(code);
+
         AuthService.exchangeOAuthCode(code)
             .then((result) => {
+                // Stale-response guard: bail if the URL code changed while in-flight.
+                if (searchParams.get("code") !== code) return;
                 localStorage.setItem("accessToken", result.accessToken);
                 localStorage.setItem("refreshToken", result.refreshToken);
                 setUser(result.user);
                 router.replace("/projects");
             })
             .catch(() => {
-                setLoading(false);
+                if (searchParams.get("code") !== code) return;
+                logout();
                 router.replace("/login?error=oauth_failed");
+            })
+            .finally(() => {
+                inFlight.delete(code);
             });
-    }, [searchParams, router, setUser, setLoading]);
+    }, [searchParams, router, setUser, logout]);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-background">
