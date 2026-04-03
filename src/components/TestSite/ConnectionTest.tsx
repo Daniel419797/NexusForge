@@ -62,7 +62,7 @@ export default function ConnectionTest({ onLog }: ConnectionTestProps) {
     setResponse(null);
     const start = Date.now();
     try {
-      const res = await testApi.get("/");
+      const res = await testApi.get("/health");
       const responseTime = Date.now() - start;
       const apiResponse: ApiResponse = {
         status: res.status,
@@ -114,7 +114,7 @@ export default function ConnectionTest({ onLog }: ConnectionTestProps) {
           className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
         >
           <Zap className="w-4 h-4" />
-          Health Check (GET /)
+          Health Check (GET /health)
         </button>
         <button
           onClick={testConnection}
