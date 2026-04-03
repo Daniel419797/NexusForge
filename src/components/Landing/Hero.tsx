@@ -87,8 +87,8 @@ export default function Hero() {
                 className="absolute inset-0 opacity-0"
                 style={{
                     backgroundImage: `
-            linear-gradient(hsl(265 90% 67% / 0.04) 1px, transparent 1px),
-            linear-gradient(90deg, hsl(265 90% 67% / 0.04) 1px, transparent 1px)
+            linear-gradient(hsl(353 72% 53% / 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(353 72% 53% / 0.04) 1px, transparent 1px)
           `,
                     backgroundSize: "60px 60px",
                 }}
@@ -100,7 +100,7 @@ export default function Hero() {
                 className="absolute top-[15%] left-[10%] w-[500px] h-[500px] rounded-full opacity-20 blur-[120px]"
                 style={{
                     background:
-                        "radial-gradient(circle, hsl(265 90% 67%) 0%, transparent 70%)",
+                        "radial-gradient(circle, hsl(353 72% 53%) 0%, transparent 70%)",
                 }}
             />
             <div
@@ -179,3 +179,4 @@ export default function Hero() {
         </section>
     );
 }
+

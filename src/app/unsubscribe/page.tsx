@@ -34,7 +34,7 @@ function UnsubscribeContent() {
       <div className="max-w-md mx-auto px-6 text-center">
         {status === "loading" && (
           <div>
-            <div className="w-10 h-10 mx-auto mb-4 rounded-full border-2 border-purple-500 border-t-transparent animate-spin" />
+            <div className="w-10 h-10 mx-auto mb-4 rounded-full border-2 border-white/30 border-t-transparent animate-spin" />
             <p className="text-sm text-white/50">Processing your unsubscribe request...</p>
           </div>
         )}
@@ -53,7 +53,7 @@ function UnsubscribeContent() {
             </p>
             <Link
               href="/"
-              className="inline-flex items-center px-5 py-2 text-sm font-medium rounded-xl bg-purple-500 text-white hover:bg-purple-400 transition-colors"
+              className="inline-flex items-center px-5 py-2 text-sm font-medium rounded-xl bg-rose-600 text-white hover:bg-rose-500 transition-colors"
             >
               Back to Home
             </Link>
@@ -74,7 +74,7 @@ function UnsubscribeContent() {
             </p>
             <Link
               href="/login"
-              className="inline-flex items-center px-5 py-2 text-sm font-medium rounded-xl bg-purple-500 text-white hover:bg-purple-400 transition-colors"
+              className="inline-flex items-center px-5 py-2 text-sm font-medium rounded-xl bg-rose-600 text-white hover:bg-rose-500 transition-colors"
             >
               Sign In
             </Link>
@@ -89,7 +89,7 @@ function UnsubscribeContent() {
             </p>
             <Link
               href="/login"
-              className="inline-flex items-center px-5 py-2 text-sm font-medium rounded-xl bg-purple-500 text-white hover:bg-purple-400 transition-colors"
+              className="inline-flex items-center px-5 py-2 text-sm font-medium rounded-xl bg-rose-600 text-white hover:bg-rose-500 transition-colors"
             >
               Sign In
             </Link>
@@ -104,7 +104,7 @@ export default function UnsubscribePage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full border-2 border-purple-500 border-t-transparent animate-spin" />
+        <div className="w-10 h-10 rounded-full border-2 border-white/30 border-t-transparent animate-spin" />
       </div>
     }>
       <UnsubscribeContent />

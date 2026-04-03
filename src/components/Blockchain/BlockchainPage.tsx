@@ -85,7 +85,7 @@ export default function BlockchainPage() {
                             onClick={() => setActiveTab(tab)}
                             className={`px-5 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
                                 activeTab === tab
-                                    ? "bg-white/[0.08] text-white shadow-[0_0_12px_rgba(0,245,255,0.1)]"
+                                    ? "bg-white/[0.08] text-white"
                                     : "text-white/50 hover:text-white/70"
                             }`}
                         >

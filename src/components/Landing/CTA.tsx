@@ -38,7 +38,7 @@ export default function CTA() {
                 className="absolute inset-0 opacity-30"
                 style={{
                     background:
-                        "radial-gradient(ellipse at 50% 50%, hsl(265 90% 67% / 0.15), transparent 70%)",
+                        "radial-gradient(ellipse at 50% 50%, hsl(353 72% 53% / 0.15), transparent 70%)",
                 }}
             />
 
@@ -77,3 +77,4 @@ export default function CTA() {
         </section>
     );
 }
+

@@ -62,14 +62,14 @@ export default function GlassSidebar({
         initial={false}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         style={{
-          background: "linear-gradient(180deg, rgba(10,12,28,0.97) 0%, rgba(6,8,20,0.98) 100%)",
-          borderRight: "1px solid rgba(255,255,255,0.04)",
+          background: "rgba(10,10,12,0.98)",
+          borderRight: "1px solid rgba(255,255,255,0.05)",
         }}
       >
         {/* ── Logo ── */}
         <div
           className="flex h-16 items-center gap-3 px-4 shrink-0"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
         >
           {/* Close button — mobile only */}
           <button
@@ -85,10 +85,11 @@ export default function GlassSidebar({
           {/* Orb */}
           <div
             className="h-9 w-9 shrink-0 rounded-xl flex items-center justify-center"
-            style={{
-              background: "rgba(168,85,247,0.35)",
-              boxShadow: "0 0 16px rgba(168,85,247,0.15)",
-            }}
+            style={
+              {
+                background: "rgba(220,50,78,0.15)",
+              }
+            }
           >
             <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2}>
               <path d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -116,8 +117,8 @@ export default function GlassSidebar({
             <motion.div
               className="mx-3 mt-3 rounded-lg px-3 py-2"
               style={{
-                background: "rgba(168,85,247,0.08)",
-                border: "1px solid rgba(168,85,247,0.12)",
+                background: "rgba(220,50,78,0.06)",
+                border: "1px solid rgba(220,50,78,0.1)",
               }}
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -152,9 +153,8 @@ export default function GlassSidebar({
                     layoutId="sidebar-active"
                     className="absolute inset-0 rounded-xl"
                     style={{
-                      background: "rgba(168,85,247,0.1)",
-                      border: "1px solid rgba(168,85,247,0.15)",
-                      boxShadow: "0 0 20px rgba(168,85,247,0.06)",
+                      background: "rgba(220,50,78,0.08)",
+                      border: "1px solid rgba(220,50,78,0.12)",
                     }}
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
                   />
@@ -164,7 +164,7 @@ export default function GlassSidebar({
                 {isActive && (
                   <motion.span
                     className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-full"
-                    style={{ background: "rgba(168,85,247,0.7)" }}
+                    style={{ background: "rgba(220,50,78,0.72)" }}
                     layoutId="sidebar-bar"
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
                   />
@@ -190,7 +190,7 @@ export default function GlassSidebar({
                 {collapsed && !mobileOpen && (
                   <div className="pointer-events-none absolute left-full ml-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-white/80 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block"
                     style={{
-                      background: "rgba(10,12,28,0.95)",
+                    background: "rgba(10,10,12,0.97)",
                       border: "1px solid rgba(255,255,255,0.08)",
                       boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
                     }}
@@ -204,7 +204,7 @@ export default function GlassSidebar({
         </nav>
 
         {/* ── Collapse toggle (desktop only) ── */}
-        <div className="shrink-0 px-2 pb-4 pt-2 hidden md:block" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+        <div className="shrink-0 px-2 pb-4 pt-2 hidden md:block" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
           <button
             onClick={onToggleCollapse}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}

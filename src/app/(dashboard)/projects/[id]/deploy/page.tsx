@@ -35,7 +35,7 @@ const DEPLOY_STATUS_COLORS: Record<string, string> = {
     pending: "bg-zinc-700 text-zinc-300",
     validating: "bg-blue-600/20 text-blue-400",
     provisioning: "bg-amber-600/20 text-amber-400",
-    activating: "bg-violet-600/20 text-violet-400",
+    activating: "bg-rose-600/20 text-rose-400",
     live: "bg-emerald-600/20 text-emerald-400",
     failed: "bg-red-600/20 text-red-400",
     rolled_back: "bg-orange-600/20 text-orange-400",

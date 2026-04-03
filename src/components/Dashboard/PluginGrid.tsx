@@ -58,9 +58,9 @@ function resolveIcon(meta: PluginMeta): string {
 }
 
 const ACCENT_BG: Record<string, string> = {
-  cyan: "rgba(0,245,255,0.06)",
-  purple: "rgba(168,85,247,0.06)",
-  magenta: "rgba(255,0,170,0.06)",
+  cyan: "rgba(0,245,255,0.04)",
+  purple: "rgba(220,50,78,0.06)",
+  magenta: "rgba(220,50,78,0.06)",
   emerald: "rgba(16,185,129,0.06)",
   amber: "rgba(245,158,11,0.06)",
 };

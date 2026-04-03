@@ -94,8 +94,8 @@ export default function ProjectsPage() {
                             onClick={() => setCreateOpen(true)}
                             className="shrink-0 text-sm font-semibold"
                             style={{
-                                background: "linear-gradient(135deg, rgba(168,85,247,0.35), rgba(0,245,255,0.25))",
-                                border: "1px solid rgba(168,85,247,0.25)",
+                                background: "rgba(220,50,78,0.15)",
+                                border: "1px solid rgba(220,50,78,0.25)",
                             }}
                         >
                             + New Project
@@ -113,7 +113,7 @@ export default function ProjectsPage() {
             >
                 {([
                     { label: "Total Projects", value: stats?.totalProjects ?? projects.length, color: "text-cyan-400" },
-                    { label: "API Requests (24h)", value: stats?.apiRequests24h ?? 0, color: "text-purple-400" },
+                    { label: "API Requests (24h)", value: stats?.apiRequests24h ?? 0, color: "text-white/70" },
                     { label: "Active Users", value: stats?.activeUsers ?? 0, color: "text-emerald-400" },
                 ] as const).map(({ label, value, color }) => (
                     <div key={label} className="flex-1 px-6 py-4">
@@ -347,8 +347,8 @@ function TabButton({
             style={
                 active
                     ? {
-                          background: "rgba(168,85,247,0.12)",
-                          border: "1px solid rgba(168,85,247,0.15)",
+                          background: "rgba(220,50,78,0.10)",
+                          border: "1px solid rgba(220,50,78,0.18)",
                       }
                     : { background: "transparent", border: "1px solid transparent" }
             }

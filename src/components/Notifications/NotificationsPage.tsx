@@ -113,9 +113,9 @@ export default function NotificationsPage() {
             {/* Unread badge */}
             {unreadCount > 0 && (
                 <ScrollReveal direction="left" delay={0.1} className="mb-6">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20">
-                        <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-                        <span className="text-xs text-purple-300 font-medium">{unreadCount} unread</span>
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20">
+                        <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
+                        <span className="text-xs text-rose-300 font-medium">{unreadCount} unread</span>
                     </div>
                 </ScrollReveal>
             )}
@@ -221,12 +221,12 @@ export default function NotificationsPage() {
                 <AnimatePresence>
                     {!loading && notifications.map((notif, index) => (
                         <ScrollReveal key={notif.id} direction="up" delay={index * 0.04}>
-                            <div className={`rounded-xl border px-4 py-3 ${!notif.read ? "border-purple-500/20 bg-white/[0.02] ring-1 ring-purple-500/20" : "border-white/[0.06] bg-white/[0.02]"}`}>
+                            <div className={`rounded-xl border px-4 py-3 ${!notif.read ? "border-rose-500/20 bg-white/[0.02] ring-1 ring-rose-500/20" : "border-white/[0.06] bg-white/[0.02]"}`}>
                                 <div className="flex gap-3">
                                     {/* Unread indicator dot */}
                                     {!notif.read && (
                                         <div className="pt-1.5 shrink-0">
-                                            <span className="block w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
+                                            <span className="block w-2 h-2 rounded-full bg-rose-400" />
                                         </div>
                                     )}
                                     <div className="flex-1 min-w-0">

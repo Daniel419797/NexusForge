@@ -50,14 +50,14 @@ export default function Navbar() {
       <nav aria-label="Landing page navigation" className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="relative w-9 h-9 rounded-xl bg-purple-500 flex items-center justify-center overflow-hidden">
+          <div className="relative w-9 h-9 rounded-xl bg-rose-600 flex items-center justify-center overflow-hidden">
             <span className="text-white font-extrabold text-sm font-mono relative z-10">
               NF
             </span>
             <div className="absolute inset-0 bg-linear-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </div>
           <span className="text-lg font-bold tracking-tight">
-            <span className="text-purple-400">
+            <span className="text-rose-400">
               Nexus
             </span>
             <span className="text-white">Forge</span>
@@ -73,7 +73,7 @@ export default function Navbar() {
               className="text-sm text-white/40 hover:text-white transition-colors duration-200 relative group"
             >
               {link.label}
-              <span className="absolute -bottom-1 left-0 w-0 h-px bg-purple-500 group-hover:w-full transition-all duration-300" />
+              <span className="absolute -bottom-1 left-0 w-0 h-px bg-rose-600 group-hover:w-full transition-all duration-300" />
             </Link>
           ))}
 
@@ -93,7 +93,7 @@ export default function Navbar() {
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Link
                 href="/projects"
-                className="inline-flex items-center px-5 py-2 text-sm font-medium rounded-xl bg-purple-500 text-white hover:shadow-lg hover:shadow-purple-500/20 transition-shadow duration-300"
+                className="inline-flex items-center px-5 py-2 text-sm font-medium rounded-xl bg-rose-600 text-white hover:shadow-lg hover:shadow-rose-600/20 transition-shadow duration-300"
               >
                 Dashboard
               </Link>
@@ -110,7 +110,7 @@ export default function Navbar() {
               <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                 <Link
                   href="/register"
-                  className="inline-flex items-center px-5 py-2 text-sm font-medium rounded-xl bg-purple-500 text-white hover:shadow-lg hover:shadow-purple-500/20 transition-shadow duration-300"
+                  className="inline-flex items-center px-5 py-2 text-sm font-medium rounded-xl bg-rose-600 text-white hover:shadow-lg hover:shadow-rose-600/20 transition-shadow duration-300"
                 >
                   Get Started
                 </Link>
@@ -173,14 +173,14 @@ export default function Navbar() {
                 ) : isAuthenticated ? (
                   <Link
                     href="/projects"
-                    className="block w-full text-center px-5 py-2.5 text-sm font-medium rounded-xl bg-purple-500 text-white"
+                    className="block w-full text-center px-5 py-2.5 text-sm font-medium rounded-xl bg-rose-600 text-white"
                   >
                     Dashboard
                   </Link>
                 ) : (
                   <Link
                     href="/register"
-                    className="block w-full text-center px-5 py-2.5 text-sm font-medium rounded-xl bg-purple-500 text-white"
+                    className="block w-full text-center px-5 py-2.5 text-sm font-medium rounded-xl bg-rose-600 text-white"
                   >
                     Get Started
                   </Link>
@@ -193,3 +193,4 @@ export default function Navbar() {
     </motion.header>
   );
 }
+

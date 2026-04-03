@@ -79,7 +79,7 @@ export default function TechConstellation() {
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-4">
             Built With the{" "}
-            <span className="text-purple-400">
+            <span className="text-rose-400">
               Best
             </span>
           </h2>
@@ -226,3 +226,4 @@ export default function TechConstellation() {
     </section>
   );
 }
+

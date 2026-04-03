@@ -16,9 +16,9 @@ const demoSteps = [
     label: "AI Suggests Yield Strategy",
     detail: "NexusForge AI analyzes Base chain pools and recommends optimal yield allocation.",
     icon: "✦",
-    color: "text-purple-400",
-    borderColor: "border-purple-500/20",
-    bgColor: "bg-purple-500/[0.06]",
+    color: "text-rose-400",
+    borderColor: "border-rose-600/20",
+    bgColor: "bg-rose-600/[0.06]",
   },
   {
     id: 1,
@@ -68,7 +68,7 @@ function DemoLoop() {
 
         {/* Active progress */}
         <motion.div
-          className="absolute top-1/2 left-0 h-px bg-linear-to-r from-purple-500 via-cyan-500 to-emerald-500"
+          className="absolute top-1/2 left-0 h-px bg-linear-to-r from-rose-600 via-cyan-500 to-emerald-500"
           animate={{ width: `${(activeStep / (demoSteps.length - 1)) * 100}%` }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         />
@@ -127,8 +127,8 @@ function DemoLoop() {
           <div className="mt-4 rounded-lg bg-black/40 border border-white/4 p-3 font-mono text-[11px] text-white/40 overflow-x-auto">
             {activeStep === 0 && (
               <>
-                <span className="text-purple-400">const</span> suggestion{" "}
-                <span className="text-purple-400">=</span>{" "}
+                <span className="text-rose-400">const</span> suggestion{" "}
+                <span className="text-rose-400">=</span>{" "}
                 <span className="text-cyan-400">await</span> nexus.ai.
                 <span className="text-emerald-400">analyze</span>(
                 <span className="text-amber-300">&quot;base-yield&quot;</span>);
@@ -136,8 +136,8 @@ function DemoLoop() {
             )}
             {activeStep === 1 && (
               <>
-                <span className="text-purple-400">const</span> tx{" "}
-                <span className="text-purple-400">=</span>{" "}
+                <span className="text-rose-400">const</span> tx{" "}
+                <span className="text-rose-400">=</span>{" "}
                 <span className="text-cyan-400">await</span> nexus.blockchain.
                 <span className="text-emerald-400">signAndSend</span>(&#123; chain:{" "}
                 <span className="text-amber-300">&quot;base&quot;</span> &#125;);
@@ -145,8 +145,8 @@ function DemoLoop() {
             )}
             {activeStep === 2 && (
               <>
-                <span className="text-purple-400">const</span> payment{" "}
-                <span className="text-purple-400">=</span>{" "}
+                <span className="text-rose-400">const</span> payment{" "}
+                <span className="text-rose-400">=</span>{" "}
                 <span className="text-cyan-400">await</span> nexus.x402.
                 <span className="text-emerald-400">charge</span>(&#123; amount:{" "}
                 <span className="text-amber-300">0.001</span>, asset:{" "}
@@ -175,7 +175,7 @@ export default function Web3AISection() {
     <section className="relative py-24 sm:py-32 px-6 overflow-hidden">
       {/* Dark neon background */}
       <div className="absolute inset-0 bg-linear-to-b from-transparent via-fuchsia-500/2 to-transparent pointer-events-none" />
-      <div className="absolute top-0 left-1/4 w-125 h-125 rounded-full bg-purple-500/3 blur-[150px] pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-125 h-125 rounded-full bg-rose-600/3 blur-[150px] pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-100 h-100 rounded-full bg-cyan-500/3 blur-[120px] pointer-events-none" />
 
       <div className="max-w-5xl mx-auto" ref={ref}>
@@ -191,7 +191,7 @@ export default function Web3AISection() {
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-4">
             The{" "}
-            <span className="text-purple-400">
+            <span className="text-rose-400">
               Trifecta
             </span>{" "}
             of Modern Backend
@@ -256,3 +256,4 @@ export default function Web3AISection() {
     </section>
   );
 }
+

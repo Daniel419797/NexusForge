@@ -11,8 +11,8 @@ type Accent = "cyan" | "purple" | "magenta" | "emerald" | "amber";
 
 const COLORS: Record<Accent, { stroke: string; fill: string; glow: string }> = {
   cyan:    { stroke: "rgb(0,245,255)", fill: "rgba(0,245,255,0.08)", glow: "rgba(0,245,255,0.5)" },
-  purple:  { stroke: "rgb(168,85,247)", fill: "rgba(168,85,247,0.08)", glow: "rgba(168,85,247,0.5)" },
-  magenta: { stroke: "rgb(255,0,170)", fill: "rgba(255,0,170,0.08)", glow: "rgba(255,0,170,0.5)" },
+  purple:  { stroke: "rgb(220,50,78)", fill: "rgba(220,50,78,0.08)", glow: "rgba(220,50,78,0.4)" },
+  magenta: { stroke: "rgb(220,50,78)", fill: "rgba(220,50,78,0.08)", glow: "rgba(220,50,78,0.4)" },
   emerald: { stroke: "rgb(16,185,129)", fill: "rgba(16,185,129,0.08)", glow: "rgba(16,185,129,0.5)" },
   amber:   { stroke: "rgb(245,158,11)", fill: "rgba(245,158,11,0.08)", glow: "rgba(245,158,11,0.5)" },
 };

@@ -15,7 +15,7 @@ const TYPE_BADGE: Record<string, string> = {
   uuid: "text-cyan-400/70 bg-cyan-400/10",
   string: "text-emerald-400/70 bg-emerald-400/10",
   number: "text-amber-400/70 bg-amber-400/10",
-  enum: "text-purple-400/70 bg-purple-400/10",
+  enum: "text-blue-400/70 bg-blue-400/10",
   text: "text-rose-400/70 bg-rose-400/10",
   jsonb: "text-cyan-400/70 bg-cyan-400/10",
   boolean: "text-emerald-400/70 bg-emerald-400/10",

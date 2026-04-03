@@ -11,8 +11,8 @@ type Accent = "cyan" | "purple" | "magenta" | "emerald" | "amber";
 
 const PALETTE: Record<Accent, { wire: string; fill: string; top: string }> = {
   cyan:    { wire: "rgba(0,245,255,0.35)", fill: "rgba(0,245,255,0.18)", top: "rgba(0,245,255,0.30)" },
-  purple:  { wire: "rgba(168,85,247,0.35)", fill: "rgba(168,85,247,0.18)", top: "rgba(168,85,247,0.30)" },
-  magenta: { wire: "rgba(255,0,170,0.35)", fill: "rgba(255,0,170,0.18)", top: "rgba(255,0,170,0.30)" },
+  purple:  { wire: "rgba(220,50,78,0.35)", fill: "rgba(220,50,78,0.15)", top: "rgba(220,50,78,0.28)" },
+  magenta: { wire: "rgba(220,50,78,0.35)", fill: "rgba(220,50,78,0.15)", top: "rgba(220,50,78,0.28)" },
   emerald: { wire: "rgba(16,185,129,0.35)", fill: "rgba(16,185,129,0.18)", top: "rgba(16,185,129,0.30)" },
   amber:   { wire: "rgba(245,158,11,0.35)", fill: "rgba(245,158,11,0.18)", top: "rgba(245,158,11,0.30)" },
 };

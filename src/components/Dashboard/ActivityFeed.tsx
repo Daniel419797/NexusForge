@@ -18,7 +18,7 @@ const TYPE_COLORS: Record<ActivityType, { dot: string; text: string }> = {
   deploy: { dot: "bg-cyan-400", text: "text-cyan-400/80" },
   update: { dot: "bg-amber-400", text: "text-amber-400/80" },
   delete: { dot: "bg-rose-400", text: "text-rose-400/80" },
-  ai: { dot: "bg-purple-400", text: "text-purple-400/80" },
+  ai: { dot: "bg-rose-400", text: "text-rose-400/80" },
 };
 
 /** Map audit-log action strings to display type */
@@ -103,7 +103,7 @@ export default function ActivityFeed() {
         ) : error ? (
           <div className="py-8 text-center">
             <p className="text-xs text-white/25">Failed to load activity</p>
-            <button onClick={fetchActivity} className="mt-2 text-xs text-purple-400/60 hover:text-purple-400/80 transition-colors">
+            <button onClick={fetchActivity} className="mt-2 text-xs text-white/30 hover:text-white/50 transition-colors">
               Retry
             </button>
           </div>

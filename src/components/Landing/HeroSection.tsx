@@ -60,7 +60,7 @@ function HoloDashboard() {
         {/* Main card */}
         <div className="relative rounded-2xl border border-white/[0.08] bg-[rgba(8,10,25,0.85)] p-4 sm:p-6 shadow-2xl">
           {/* Glow behind */}
-          <div className="absolute -inset-1 rounded-2xl bg-purple-500/20 blur-xl opacity-60" />
+          <div className="absolute -inset-1 rounded-2xl bg-rose-600/20 blur-xl opacity-60" />
 
           <div className="relative z-10">
             {/* Title bar */}
@@ -78,7 +78,7 @@ function HoloDashboard() {
               {[
                 { label: "Active Projects", value: "12", color: "text-cyan-400" },
                 { label: "WebSocket Conns", value: "1.2k", color: "text-fuchsia-400" },
-                { label: "AI Queries", value: "48k", color: "text-purple-400" },
+                { label: "AI Queries", value: "48k", color: "text-rose-400" },
               ].map((stat) => (
                 <div
                   key={stat.label}
@@ -94,7 +94,7 @@ function HoloDashboard() {
 
             {/* Fake code / AI chat line */}
             <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 flex items-center gap-3">
-              <div className="w-6 h-6 rounded-lg bg-purple-500 flex items-center justify-center flex-shrink-0">
+              <div className="w-6 h-6 rounded-lg bg-rose-600 flex items-center justify-center flex-shrink-0">
                 <svg aria-hidden="true" className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                 </svg>
@@ -159,7 +159,7 @@ export default function Hero() {
       // Glitch flash on certain words
       tl.to(".hero-accent", {
         textShadow:
-          "0 0 20px rgba(0,240,255,0.6), 0 0 40px rgba(168,85,247,0.4), 0 0 80px rgba(255,0,229,0.2)",
+          "0 0 20px rgba(0,240,255,0.6), 0 0 40px rgba(220,50,78,0.4), 0 0 80px rgba(255,0,229,0.2)",
         duration: 0.6,
         ease: "power2.out",
       }, "-=0.3");
@@ -214,7 +214,7 @@ export default function Hero() {
             {line1Words.map((word, i) => (
               <span
                 key={i}
-                className={`hero-word inline-block mr-[0.25em] opacity-0 ${word === "Forge" ? "hero-accent text-purple-400" : "text-white"}`}
+                className={`hero-word inline-block mr-[0.25em] opacity-0 ${word === "Forge" ? "hero-accent text-rose-400" : "text-white"}`}
               >
                 {word}
               </span>
@@ -232,7 +232,7 @@ export default function Hero() {
             {line3Words.map((word, i) => (
               <span
                 key={i}
-                className={`hero-word inline-block mr-[0.25em] opacity-0 ${word === "Power." ? "hero-accent text-purple-400" : "text-white/70"}`}
+                className={`hero-word inline-block mr-[0.25em] opacity-0 ${word === "Power." ? "hero-accent text-rose-400" : "text-white/70"}`}
               >
                 {word}
               </span>
@@ -299,3 +299,4 @@ export default function Hero() {
     </section>
   );
 }
+

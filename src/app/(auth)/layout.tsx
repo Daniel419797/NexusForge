@@ -57,7 +57,7 @@ export default function AuthLayout({
                 className="absolute top-[15%] left-[10%] w-[500px] h-[500px] rounded-full pointer-events-none"
                 style={{
                     background:
-                        "radial-gradient(circle, hsl(265 90% 67% / 0.12) 0%, transparent 70%)",
+                        "radial-gradient(circle, hsl(353 72% 53% / 0.10) 0%, transparent 70%)",
                 }}
             />
             <div
