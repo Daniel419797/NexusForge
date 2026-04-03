@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Link2, Wallet, ArrowRightLeft, Image, RefreshCw, Plus } from "lucide-react";
+import { Link2, Wallet, ArrowRightLeft, Image as ImageIcon, RefreshCw, Plus } from "lucide-react";
 import testApi from "@/services/testApi";
 import ResponsePanel, { ApiResponse } from "./ResponsePanel";
 import { LogEntry } from "./RequestLog";
@@ -64,7 +64,7 @@ export default function BlockchainTest({ onLog }: BlockchainTestProps) {
         </div>
 
         <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">
-          <div className="flex items-center gap-2 text-sm font-medium text-slate-200"><Image className="w-4 h-4 text-yellow-400" /> NFTs</div>
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-200"><ImageIcon className="w-4 h-4 text-yellow-400" /> NFTs</div>
           <div className="text-xs text-slate-500 font-mono">GET /blockchain/nfts</div>
           <button onClick={() => run("get", "/blockchain/nfts")} disabled={loading} className="w-full bg-yellow-600 hover:bg-yellow-500 disabled:opacity-50 text-white py-1.5 rounded text-xs font-medium transition-colors flex items-center justify-center gap-1"><RefreshCw className="w-3 h-3" /> Fetch NFTs</button>
         </div>
