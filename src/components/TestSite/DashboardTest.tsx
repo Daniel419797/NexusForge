@@ -35,6 +35,13 @@ export default function DashboardTest({ onLog }: DashboardTestProps) {
     setLoading(false);
   };
 
+  const colorClasses: Record<string, { icon: string; btn: string }> = {
+    violet: { icon: "text-violet-400", btn: "bg-violet-600 hover:bg-violet-500" },
+    blue:   { icon: "text-blue-400",   btn: "bg-blue-600 hover:bg-blue-500" },
+    emerald:{ icon: "text-emerald-400",btn: "bg-emerald-600 hover:bg-emerald-500" },
+    orange: { icon: "text-orange-400", btn: "bg-orange-600 hover:bg-orange-500" },
+  };
+
   const endpoints = [
     { label: "Dashboard Stats", icon: BarChart3, color: "violet", url: "/dashboard/stats" },
     { label: "Activity Feed", icon: Activity, color: "blue", url: "/dashboard/activity" },
@@ -45,22 +52,25 @@ export default function DashboardTest({ onLog }: DashboardTestProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {endpoints.map((ep) => (
+        {endpoints.map((ep) => {
+          const colors = colorClasses[ep.color];
+          return (
           <div key={ep.url} className="bg-slate-800/50 rounded-lg p-3 space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
-              <ep.icon className={`w-4 h-4 text-${ep.color}-400`} />
+              <ep.icon className={`w-4 h-4 ${colors.icon}`} />
               {ep.label}
             </div>
             <div className="text-xs text-slate-500 font-mono">GET {ep.url}</div>
             <button
               onClick={() => run(ep.url)}
               disabled={loading}
-              className={`w-full bg-${ep.color}-600 hover:bg-${ep.color}-500 disabled:opacity-50 text-white py-1.5 rounded text-xs font-medium transition-colors flex items-center justify-center gap-1`}
+              className={`w-full ${colors.btn} disabled:opacity-50 text-white py-1.5 rounded text-xs font-medium transition-colors flex items-center justify-center gap-1`}
             >
               <RefreshCw className="w-3 h-3" /> Fetch
             </button>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <ResponsePanel response={response} loading={loading} />
