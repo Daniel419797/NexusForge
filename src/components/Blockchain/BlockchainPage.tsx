@@ -6,7 +6,6 @@ import BlockchainService, { type Wallet, type Transaction, type NFT } from "@/se
 import WalletCard from "@/components/Blockchain/WalletCard";
 import TxTable from "@/components/Blockchain/TxTable";
 import NFTGallery from "@/components/Blockchain/NFTGallery";
-import GlassPanel from "@/components/Dashboard/GlassPanel";
 import ElectricRippleButton from "@/components/Dashboard/ElectricRippleButton";
 import ScrollReveal from "@/components/Dashboard/ScrollReveal";
 
@@ -67,9 +66,7 @@ export default function BlockchainPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {wallets.length === 0 && !loading && (
                     <ScrollReveal className="col-span-full">
-                        <GlassPanel accent="purple">
-                            <p className="text-white/50 text-sm text-center py-6">No wallets generated yet.</p>
-                        </GlassPanel>
+                        <p className="text-white/50 text-sm text-center py-6">No wallets generated yet.</p>
                     </ScrollReveal>
                 )}
                 {wallets.map((w, i) => (
@@ -101,25 +98,25 @@ export default function BlockchainPage() {
             {/* Tab content */}
             {activeTab === "transactions" && (
                 <ScrollReveal direction="up" delay={0.05}>
-                    <GlassPanel accent="cyan">
+                    <div>
                         <div className="mb-4">
                             <h2 className="text-lg font-semibold text-white">Recent Transactions</h2>
                             <p className="text-xs text-white/40 mt-1">On-chain activity across all project wallets.</p>
                         </div>
                         <TxTable transactions={transactions} loading={loading} />
-                    </GlassPanel>
+                    </div>
                 </ScrollReveal>
             )}
 
             {activeTab === "nfts" && (
                 <ScrollReveal direction="up" delay={0.05}>
-                    <GlassPanel accent="purple">
+                    <div>
                         <div className="mb-4">
                             <h2 className="text-lg font-semibold text-white">Project NFTs</h2>
                             <p className="text-xs text-white/40 mt-1">Digital assets minted or owned by this project.</p>
                         </div>
                         <NFTGallery nfts={nfts} loading={loading} />
-                    </GlassPanel>
+                    </div>
                 </ScrollReveal>
             )}
         </div>

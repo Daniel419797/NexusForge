@@ -18,23 +18,11 @@ import ProjectService from "@/services/ProjectService";
 import DashboardService, { type DashboardStats } from "@/services/DashboardService";
 import { useProjectStore } from "@/store/projectStore";
 
-import GlassPanel from "@/components/Dashboard/GlassPanel";
-import StatCard from "@/components/Dashboard/StatCard";
 import WizardCTA from "@/components/Dashboard/WizardCTA";
 import ActivityFeed from "@/components/Dashboard/ActivityFeed";
 import ModelExplorer from "@/components/Dashboard/ModelExplorer";
 import PluginGrid from "@/components/Dashboard/PluginGrid";
 // Non-core features hidden: BlockchainStatus, X402Panel, AIAssistantOrb
-
-/* ── Stagger animation helpers ── */
-const stagger = {
-    hidden: {},
-    show: { transition: { staggerChildren: 0.08 } },
-};
-const fadeUp = {
-    hidden: { opacity: 0, y: 16 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
-};
 
 export default function ProjectsPage() {
     const { projects, setProjects, setActiveProject } = useProjectStore();
@@ -116,55 +104,23 @@ export default function ProjectsPage() {
                 </div>
             </motion.div>
 
-            {/* ────── Stat cards row ────── */}
+            {/* ────── Stat strip ────── */}
             <motion.div
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-                variants={stagger}
-                initial="hidden"
-                animate="show"
+                className="flex divide-x divide-white/[0.06] border border-white/[0.06] rounded-xl overflow-hidden"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
             >
-                <motion.div variants={fadeUp}>
-                    <StatCard
-                        label="Total Projects"
-                        value={stats?.totalProjects ?? projects.length}
-                        accent="cyan"
-                        trend="up"
-                        trendLabel={`${projects.length}`}
-                        icon={
-                            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(0,245,255,0.7)" strokeWidth={1.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
-                            </svg>
-                        }
-                    />
-                </motion.div>
-                <motion.div variants={fadeUp}>
-                    <StatCard
-                        label="API Requests (24h)"
-                        value={stats?.apiRequests24h ?? 0}
-                        accent="purple"
-                        trend="up"
-                        trendLabel="24h"
-                        icon={
-                            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,0.7)" strokeWidth={1.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-                            </svg>
-                        }
-                    />
-                </motion.div>
-                <motion.div variants={fadeUp}>
-                    <StatCard
-                        label="Active Users"
-                        value={stats?.activeUsers ?? 0}
-                        accent="emerald"
-                        trend="up"
-                        trendLabel="24h"
-                        icon={
-                            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(16,185,129,0.7)" strokeWidth={1.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-                            </svg>
-                        }
-                    />
-                </motion.div>
+                {([
+                    { label: "Total Projects", value: stats?.totalProjects ?? projects.length, color: "text-cyan-400" },
+                    { label: "API Requests (24h)", value: stats?.apiRequests24h ?? 0, color: "text-purple-400" },
+                    { label: "Active Users", value: stats?.activeUsers ?? 0, color: "text-emerald-400" },
+                ] as const).map(({ label, value, color }) => (
+                    <div key={label} className="flex-1 px-6 py-4">
+                        <p className={`text-2xl font-bold tabular-nums ${color}`}>{value.toLocaleString()}</p>
+                        <p className="text-xs text-white/30 mt-0.5">{label}</p>
+                    </div>
+                ))}
             </motion.div>
 
             {/* ────── Wizard CTA ────── */}
@@ -200,7 +156,7 @@ export default function ProjectsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
             >
-                <GlassPanel accent="cyan" hover3d={false}>
+                <div>
                     {/* Tabs */}
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
@@ -347,7 +303,7 @@ export default function ProjectsPage() {
                             </div>
                         </>
                     )}
-                </GlassPanel>
+                </div>
             </motion.div>
 
             {/* ────── Plugin Grid ────── */}
