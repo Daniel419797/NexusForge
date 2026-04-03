@@ -13,11 +13,11 @@ export default function TermsOfServicePage() {
       <header className="border-b border-white/6 bg-black/40 backdrop-blur-xl sticky top-0 z-50">
         <nav className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-xl bg-purple-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-rose-600 flex items-center justify-center">
               <span className="text-white font-bold text-xs font-mono">NF</span>
             </div>
             <span className="text-sm font-bold">
-              <span className="text-purple-400">Nexus</span>Forge
+              <span className="text-rose-400">Nexus</span>Forge
             </span>
           </Link>
           <Link href="/privacy" className="text-xs text-white/40 hover:text-white/60 transition-colors">

@@ -279,8 +279,8 @@ export default function OnboardingPage() {
                         disabled={!canProceed()}
                         className="gap-2"
                         style={{
-                            background: "linear-gradient(135deg, rgba(168,85,247,0.35), rgba(0,245,255,0.25))",
-                            border: "1px solid rgba(168,85,247,0.25)",
+                            background: "rgba(220,50,78,0.15)",
+                            border: "1px solid rgba(220,50,78,0.25)",
                         }}
                     >
                         Continue
@@ -597,8 +597,8 @@ function StepLaunch({
                         disabled={creating}
                         className="gap-2 px-6"
                         style={{
-                            background: "linear-gradient(135deg, rgba(168,85,247,0.4), rgba(0,245,255,0.3))",
-                            border: "1px solid rgba(168,85,247,0.3)",
+                            background: "rgba(220,50,78,0.15)",
+                            border: "1px solid rgba(220,50,78,0.25)",
                         }}
                     >
                         {creating ? (
@@ -618,7 +618,7 @@ function StepLaunch({
                         onClick={onFinish}
                         className="gap-2 px-6"
                         style={{
-                            background: "linear-gradient(135deg, rgba(16,185,129,0.35), rgba(0,245,255,0.25))",
+                            background: "rgba(16,185,129,0.15)",
                             border: "1px solid rgba(16,185,129,0.25)",
                         }}
                     >

@@ -29,8 +29,8 @@ export interface StreamConfig {
 
 const COLORS: Record<Accent, { stroke: string; fill: string; glow: string }> = {
   cyan:    { stroke: "rgb(0,245,255)",   fill: "rgba(0,245,255,0.06)",   glow: "rgba(0,245,255,0.40)" },
-  purple:  { stroke: "rgb(168,85,247)",  fill: "rgba(168,85,247,0.06)",  glow: "rgba(168,85,247,0.40)" },
-  magenta: { stroke: "rgb(255,0,170)",   fill: "rgba(255,0,170,0.06)",   glow: "rgba(255,0,170,0.40)" },
+  purple:  { stroke: "rgb(220,50,78)",   fill: "rgba(220,50,78,0.06)",   glow: "rgba(220,50,78,0.35)" },
+  magenta: { stroke: "rgb(220,50,78)",   fill: "rgba(220,50,78,0.06)",   glow: "rgba(220,50,78,0.35)" },
   emerald: { stroke: "rgb(16,185,129)",  fill: "rgba(16,185,129,0.06)",  glow: "rgba(16,185,129,0.40)" },
   amber:   { stroke: "rgb(245,158,11)",  fill: "rgba(245,158,11,0.06)",  glow: "rgba(245,158,11,0.40)" },
 };
@@ -526,7 +526,7 @@ function RealtimeStreamChartInner({
       <div
         className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none"
         style={{
-          background: `linear-gradient(to top, rgba(168,85,247,0.04), transparent)`,
+          background: `linear-gradient(to top, rgba(220,50,78,0.04), transparent)`,
         }}
       />
     </motion.div>

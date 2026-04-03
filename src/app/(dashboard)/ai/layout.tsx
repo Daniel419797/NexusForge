@@ -31,7 +31,7 @@ export default function AILayout({ children }: { children: React.ReactNode }) {
                                 href={tab.href}
                                 className={`px-5 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
                                     isActive
-                                        ? "bg-white/[0.08] text-white shadow-[0_0_12px_rgba(168,85,247,0.15)]"
+                                        ? "bg-white/[0.08] text-white"
                                         : "text-white/50 hover:text-white/70"
                                 }`}
                             >

@@ -112,6 +112,28 @@ api.interceptors.response.use(
     }
 );
 
+// ── 503 Retry: handle Render free-tier hibernation wake delay ──
+// When the backend is cold-starting (Render wakes it), it briefly returns 503.
+// We retry up to 3 times with growing delays so the user's request succeeds
+// once the service is up, rather than showing an immediate error.
+const MAX_503_RETRIES = 3;
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+        const retries: number = originalRequest._503Retries ?? 0;
+
+        if (error.response?.status === 503 && retries < MAX_503_RETRIES) {
+            originalRequest._503Retries = retries + 1;
+            const delayMs = 3000 * originalRequest._503Retries; // 3s, 6s, 9s
+            await new Promise<void>((resolve) => setTimeout(resolve, delayMs));
+            return api(originalRequest);
+        }
+
+        return Promise.reject(error);
+    },
+);
+
 // ── Separate interceptor for global error toasts ──
 api.interceptors.response.use(
     (response) => response,

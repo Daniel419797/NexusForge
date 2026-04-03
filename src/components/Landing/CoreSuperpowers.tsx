@@ -96,8 +96,8 @@ const superpowers = [
             viewport={{ once: true }}
             className="flex-1 text-center"
           >
-            <div className="w-3 h-3 rounded-full bg-purple-500/30 border border-purple-500/30 mx-auto mb-1" />
-            <span className="text-[8px] sm:text-[9px] font-mono text-purple-400/60 leading-tight block">{step}</span>
+            <div className="w-3 h-3 rounded-full bg-rose-600/30 border border-rose-600/30 mx-auto mb-1" />
+            <span className="text-[8px] sm:text-[9px] font-mono text-rose-400/60 leading-tight block">{step}</span>
           </motion.div>
         ))}
       </div>
@@ -170,7 +170,7 @@ export default function CoreSuperpowers() {
   return (
     <section id="features" className="relative py-24 sm:py-32 px-6 overflow-hidden">
       {/* Background neon accent */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 rounded-full bg-purple-500/4 blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 rounded-full bg-rose-600/4 blur-[120px] pointer-events-none" />
 
       <div className="max-w-6xl mx-auto" ref={ref}>
         {/* Section header */}
@@ -184,7 +184,7 @@ export default function CoreSuperpowers() {
             Core Superpowers
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-4">
-            <span className="text-purple-400">
+            <span className="text-rose-400">
               Everything
             </span>{" "}
             You Need. Nothing You Don&apos;t.
@@ -224,7 +224,7 @@ export default function CoreSuperpowers() {
                         ? "bg-cyan-500/10 text-cyan-400"
                         : power.color === "magenta"
                           ? "bg-fuchsia-500/10 text-fuchsia-400"
-                          : "bg-purple-500/10 text-purple-400"
+                          : "bg-rose-600/10 text-rose-400"
                     }`}
                   >
                     {power.icon}
@@ -240,7 +240,7 @@ export default function CoreSuperpowers() {
                         ? "text-cyan-400/60"
                         : power.color === "magenta"
                           ? "text-fuchsia-400/60"
-                          : "text-purple-400/60"
+                          : "text-rose-400/60"
                     }`}
                   >
                     {power.subtitle}
@@ -279,3 +279,4 @@ export default function CoreSuperpowers() {
     </section>
   );
 }
+

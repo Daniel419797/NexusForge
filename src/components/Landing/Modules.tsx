@@ -12,14 +12,14 @@ const modules = [
         tag: "Core",
         description: "Register, login, OAuth, JWT tokens, RBAC.",
         endpoint: "/api/v1/auth",
-        color: "hsl(265 90% 67%)",
+        color: "hsl(353 72% 53%)",
     },
     {
         name: "Projects",
         tag: "Core",
         description: "Multi-tenant project management, templates, configs.",
         endpoint: "/api/v1/projects",
-        color: "hsl(265 83% 57%)",
+        color: "hsl(353 60% 45%)",
     },
     {
         name: "Real-time Chat",
@@ -54,7 +54,7 @@ const modules = [
         tag: "Extensibility",
         description: "Browse, install, configure, and submit plugin ideas.",
         endpoint: "/api/v1/plugins",
-        color: "hsl(265 85% 75%)",
+        color: "hsl(353 72% 65%)",
     },
     {
         name: "x402 Payments",
@@ -156,3 +156,4 @@ export default function Modules() {
         </section>
     );
 }
+

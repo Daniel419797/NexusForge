@@ -44,8 +44,8 @@ export default function GlassTopBar({
     <motion.header
       className="sticky top-0 z-30 flex h-16 items-center justify-between px-4 md:px-6"
       style={{
-        background: "linear-gradient(90deg, rgba(10,12,28,0.92), rgba(8,10,25,0.88))",
-        borderBottom: "1px solid rgba(255,255,255,0.04)",
+        background: "rgba(10,10,12,0.92)",
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
       }}
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
@@ -125,7 +125,7 @@ export default function GlassTopBar({
             <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
           </svg>
           {/* Notification dot */}
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full" style={{ background: "rgba(255,0,170,0.8)" }} />
+          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full" style={{ background: "rgba(220,50,78,0.9)" }} />
         </motion.button>
 
         {/* User avatar */}
@@ -138,8 +138,8 @@ export default function GlassTopBar({
           <div
             className="flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold text-white/80 transition-all"
             style={{
-              background: "rgba(168,85,247,0.3)",
-              border: "1px solid rgba(168,85,247,0.2)",
+              background: "rgba(220,50,78,0.18)",
+              border: "1px solid rgba(220,50,78,0.15)",
             }}
           >
             {initials}

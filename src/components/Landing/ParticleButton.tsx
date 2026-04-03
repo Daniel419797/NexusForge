@@ -76,7 +76,7 @@ export default function ParticleButton({
 
   const baseClasses =
     variant === "primary"
-      ? "relative inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-semibold rounded-2xl bg-purple-500 text-white overflow-hidden group"
+      ? "relative inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-semibold rounded-2xl bg-rose-600 text-white overflow-hidden group"
       : "relative inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-semibold rounded-2xl border border-white/10 bg-[rgba(8,10,25,0.65)] text-white overflow-hidden group hover:border-cyan-500/30";
 
   const MotionTag = href ? motion.a : motion.button;
@@ -98,10 +98,11 @@ export default function ParticleButton({
 
       {/* Pulse glow behind */}
       {variant === "primary" && (
-        <span className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl bg-linear-to-r from-cyan-500/30 via-purple-500/30 to-fuchsia-500/30" />
+        <span className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl bg-linear-to-r from-cyan-500/30 via-rose-600/30 to-fuchsia-500/30" />
       )}
 
       <span className="relative z-10 flex items-center gap-2">{children}</span>
     </MotionTag>
   );
 }
+

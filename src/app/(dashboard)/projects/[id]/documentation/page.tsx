@@ -51,7 +51,7 @@ const METHOD_COLORS: Record<string, string> = {
     POST: "bg-blue-600/20 text-blue-400 border-blue-600/30",
     PATCH: "bg-amber-600/20 text-amber-400 border-amber-600/30",
     DELETE: "bg-red-600/20 text-red-400 border-red-600/30",
-    PUT: "bg-purple-600/20 text-purple-400 border-purple-600/30",
+    PUT: "bg-amber-600/20 text-amber-400 border-amber-600/30",
 };
 
 function buildModuleDocs(projectId: string): ModuleDef[] {
@@ -551,7 +551,7 @@ export default function DocumentationPage() {
                 <Card className="border-white/[0.08] bg-white/[0.02]">
                     <CardHeader className="pb-3">
                         <CardTitle className="text-base flex items-center gap-2 text-white/90">
-                            <Shield className="w-4 h-4 text-purple-400" />
+                            <Shield className="w-4 h-4 text-white/50" />
                             2. Authentication
                         </CardTitle>
                     </CardHeader>

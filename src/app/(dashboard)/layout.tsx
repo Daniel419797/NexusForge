@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import dynamic from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
+
 import { useAuthStore } from "@/store/authStore";
 import { useProjectStore } from "@/store/projectStore";
 import { useOnboardingStore } from "@/store/onboardingStore";
@@ -10,16 +10,6 @@ import AuthProvider from "@/components/Auth/AuthProvider";
 import GlassSidebar from "@/components/Dashboard/GlassSidebar";
 import GlassTopBar from "@/components/Dashboard/GlassTopBar";
 import { globalNavItems, getProjectNavItems } from "@/components/layout/nav-items";
-
-const DashboardBackground = dynamic(
-    () => import("@/components/Dashboard/DashboardBackground"),
-    { ssr: false },
-);
-
-const CursorTrail = dynamic(
-    () => import("@/components/Dashboard/CursorTrail"),
-    { ssr: false },
-);
 
 /** Tailwind md breakpoint in px */
 const MD_BREAKPOINT = 768;
@@ -81,8 +71,7 @@ export default function DashboardLayout({
     if (isOnboarding) {
         return (
             <AuthProvider>
-                <DashboardBackground />
-                <div className="relative z-10 min-h-screen">
+                <div className="min-h-screen">
                     <main className="px-4 py-5 sm:p-6">{children}</main>
                 </div>
             </AuthProvider>
@@ -91,11 +80,6 @@ export default function DashboardLayout({
 
     return (
         <AuthProvider>
-            {/* WebGL shader background */}
-            <DashboardBackground />
-            {/* Cursor particle trail (desktop only) */}
-            {!isMobile && <CursorTrail />}
-
             <div className="relative z-10 min-h-screen flex">
                 <GlassSidebar
                     items={navItems}

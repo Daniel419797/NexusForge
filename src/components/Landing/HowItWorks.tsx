@@ -60,7 +60,7 @@ const steps: Step[] = [
     ),
     accentHex: "#a855f7",
     accentRgb: "168,85,247",
-    gradient: "from-purple-500 to-fuchsia-500",
+    gradient: "from-rose-600 to-fuchsia-500",
   },
   {
     step: "03",
@@ -401,7 +401,7 @@ export default function HowItWorks() {
         className="absolute bottom-1/4 left-[5%] w-80 h-80 rounded-full pointer-events-none"
         style={{
           background:
-            "radial-gradient(circle, rgba(168,85,247,0.05) 0%, transparent 70%)",
+            "radial-gradient(circle, rgba(220,50,78,0.05) 0%, transparent 70%)",
           filter: "blur(60px)",
         }}
       />
@@ -436,7 +436,7 @@ export default function HowItWorks() {
           <h2 className="text-3xl sm:text-4xl lg:text-[3.25rem] font-extrabold tracking-tight leading-[1.1] mb-4">
             From Zero to{" "}
             <span
-              className="text-purple-400"
+              className="text-rose-400"
             >
               Production
             </span>{" "}
@@ -714,3 +714,4 @@ function MobileCard({ step, index }: { step: Step; index: number }) {
     </div>
   );
 }
+

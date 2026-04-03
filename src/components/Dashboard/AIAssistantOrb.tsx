@@ -125,11 +125,11 @@ export default function AIAssistantOrb() {
         onClick={() => setOpen(!open)}
         className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full"
         style={{
-          background: "linear-gradient(135deg, rgba(168,85,247,0.5) 0%, rgba(0,245,255,0.4) 100%)",
-          border: "1px solid rgba(168,85,247,0.3)",
+          background: "rgba(220,50,78,0.85)",
+          border: "1px solid rgba(220,50,78,0.4)",
           boxShadow: open
-            ? "0 0 30px rgba(168,85,247,0.3)"
-            : "0 0 20px rgba(168,85,247,0.15)",
+            ? "0 4px 24px rgba(0,0,0,0.5)"
+            : "0 2px 12px rgba(0,0,0,0.3)",
         }}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
@@ -158,8 +158,8 @@ export default function AIAssistantOrb() {
             className="fixed bottom-24 right-4 left-4 sm:left-auto sm:right-6 z-50 sm:w-[360px] max-h-[70vh] sm:max-h-[520px] flex flex-col rounded-2xl overflow-hidden"
             style={{
               background: "rgba(10,12,28,0.96)",
-              border: "1px solid rgba(168,85,247,0.15)",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(168,85,247,0.08)",
+            border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
             }}
             initial={{ opacity: 0, y: 20, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -170,13 +170,13 @@ export default function AIAssistantOrb() {
             <div
               className="flex items-center gap-3 px-4 py-3 shrink-0"
               style={{
-                background: "linear-gradient(90deg, rgba(168,85,247,0.12), rgba(0,245,255,0.08))",
+              background: "rgba(255,255,255,0.04)",
                 borderBottom: "1px solid rgba(255,255,255,0.05)",
               }}
             >
               <div
                 className="h-8 w-8 rounded-full flex items-center justify-center shrink-0"
-                style={{ background: "rgba(168,85,247,0.25)" }}
+                style={{ background: "rgba(255,255,255,0.08)" }}
               >
                 <span className="text-sm">🤖</span>
               </div>
@@ -226,11 +226,11 @@ export default function AIAssistantOrb() {
                     style={{
                       background:
                         msg.role === "user"
-                          ? "linear-gradient(135deg, rgba(168,85,247,0.3), rgba(0,245,255,0.15))"
+                          ? "rgba(220,50,78,0.18)"
                           : "rgba(255,255,255,0.04)",
                       border:
                         msg.role === "user"
-                          ? "1px solid rgba(168,85,247,0.2)"
+                          ? "1px solid rgba(220,50,78,0.15)"
                           : "1px solid rgba(255,255,255,0.04)",
                     }}
                   >
@@ -253,9 +253,9 @@ export default function AIAssistantOrb() {
                       border: "1px solid rgba(255,255,255,0.04)",
                     }}
                   >
-                    <span className="h-1.5 w-1.5 rounded-full bg-purple-400/60 animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="h-1.5 w-1.5 rounded-full bg-purple-400/60 animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="h-1.5 w-1.5 rounded-full bg-purple-400/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: "300ms" }} />
                   </div>
                 </motion.div>
               )}
@@ -273,15 +273,15 @@ export default function AIAssistantOrb() {
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
                 placeholder={activeProject ? "Ask anything..." : "Select a project first…"}
                 disabled={sending || !activeProject}
-                className="flex-1 bg-white/[0.04] border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 outline-none focus:border-purple-400/30 transition-colors disabled:opacity-40"
+                className="flex-1 bg-white/[0.04] border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 outline-none focus:border-white/20 transition-colors disabled:opacity-40"
               />
               <motion.button
                 onClick={send}
                 disabled={sending || !activeProject || !input.trim()}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg disabled:opacity-30"
                 style={{
-                  background: "rgba(168,85,247,0.25)",
-                  border: "1px solid rgba(168,85,247,0.2)",
+                  background: "rgba(220,50,78,0.2)",
+                  border: "1px solid rgba(220,50,78,0.18)",
                 }}
                 whileHover={{ scale: sending ? 1 : 1.05 }}
                 whileTap={{ scale: sending ? 1 : 0.95 }}

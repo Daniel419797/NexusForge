@@ -116,7 +116,7 @@ export default function AIPage() {
                                 onClick={() => setActiveTab(t.key)}
                                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
                                     activeTab === t.key
-                                        ? "bg-white/[0.08] text-white shadow-[0_0_12px_rgba(168,85,247,0.1)]"
+                                        ? "bg-white/[0.08] text-white"
                                         : "text-white/50 hover:text-white/70"
                                 }`}
                             >

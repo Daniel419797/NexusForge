@@ -97,7 +97,7 @@ export default function ChatPage() {
                 className="flex h-[calc(100vh-8rem)] rounded-2xl overflow-hidden"
                 style={{
                     background: "linear-gradient(170deg, rgba(14,16,34,0.92) 0%, rgba(8,10,25,0.88) 100%)",
-                    border: "1px solid rgba(0,245,255,0.08)",
+                    border: "1px solid rgba(255,255,255,0.06)",
                     boxShadow: "0 8px 40px rgba(0,0,0,0.3)",
                 }}
             >

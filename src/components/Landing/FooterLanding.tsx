@@ -47,7 +47,7 @@ export default function FooterLanding() {
   return (
     <footer ref={ref} className="relative border-t border-white/4 overflow-hidden">
       {/* Background glow */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-150 h-75 bg-purple-500/2 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-150 h-75 bg-rose-600/2 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 py-16 backdrop-blur-2xl relative z-10">
         {/* CTA strip */}
@@ -59,7 +59,7 @@ export default function FooterLanding() {
         >
           <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-4">
             Ready to{" "}
-            <span className="text-purple-400">
+            <span className="text-rose-400">
               Forge Something Remarkable
             </span>
             ?
@@ -91,7 +91,7 @@ export default function FooterLanding() {
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-xl bg-linear-to-br from-cyan-500 via-purple-500 to-fuchsia-500 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-linear-to-br from-cyan-500 via-rose-600 to-fuchsia-500 flex items-center justify-center">
                 <span className="text-white font-bold text-xs font-mono">NF</span>
               </div>
               <span className="text-sm font-bold">
@@ -153,3 +153,4 @@ export default function FooterLanding() {
     </footer>
   );
 }
+

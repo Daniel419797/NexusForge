@@ -106,7 +106,7 @@ export default function CookieConsentBanner() {
               <p className="text-xs text-white/50 leading-relaxed">
                 We use essential cookies for authentication and security. Non-essential cookies (analytics, marketing)
                 are only set with your explicit consent.{" "}
-                <Link href="/privacy#cookies" className="text-purple-400 hover:text-purple-300 underline underline-offset-2">
+                <Link href="/privacy#cookies" className="text-rose-400 hover:text-rose-300 underline underline-offset-2">
                   Privacy Policy
                 </Link>
               </p>
@@ -129,7 +129,7 @@ export default function CookieConsentBanner() {
                         <span className="text-xs font-medium text-white">Essential</span>
                         <p className="text-[11px] text-white/30">Authentication, security, session management. Always required.</p>
                       </div>
-                      <div className="w-9 h-5 bg-purple-500/60 rounded-full relative cursor-not-allowed">
+                      <div className="w-9 h-5 bg-rose-500/60 rounded-full relative cursor-not-allowed">
                         <div className="absolute top-0.5 right-0.5 w-4 h-4 bg-white rounded-full" />
                       </div>
                     </label>
@@ -137,13 +137,13 @@ export default function CookieConsentBanner() {
                     {/* Analytics */}
                     <label className="flex items-center justify-between cursor-pointer group">
                       <div>
-                        <span className="text-xs font-medium text-white group-hover:text-purple-300 transition-colors">Analytics</span>
+                        <span className="text-xs font-medium text-white group-hover:text-white/80 transition-colors">Analytics</span>
                         <p className="text-[11px] text-white/30">Usage patterns and platform improvement metrics.</p>
                       </div>
                       <button
                         onClick={() => setAnalytics(!analytics)}
                         className={`w-9 h-5 rounded-full relative transition-colors duration-200 ${
-                          analytics ? "bg-purple-500" : "bg-white/10"
+                          analytics ? "bg-rose-600" : "bg-white/10"
                         }`}
                       >
                         <div
@@ -157,13 +157,13 @@ export default function CookieConsentBanner() {
                     {/* Marketing */}
                     <label className="flex items-center justify-between cursor-pointer group">
                       <div>
-                        <span className="text-xs font-medium text-white group-hover:text-purple-300 transition-colors">Marketing</span>
+                        <span className="text-xs font-medium text-white group-hover:text-white/80 transition-colors">Marketing</span>
                         <p className="text-[11px] text-white/30">Personalized content and promotional communications.</p>
                       </div>
                       <button
                         onClick={() => setMarketing(!marketing)}
                         className={`w-9 h-5 rounded-full relative transition-colors duration-200 ${
-                          marketing ? "bg-purple-500" : "bg-white/10"
+                          marketing ? "bg-rose-600" : "bg-white/10"
                         }`}
                       >
                         <div
@@ -183,14 +183,14 @@ export default function CookieConsentBanner() {
               {showDetails ? (
                 <button
                   onClick={handleSavePreferences}
-                  className="flex-1 px-4 py-2 text-xs font-medium rounded-xl bg-purple-500 text-white hover:bg-purple-400 transition-colors"
+                  className="flex-1 px-4 py-2 text-xs font-medium rounded-xl bg-rose-600 text-white hover:bg-rose-500 transition-colors"
                 >
                   Save Preferences
                 </button>
               ) : (
                 <button
                   onClick={handleAcceptAll}
-                  className="flex-1 px-4 py-2 text-xs font-medium rounded-xl bg-purple-500 text-white hover:bg-purple-400 transition-colors"
+                  className="flex-1 px-4 py-2 text-xs font-medium rounded-xl bg-rose-600 text-white hover:bg-rose-500 transition-colors"
                 >
                   Accept All
                 </button>
@@ -216,3 +216,4 @@ export default function CookieConsentBanner() {
     </AnimatePresence>
   );
 }
+

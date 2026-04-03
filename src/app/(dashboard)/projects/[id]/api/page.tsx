@@ -31,7 +31,7 @@ export default function ProjectApiPage() {
                 <div className="flex items-center gap-2 mb-3">
                     <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider">Authentication Endpoints</h3>
                     {isTenantAuth && (
-                        <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-400">
+                        <Badge variant="outline" className="text-[10px] border-white/20 text-white/60">
                             Tenant-Owned
                         </Badge>
                     )}
