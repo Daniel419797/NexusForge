@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import GlassPanel from "@/components/Dashboard/GlassPanel";
 import ElectricRippleButton from "@/components/Dashboard/ElectricRippleButton";
 import ScrollReveal from "@/components/Dashboard/ScrollReveal";
 import PromptInput from "@/components/AI/PromptInput";
@@ -92,7 +91,7 @@ export default function AIPage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 {/* Settings Sidebar */}
                 <ScrollReveal direction="left" className="col-span-1">
-                    <GlassPanel accent="purple">
+                    <div>
                         <h3 className="text-sm font-semibold text-white mb-4">Global Settings</h3>
                         <div className="space-y-3">
                             <div className="flex justify-between">
@@ -104,7 +103,7 @@ export default function AIPage() {
                                 Higher values make output more random, lower values make it more focused.
                             </p>
                         </div>
-                    </GlassPanel>
+                    </div>
                 </ScrollReveal>
 
                 {/* Main Playground */}
@@ -127,7 +126,7 @@ export default function AIPage() {
                     </div>
 
                     {activeTab === "text" && (
-                        <GlassPanel accent="cyan">
+                        <div>
                             <PromptInput
                                 prompt={textPrompt}
                                 setPrompt={setTextPrompt}
@@ -135,7 +134,7 @@ export default function AIPage() {
                                 loading={loadingText}
                                 result={textResult}
                             />
-                        </GlassPanel>
+                        </div>
                     )}
 
                     {activeTab === "chat" && (
@@ -149,7 +148,7 @@ export default function AIPage() {
                     )}
 
                     {activeTab === "analysis" && (
-                        <GlassPanel accent="emerald">
+                        <div>
                             <AnalysisView
                                 content={analysisContent}
                                 setContent={setAnalysisContent}
@@ -159,7 +158,7 @@ export default function AIPage() {
                                 loading={loadingAnalysis}
                                 result={analysisResult}
                             />
-                        </GlassPanel>
+                        </div>
                     )}
                 </ScrollReveal>
             </div>

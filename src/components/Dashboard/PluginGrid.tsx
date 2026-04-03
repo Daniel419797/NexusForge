@@ -2,7 +2,6 @@
 
 import { motion, useInView } from "framer-motion";
 import { useRef, useEffect, useState, useCallback } from "react";
-import GlassPanel from "./GlassPanel";
 import PluginService, {
   type PluginMeta,
 } from "@/services/PluginService";
@@ -132,7 +131,7 @@ export default function PluginGrid() {
 
   return (
     <div ref={ref}>
-      <GlassPanel accent="emerald" hover3d={false}>
+      <div>
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-sm font-semibold text-white/80 tracking-wide uppercase">
             Plugins
@@ -224,7 +223,7 @@ export default function PluginGrid() {
             ))}
           </div>
         )}
-      </GlassPanel>
+      </div>
     </div>
   );
 }

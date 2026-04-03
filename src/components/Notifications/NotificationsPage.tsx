@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
-import GlassPanel from "@/components/Dashboard/GlassPanel";
 import ElectricRippleButton from "@/components/Dashboard/ElectricRippleButton";
 import ScrollReveal from "@/components/Dashboard/ScrollReveal";
 import NotificationService, { type Notification, type PushDevice } from "@/services/NotificationService";
@@ -130,7 +129,7 @@ export default function NotificationsPage() {
                         exit={{ opacity: 0, height: 0 }}
                         className="mb-8 overflow-hidden"
                     >
-                        <GlassPanel accent="emerald">
+                        <div>
                             <h2 className="text-sm font-semibold text-white/70 mb-4">Notification Preferences</h2>
                             <div className="space-y-3">
                                 {([
@@ -162,7 +161,7 @@ export default function NotificationsPage() {
                                     </div>
                                 ))}
                             </div>
-                        </GlassPanel>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -180,12 +179,10 @@ export default function NotificationsPage() {
                         {devicesLoading ? (
                             <div className="h-16 w-full rounded-2xl bg-white/[0.03] animate-pulse" />
                         ) : devices.length === 0 ? (
-                            <GlassPanel accent="cyan">
-                                <p className="text-sm text-white/50 text-center py-2">No push devices registered. Enable push in your browser or app.</p>
-                            </GlassPanel>
+                            <p className="text-sm text-white/50 text-center py-4">No push devices registered. Enable push in your browser or app.</p>
                         ) : (
                             devices.map((device) => (
-                                <GlassPanel key={device.id} accent="cyan" className="!p-4">
+                                <div key={device.id} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
                                     <div className="flex justify-between items-center">
                                         <div>
                                             <p className="text-sm font-medium text-white">{device.platform}</p>
@@ -199,7 +196,7 @@ export default function NotificationsPage() {
                                             Remove
                                         </ElectricRippleButton>
                                     </div>
-                                </GlassPanel>
+                                </div>
                             ))
                         )}
                     </motion.div>
@@ -214,22 +211,17 @@ export default function NotificationsPage() {
 
                 {!loading && notifications.length === 0 && (
                     <ScrollReveal>
-                        <GlassPanel accent="purple">
-                            <div className="flex flex-col items-center justify-center py-12 text-center">
-                                <span className="text-4xl mb-4">📭</span>
-                                <p className="text-white/50">You&apos;re all caught up!</p>
-                            </div>
-                        </GlassPanel>
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <span className="text-4xl mb-4">📭</span>
+                            <p className="text-white/50">You&apos;re all caught up!</p>
+                        </div>
                     </ScrollReveal>
                 )}
 
                 <AnimatePresence>
                     {!loading && notifications.map((notif, index) => (
                         <ScrollReveal key={notif.id} direction="up" delay={index * 0.04}>
-                            <GlassPanel
-                                accent={!notif.read ? "purple" : "cyan"}
-                                className={!notif.read ? "ring-1 ring-purple-500/20" : ""}
-                            >
+                            <div className={`rounded-xl border px-4 py-3 ${!notif.read ? "border-purple-500/20 bg-white/[0.02] ring-1 ring-purple-500/20" : "border-white/[0.06] bg-white/[0.02]"}`}>
                                 <div className="flex gap-3">
                                     {/* Unread indicator dot */}
                                     {!notif.read && (
@@ -259,7 +251,7 @@ export default function NotificationsPage() {
                                         )}
                                     </div>
                                 </div>
-                            </GlassPanel>
+                            </div>
                         </ScrollReveal>
                     ))}
                 </AnimatePresence>
