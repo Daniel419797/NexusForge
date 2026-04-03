@@ -15,10 +15,13 @@ export default function ConfigPanel({ isLoggedIn, userEmail, onLogout }: ConfigP
   const [showKey, setShowKey] = useState(false);
 
   const apiUrl = getTestApiUrl();
-  const apiKey = getApiKey();
-  const maskedKey = apiKey.slice(0, 6) + "•".repeat(Math.max(0, apiKey.length - 10)) + apiKey.slice(-4);
+  const apiKey = getApiKey() ?? "";
+  const maskedKey = apiKey
+    ? apiKey.slice(0, 6) + "•".repeat(Math.max(0, apiKey.length - 10)) + apiKey.slice(-4)
+    : "Not configured";
 
   const copyKey = async () => {
+    if (!apiKey) return;
     await navigator.clipboard.writeText(apiKey);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -42,7 +45,7 @@ export default function ConfigPanel({ isLoggedIn, userEmail, onLogout }: ConfigP
         <div className="text-xs text-slate-500 uppercase tracking-wide mb-1">API Key</div>
         <div className="flex items-center gap-2">
           <div className="flex-1 text-xs text-slate-300 font-mono bg-slate-800 rounded px-2 py-1.5 truncate">
-            {showKey ? apiKey : maskedKey}
+            {showKey ? (apiKey || "Not configured") : maskedKey}
           </div>
           <button
             onClick={() => setShowKey(!showKey)}
