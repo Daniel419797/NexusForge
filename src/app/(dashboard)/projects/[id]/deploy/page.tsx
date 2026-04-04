@@ -497,7 +497,7 @@ export default function DeployPage() {
     const params = useParams();
     const rawId = params.id;
     const projectId = typeof rawId === "string" ? rawId : Array.isArray(rawId) ? rawId[0] : "";
-    const { fetchCurrentDeployment, reset } = useDeployStore();
+    const { fetchCurrentDeployment, reset, currentDeployment } = useDeployStore();
 
     useEffect(() => {
         fetchCurrentDeployment(projectId);
@@ -512,6 +512,25 @@ export default function DeployPage() {
                     Deploy your backend configuration to make it live. Each deployment creates an immutable versioned snapshot.
                 </p>
             </div>
+
+            {/* Live deployment banner */}
+            {currentDeployment?.deployment?.status === "live" && currentDeployment.deployment.apiUrl && (
+                <Card className="bg-emerald-950/30 border-emerald-800/40">
+                    <CardContent className="py-3 px-4 flex flex-wrap items-center gap-3">
+                        <Badge className="bg-emerald-600/20 text-emerald-400 shrink-0">Live</Badge>
+                        <span className="text-xs text-zinc-400 shrink-0">v{currentDeployment.deployment.version} · API URL</span>
+                        <code className="text-sm font-mono text-emerald-300 flex-1 break-all">
+                            {currentDeployment.deployment.apiUrl}
+                        </code>
+                        <button
+                            onClick={() => navigator.clipboard.writeText(currentDeployment.deployment.apiUrl!)}
+                            className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors shrink-0"
+                        >
+                            Copy
+                        </button>
+                    </CardContent>
+                </Card>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left column — readiness + trigger */}
