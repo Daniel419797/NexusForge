@@ -501,8 +501,13 @@ export default function DeployPage() {
 
     useEffect(() => {
         fetchCurrentDeployment(projectId);
+    }, [projectId, fetchCurrentDeployment]);
+
+    // Reset store only when leaving the page entirely, not on every re-render
+    useEffect(() => {
         return () => reset();
-    }, [projectId, fetchCurrentDeployment, reset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <div className="space-y-6">
