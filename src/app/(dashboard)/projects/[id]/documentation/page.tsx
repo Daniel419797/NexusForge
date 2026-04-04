@@ -477,7 +477,7 @@ export default function DocumentationPage() {
     );
 
     const apiBase = API_BASE;
-    const gatewayBase = project?.apiUrl || ``;
+    const gatewayBase = currentDeployment?.deployment?.apiUrl || ``;
     const tokenDisplay = projectToken || "YOUR_PROJECT_TOKEN";
 
     const handleGetToken = useCallback(async () => {

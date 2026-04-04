@@ -497,17 +497,11 @@ export default function DeployPage() {
     const params = useParams();
     const rawId = params.id;
     const projectId = typeof rawId === "string" ? rawId : Array.isArray(rawId) ? rawId[0] : "";
-    const { fetchCurrentDeployment, reset, currentDeployment } = useDeployStore();
+    const { fetchCurrentDeployment, currentDeployment } = useDeployStore();
 
     useEffect(() => {
-        fetchCurrentDeployment(projectId);
+        if (projectId) fetchCurrentDeployment(projectId);
     }, [projectId, fetchCurrentDeployment]);
-
-    // Reset store only when leaving the page entirely, not on every re-render
-    useEffect(() => {
-        return () => reset();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     return (
         <div className="space-y-6">
