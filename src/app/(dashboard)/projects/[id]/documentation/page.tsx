@@ -348,8 +348,26 @@ function buildModuleDocs(projectId: string): ModuleDef[] {
 
 /* ── Code generator helpers ── */
 
-function curlExample(endpoint: EndpointExample, apiBase: string, token: string): string {
-    const url = `${apiBase}${endpoint.path}`;
+/**
+ * Resolve the full URL for a code example.
+ * - If gatewayBase is a subdomain URL (e.g. https://my-app-69e93f31.reuse.app),
+ *   strip the /api/v1/p/:uuid prefix from the path so the example uses the
+ *   cleaner subdomain form: https://my-app-69e93f31.reuse.app/auth/register
+ * - Otherwise fall back to the original long-form URL.
+ */
+function resolveExampleUrl(endpoint: EndpointExample, apiBase: string, gatewayBase: string): string {
+    // Check if gatewayBase is already a subdomain URL (doesn't end with /p/<uuid>)
+    const uuidInPath = /\/api\/v1\/p\/[0-9a-f-]{36}$/.exec(gatewayBase);
+    if (!uuidInPath) {
+        // Subdomain or custom URL — strip the uuid prefix from the endpoint path
+        const strippedPath = endpoint.path.replace(/^\/api\/v1\/p\/[0-9a-f-]{36}/, '');
+        return `${gatewayBase}${strippedPath}`;
+    }
+    return `${apiBase}${endpoint.path}`;
+}
+
+function curlExample(endpoint: EndpointExample, apiBase: string, token: string, gatewayBase: string): string {
+    const url = resolveExampleUrl(endpoint, apiBase, gatewayBase);
     let cmd = `curl -X ${endpoint.method} "${url}"`;
 
     if (endpoint.auth === "bearer") {
@@ -366,8 +384,8 @@ function curlExample(endpoint: EndpointExample, apiBase: string, token: string):
     return cmd;
 }
 
-function jsExample(endpoint: EndpointExample, apiBase: string, token: string): string {
-    const url = `${apiBase}${endpoint.path}`;
+function jsExample(endpoint: EndpointExample, apiBase: string, token: string, gatewayBase: string): string {
+    const url = resolveExampleUrl(endpoint, apiBase, gatewayBase);
     const headers: Record<string, string> = { "Content-Type": "application/json" };
 
     if (endpoint.auth === "bearer") headers["Authorization"] = `Bearer ${token}`;
@@ -383,17 +401,17 @@ function jsExample(endpoint: EndpointExample, apiBase: string, token: string): s
     return code;
 }
 
-function pythonExample(endpoint: EndpointExample, apiBase: string, token: string): string {
-    const url = `${apiBase}${endpoint.path}`;
+function pythonExample(endpoint: EndpointExample, apiBase: string, token: string, gatewayBase: string): string {
+    const url = resolveExampleUrl(endpoint, apiBase, gatewayBase);
     const headers: Record<string, string> = { "Content-Type": "application/json" };
 
     if (endpoint.auth === "bearer") headers["Authorization"] = `Bearer ${token}`;
     if (endpoint.auth === "api-key") headers["x-api-key"] = "sk_your_secret_key";
 
-    let code = `import requests\n\nresponse = requests.${endpoint.method.toLowerCase()}(\n    "${url}",\n    headers=${JSON.stringify(headers).replace(/"/g, "'")},`;
+    let code = `import requests\n\nresponse = requests.${endpoint.method.toLowerCase()}(\n    "${url}",\n    headers=${JSON.stringify(headers).replaceAll('"', "'")},`;
 
     if (endpoint.body) {
-        code += `\n    json=${JSON.stringify(endpoint.body).replace(/"/g, "'")},`;
+        code += `\n    json=${JSON.stringify(endpoint.body).replaceAll('"', "'")},`;
     }
 
     code += `\n)\nprint(response.json())`;
@@ -459,7 +477,7 @@ export default function DocumentationPage() {
     );
 
     const apiBase = API_BASE;
-    const gatewayBase = `${apiBase}/api/v1/p/${projectId}`;
+    const gatewayBase = project?.apiUrl || ``;
     const tokenDisplay = projectToken || "YOUR_PROJECT_TOKEN";
 
     const handleGetToken = useCallback(async () => {
@@ -664,6 +682,7 @@ export default function DocumentationPage() {
                                 key={mod.moduleId}
                                 module={mod}
                                 apiBase={apiBase}
+                                gatewayBase={gatewayBase}
                                 token={tokenDisplay}
                                 selectedLang={selectedLang}
                                 isExpanded={expandedModule === mod.moduleId}
@@ -754,6 +773,7 @@ export default function DocumentationPage() {
 function ModuleSection({
     module: mod,
     apiBase,
+    gatewayBase,
     token,
     selectedLang,
     isExpanded,
@@ -762,6 +782,7 @@ function ModuleSection({
 }: {
     module: ModuleDef;
     apiBase: string;
+    gatewayBase: string;
     token: string;
     selectedLang: "curl" | "js" | "python";
     isExpanded: boolean;
@@ -807,7 +828,7 @@ function ModuleSection({
                 <div className="px-3 pb-3 space-y-3">
                     <p className="text-[11px] text-white/30">{mod.description}</p>
                     {mod.endpoints.map((ep, i) => (
-                        <EndpointCard key={i} endpoint={ep} apiBase={apiBase} token={token} lang={selectedLang} />
+                        <EndpointCard key={i} endpoint={ep} apiBase={apiBase} gatewayBase={gatewayBase} token={token} lang={selectedLang} />
                     ))}
                 </div>
             )}
@@ -822,11 +843,13 @@ function ModuleSection({
 function EndpointCard({
     endpoint,
     apiBase,
+    gatewayBase,
     token,
     lang,
 }: {
     endpoint: EndpointExample;
     apiBase: string;
+    gatewayBase: string;
     token: string;
     lang: "curl" | "js" | "python";
 }) {
@@ -835,11 +858,11 @@ function EndpointCard({
     const codeSnippet = useMemo(() => {
         switch (lang) {
             case "curl":
-                return curlExample(endpoint, apiBase, token);
+                return curlExample(endpoint, apiBase, token, gatewayBase);
             case "js":
-                return jsExample(endpoint, apiBase, token);
+                return jsExample(endpoint, apiBase, token, gatewayBase);
             case "python":
-                return pythonExample(endpoint, apiBase, token);
+                return pythonExample(endpoint, apiBase, token, gatewayBase);
         }
     }, [endpoint, apiBase, token, lang]);
 
