@@ -122,6 +122,7 @@ export const useDeployStore = create<DeployState>((set, get) => ({
     },
 
     fetchCurrentDeployment: async (projectId) => {
+        set({ currentDeployment: null });
         try {
             const current = await DeployService.getCurrentDeployment(projectId);
             set({ currentDeployment: current });
