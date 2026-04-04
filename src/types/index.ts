@@ -9,6 +9,10 @@ export interface User {
 
 export interface Project {
     id: string;
+    /** Auto-generated subdomain slug, e.g. "my-app-69e93f31" */
+    slug?: string;
+    /** Full gateway URL, e.g. "https://my-app-69e93f31.reuse.app" */
+    apiUrl?: string;
     name: string;
     category: string;
     status: string;
