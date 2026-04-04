@@ -716,6 +716,7 @@ export default function DocumentationPage() {
                         <QuickStartSnippet
                             projectId={projectId}
                             apiBase={apiBase}
+                            gatewayBase={gatewayBase}
                             lang={selectedLang}
                         />
                     </CardContent>
@@ -876,7 +877,7 @@ function EndpointCard({
                     {endpoint.method}
                 </Badge>
                 <code className="text-[11px] font-mono text-white/50 flex-1 truncate">
-                    {endpoint.path}
+                    {resolveExampleUrl(endpoint, apiBase, gatewayBase)}
                 </code>
                 <span className="text-[10px] text-white/25 shrink-0">{endpoint.title}</span>
             </button>
@@ -919,13 +920,15 @@ function EndpointCard({
 function QuickStartSnippet({
     projectId,
     apiBase,
+    gatewayBase,
     lang,
 }: {
     projectId: string;
     apiBase: string;
+    gatewayBase: string;
     lang: "curl" | "js" | "python";
 }) {
-    const gateway = `${apiBase}/api/v1/p/${projectId}`;
+    const gateway = gatewayBase;
 
     const snippets: Record<string, string> = {
         curl: `# 1. Register a user
