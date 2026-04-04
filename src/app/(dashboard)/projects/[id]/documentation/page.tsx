@@ -447,7 +447,7 @@ export default function DocumentationPage() {
     const params = useParams();
     const projectId = typeof params.id === "string" ? params.id : "";
     const project = useProjectStore((s) => s.activeProject);
-    const { currentDeployment, fetchCurrentDeployment } = useDeployStore();
+    const { currentDeployment, fetchCurrentDeployment, isLoadingCurrentDeployment } = useDeployStore();
     const [projectToken, setProjectToken] = useState<string | null>(null);
     const [tokenLoading, setTokenLoading] = useState(false);
     const [selectedLang, setSelectedLang] = useState<"curl" | "js" | "python">("curl");
@@ -510,7 +510,7 @@ export default function DocumentationPage() {
             </motion.div>
 
             {/* Deployment status banner */}
-            {!isDeployed && (
+            {!isLoadingCurrentDeployment && !isDeployed && (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}

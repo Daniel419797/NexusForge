@@ -38,6 +38,7 @@ interface DeployState {
     // UI state
     isDeploying: boolean;
     isLoadingReadiness: boolean;
+    isLoadingCurrentDeployment: boolean;
     isLoadingList: boolean;
     isLoadingDetail: boolean;
     isRollingBack: boolean;
@@ -65,6 +66,7 @@ const initialState = {
     activeDeployment: null,
     isDeploying: false,
     isLoadingReadiness: false,
+    isLoadingCurrentDeployment: false,
     isLoadingList: false,
     isLoadingDetail: false,
     isRollingBack: false,
@@ -122,14 +124,15 @@ export const useDeployStore = create<DeployState>((set, get) => ({
     },
 
     fetchCurrentDeployment: async (projectId) => {
-        set({ currentDeployment: null });
+        set({ currentDeployment: null, isLoadingCurrentDeployment: true });
         try {
             const current = await DeployService.getCurrentDeployment(projectId);
-            set({ currentDeployment: current });
+            set({ currentDeployment: current, isLoadingCurrentDeployment: false });
         } catch (err: unknown) {
             // Swallow 404 (no live deployment yet) but surface other errors
             const isNotFound = err && typeof err === "object" && "response" in err &&
                 (err as Record<string, Record<string, unknown>>).response?.status === 404;
+            set({ isLoadingCurrentDeployment: false });
             if (!isNotFound) {
                 const message = extractErrorMessage(err, "Failed to fetch current deployment");
                 set({ error: message });
