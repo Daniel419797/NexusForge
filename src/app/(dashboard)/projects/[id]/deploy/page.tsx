@@ -51,7 +51,7 @@ const STATUS_ICONS: Record<string, string> = {
 };
 
 /* ── Readiness Panel ── */
-function ReadinessPanel({ projectId }: { projectId: string }) {
+function ReadinessPanel({ projectId }: Readonly<{ projectId: string }>) {
     const { readiness, isLoadingReadiness, fetchReadiness } = useDeployStore();
 
     useEffect(() => {
@@ -63,8 +63,8 @@ function ReadinessPanel({ projectId }: { projectId: string }) {
             <Card className="bg-zinc-900/50 border-zinc-800">
                 <CardHeader><CardTitle className="text-sm text-zinc-400">Deploy Readiness</CardTitle></CardHeader>
                 <CardContent className="space-y-2">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                        <Skeleton key={i} className="h-6 w-full bg-zinc-800" />
+                    {Array.from({ length: 5 }, (_, i) => (
+                        <Skeleton key={`readiness-skeleton-${i}`} className="h-6 w-full bg-zinc-800" />
                     ))}
                 </CardContent>
             </Card>
@@ -98,16 +98,21 @@ function ReadinessPanel({ projectId }: { projectId: string }) {
                 <ul className="space-y-2">
                     {readiness.checks.map((check) => (
                         <li key={check.name} className="flex items-center gap-3 text-sm">
-                            <span className={`inline-block w-2 h-2 rounded-full ${check.status === "pass" ? "bg-emerald-500" :
-                                    check.status === "warn" ? "bg-amber-500" : "bg-red-500"
-                                }`} />
-                            <span className="text-zinc-300 flex-1">{check.message}</span>
-                            <Badge variant="outline" className={`text-xs ${check.status === "pass" ? "text-emerald-400 border-emerald-800" :
-                                    check.status === "warn" ? "text-amber-400 border-amber-800" :
-                                        "text-red-400 border-red-800"
-                                }`}>
-                                {check.status}
-                            </Badge>
+                            {(() => {
+                                const dotColorNonPass = check.status === "warn" ? "bg-amber-500" : "bg-red-500";
+                                const dotColor = check.status === "pass" ? "bg-emerald-500" : dotColorNonPass;
+                                const badgeColorNonPass = check.status === "warn" ? "text-amber-400 border-amber-800" : "text-red-400 border-red-800";
+                                const badgeColor = check.status === "pass" ? "text-emerald-400 border-emerald-800" : badgeColorNonPass;
+                                return (
+                                    <>
+                                        <span className={`inline-block w-2 h-2 rounded-full ${dotColor}`} />
+                                        <span className="text-zinc-300 flex-1">{check.message}</span>
+                                        <Badge variant="outline" className={`text-xs ${badgeColor}`}>
+                                        {check.status}
+                                        </Badge>
+                                    </>
+                                );
+                            })()}
                         </li>
                     ))}
                 </ul>
@@ -117,7 +122,7 @@ function ReadinessPanel({ projectId }: { projectId: string }) {
 }
 
 /* ── Deploy Log Console ── */
-function DeployLogConsole({ logs }: { logs: DeploymentLog[] }) {
+function DeployLogConsole({ logs }: Readonly<{ logs: DeploymentLog[] }>) {
     const consoleRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -131,21 +136,24 @@ function DeployLogConsole({ logs }: { logs: DeploymentLog[] }) {
         <div ref={consoleRef} className="bg-black/60 rounded-lg p-4 max-h-80 overflow-y-auto font-mono text-xs space-y-1.5">
             {logs.map((log) => (
                 <div key={log.id || log.step} className="flex gap-3 items-start">
-                    <span className={`shrink-0 w-4 text-center ${log.status === "done" ? "text-emerald-400" :
-                            log.status === "running" ? "text-blue-400" :
-                                log.status === "failed" ? "text-red-400" :
-                                    "text-zinc-500"
-                        }`}>
-                        {STATUS_ICONS[log.status] || "○"}
-                    </span>
-                    <span className="text-zinc-500 shrink-0 w-28">{STEP_LABELS[log.step] || log.step}</span>
-                    <span className={`flex-1 ${log.status === "running" ? "text-blue-300" :
-                            log.status === "failed" ? "text-red-300" :
-                                log.status === "done" ? "text-zinc-300" :
-                                    "text-zinc-600"
-                        }`}>
-                        {log.message || (log.status === "pending" ? "Waiting…" : "")}
-                    </span>
+                    {(() => {
+                        const iconColorNonDoneRunning = log.status === "failed" ? "text-red-400" : "text-zinc-500";
+                        const iconColorNonDone = log.status === "running" ? "text-blue-400" : iconColorNonDoneRunning;
+                        const iconColor = log.status === "done" ? "text-emerald-400" : iconColorNonDone;
+                        const messageColorNonRunningFailed = log.status === "done" ? "text-zinc-300" : "text-zinc-600";
+                        const messageColorNonRunning = log.status === "failed" ? "text-red-300" : messageColorNonRunningFailed;
+                        const messageColor = log.status === "running" ? "text-blue-300" : messageColorNonRunning;
+                        const messageText = log.message || (log.status === "pending" ? "Waiting…" : "");
+                        return (
+                            <>
+                                <span className={`shrink-0 w-4 text-center ${iconColor}`}>
+                                    {STATUS_ICONS[log.status] || "○"}
+                                </span>
+                                <span className="text-zinc-500 shrink-0 w-28">{STEP_LABELS[log.step] || log.step}</span>
+                                <span className={`flex-1 ${messageColor}`}>{messageText}</span>
+                            </>
+                        );
+                    })()}
                     <Badge className={`text-[10px] px-1.5 py-0 ${STATUS_COLORS[log.status] || ""}`}>
                         {log.status}
                     </Badge>
@@ -159,7 +167,7 @@ function DeployLogConsole({ logs }: { logs: DeploymentLog[] }) {
 }
 
 /* ── Deploy Trigger Card ── */
-function DeployTrigger({ projectId }: { projectId: string }) {
+function DeployTrigger({ projectId }: Readonly<{ projectId: string }>) {
     const { readiness, isDeploying, triggerDeploy, activeDeployment, error, clearError } = useDeployStore();
     const [releaseNote, setReleaseNote] = useState("");
 
@@ -211,7 +219,7 @@ function DeployTrigger({ projectId }: { projectId: string }) {
                             {isDeploying ? (
                                 <span className="flex items-center gap-2">
                                     <span className="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                                    Deploying…
+                                    <span>Deploying…</span>
                                 </span>
                             ) : (
                                 "Deploy Now"
@@ -228,7 +236,7 @@ function DeployTrigger({ projectId }: { projectId: string }) {
 }
 
 /* ── Deployment History ── */
-function DeploymentHistory({ projectId }: { projectId: string }) {
+function DeploymentHistory({ projectId }: Readonly<{ projectId: string }>) {
     const {
         deployments,
         total,
@@ -262,8 +270,8 @@ function DeploymentHistory({ projectId }: { projectId: string }) {
             <Card className="bg-zinc-900/50 border-zinc-800">
                 <CardHeader><CardTitle className="text-sm text-zinc-400">Deployment History</CardTitle></CardHeader>
                 <CardContent className="space-y-2">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                        <Skeleton key={i} className="h-12 w-full bg-zinc-800" />
+                    {Array.from({ length: 5 }, (_, i) => (
+                        <Skeleton key={`history-skeleton-${i}`} className="h-12 w-full bg-zinc-800" />
                     ))}
                 </CardContent>
             </Card>
@@ -333,23 +341,21 @@ function DeploymentRow({
     onView,
     onRollback,
     isRollingBack,
-}: {
+}: Readonly<{
     deployment: Deployment;
     isSelected: boolean;
     onView: (id: string) => void;
     onRollback: (id: string, version: number) => void;
     isRollingBack: boolean;
-}) {
+}>) {
     const canRollback = deployment.status === "live" || deployment.status === "superseded";
 
     return (
-        <div
-            className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${isSelected ? "bg-zinc-800/80 ring-1 ring-zinc-700" : "bg-zinc-800/30 hover:bg-zinc-800/50"
+        <button
+            type="button"
+            className={`w-full flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors text-left ${isSelected ? "bg-zinc-800/80 ring-1 ring-zinc-700" : "bg-zinc-800/30 hover:bg-zinc-800/50"
                 }`}
-            role="button"
-            tabIndex={0}
             onClick={() => onView(deployment.id)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onView(deployment.id); } }}
             aria-label={`View deployment v${deployment.version} — ${deployment.status}`}
         >
             <div className="flex-1 min-w-0">
@@ -397,7 +403,7 @@ function DeploymentRow({
                     Rollback
                 </Button>
             )}
-        </div>
+        </button>
     );
 }
 
@@ -496,7 +502,8 @@ function DeploymentDetailPanel() {
 export default function DeployPage() {
     const params = useParams();
     const rawId = params.id;
-    const projectId = typeof rawId === "string" ? rawId : Array.isArray(rawId) ? rawId[0] : "";
+    const resolvedId = Array.isArray(rawId) ? rawId[0] : "";
+    const projectId = typeof rawId === "string" ? rawId : resolvedId;
     const { fetchCurrentDeployment, currentDeployment } = useDeployStore();
 
     useEffect(() => {

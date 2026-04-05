@@ -54,6 +54,8 @@ const METHOD_COLORS: Record<string, string> = {
     PUT: "bg-amber-600/20 text-amber-400 border-amber-600/30",
 };
 
+type LangOption = "curl" | "js" | "python";
+
 function buildModuleDocs(projectId: string): ModuleDef[] {
     return [
         {
@@ -420,7 +422,7 @@ function pythonExample(endpoint: EndpointExample, apiBase: string, token: string
 
 /* ── Copy button component ── */
 
-function CopyBtn({ text }: { text: string }) {
+function CopyBtn({ text }: Readonly<{ text: string }>) {
     const [copied, setCopied] = useState(false);
 
     const handleCopy = useCallback(() => {
@@ -450,7 +452,7 @@ export default function DocumentationPage() {
     const { currentDeployment, fetchCurrentDeployment, isLoadingCurrentDeployment } = useDeployStore();
     const [projectToken, setProjectToken] = useState<string | null>(null);
     const [tokenLoading, setTokenLoading] = useState(false);
-    const [selectedLang, setSelectedLang] = useState<"curl" | "js" | "python">("curl");
+    const [selectedLang, setSelectedLang] = useState<LangOption>("curl");
     const [expandedModule, setExpandedModule] = useState<string | null>("auth");
 
     // Fetch current deployment
@@ -493,6 +495,8 @@ export default function DocumentationPage() {
     }, [projectId]);
 
     const isDeployed = currentDeployment?.deployment?.status === "live";
+    const tokenActionLabel = projectToken ? "Regenerate Token" : "Generate Project Token";
+    const generateTokenLabel = tokenLoading ? "Generating..." : tokenActionLabel;
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
@@ -599,7 +603,7 @@ export default function DocumentationPage() {
                                     onClick={handleGetToken}
                                     disabled={tokenLoading}
                                 >
-                                    {tokenLoading ? "Generating..." : projectToken ? "Regenerate Token" : "Generate Project Token"}
+                                    {generateTokenLabel}
                                 </Button>
                                 {projectToken && (
                                     <div className="mt-2 relative">
@@ -780,16 +784,16 @@ function ModuleSection({
     isExpanded,
     onToggle,
     isEnabled,
-}: {
+}: Readonly<{
     module: ModuleDef;
     apiBase: string;
     gatewayBase: string;
     token: string;
-    selectedLang: "curl" | "js" | "python";
+    selectedLang: LangOption;
     isExpanded: boolean;
     onToggle: () => void;
     isEnabled: boolean;
-}) {
+}>) {
     return (
         <div className={`rounded-xl border transition-all ${isEnabled ? "border-white/[0.08]" : "border-white/[0.04] opacity-50"}`}>
             <button
@@ -804,7 +808,7 @@ function ModuleSection({
                     >
                         /{mod.segment}
                     </Badge>
-                    {!isEnabled && (
+                    {isEnabled ? null : (
                         <Badge variant="outline" className="text-[9px] border-amber-500/20 text-amber-400/60">
                             not enabled
                         </Badge>
@@ -812,7 +816,7 @@ function ModuleSection({
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="text-[10px] text-white/20">
-                        {mod.endpoints.length} endpoint{mod.endpoints.length !== 1 ? "s" : ""}
+                        {mod.endpoints.length} endpoint{mod.endpoints.length === 1 ? "" : "s"}
                     </span>
                     <svg aria-hidden="true" className={`w-4 h-4 text-white/20 transition-transform ${isExpanded ? "rotate-180" : ""}`}
                         fill="none"
@@ -828,8 +832,8 @@ function ModuleSection({
             {isExpanded && (
                 <div className="px-3 pb-3 space-y-3">
                     <p className="text-[11px] text-white/30">{mod.description}</p>
-                    {mod.endpoints.map((ep, i) => (
-                        <EndpointCard key={i} endpoint={ep} apiBase={apiBase} gatewayBase={gatewayBase} token={token} lang={selectedLang} />
+                    {mod.endpoints.map((ep) => (
+                        <EndpointCard key={`${ep.method}-${ep.path}`} endpoint={ep} apiBase={apiBase} gatewayBase={gatewayBase} token={token} lang={selectedLang} />
                     ))}
                 </div>
             )}
@@ -847,13 +851,13 @@ function EndpointCard({
     gatewayBase,
     token,
     lang,
-}: {
+}: Readonly<{
     endpoint: EndpointExample;
     apiBase: string;
     gatewayBase: string;
     token: string;
-    lang: "curl" | "js" | "python";
-}) {
+    lang: LangOption;
+}>) {
     const [showCode, setShowCode] = useState(false);
 
     const codeSnippet = useMemo(() => {
@@ -922,12 +926,12 @@ function QuickStartSnippet({
     apiBase,
     gatewayBase,
     lang,
-}: {
+}: Readonly<{
     projectId: string;
     apiBase: string;
     gatewayBase: string;
-    lang: "curl" | "js" | "python";
-}) {
+    lang: LangOption;
+}>) {
     const gateway = gatewayBase;
 
     const snippets: Record<string, string> = {
