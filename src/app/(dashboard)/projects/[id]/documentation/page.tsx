@@ -744,19 +744,19 @@ export default function DocumentationPage() {
                             <pre className="p-3 rounded-lg bg-black/30 border border-white/[0.08] text-[11px] font-mono text-white/50 overflow-x-auto">
                                 {`curl ${gatewayBase}
 
-# Response:
-{
-  "success": true,
-  "data": {
-    "projectId": "${projectId}",
-    "apiBase": "/api/v1/p/${projectId}",
-    "modules": [
-      { "module": "auth", "baseUrl": "/api/v1/p/${projectId}/auth", ... },
-      { "module": "chat", "baseUrl": "/api/v1/p/${projectId}/channels", ... },
-      ...
-    ]
-  }
-}`}
+                                # Response:
+                                {
+                                "success": true,
+                                "data": {
+                                    "projectId": "${projectId}",
+                                    "apiBase": "${gatewayBase}",
+                                    "modules": [
+                                    { "module": "auth", "baseUrl": "${gatewayBase}/auth", ... },
+                                    { "module": "chat", "baseUrl": "${gatewayBase}/channels", ... },
+                                    ...
+                                    ]
+                                }
+                                }`}
                             </pre>
                             <CopyBtn text={`curl ${gatewayBase}`} />
                         </div>
