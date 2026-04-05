@@ -47,6 +47,11 @@ const TableService = {
         await api.delete(`/projects/${projectId}/tables/${tableId}`);
     },
 
+    async updateTable(projectId: string, tableId: string, payload: Partial<Pick<CustomTable, 'displayName' | 'fields'>>): Promise<CustomTable> {
+        const { data } = await api.patch(`/projects/${projectId}/tables/${tableId}`, payload);
+        return data.data;
+    },
+
     async migrateTable(projectId: string, tableId: string): Promise<{ ddl: string; migrated: boolean }> {
         const { data } = await api.post(`/projects/${projectId}/tables/${tableId}/migrate`);
         return data.data;

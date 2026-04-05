@@ -198,8 +198,48 @@ function TableCard({
     table,
     projectId,
     onDeleted,
-}: Readonly<{ table: CustomTable; projectId: string; onDeleted: (id: string) => void }>) {
+    onUpdated,
+}: Readonly<{ table: CustomTable; projectId: string; onDeleted: (id: string) => void; onUpdated: (t: CustomTable) => void }>) {
     const [deleting, setDeleting] = useState(false);
+    const [editing, setEditing] = useState(false);
+    const [draftFields, setDraftFields] = useState<DraftField[]>([]);
+    const [saving, setSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
+
+    function openEdit() {
+        setDraftFields(
+            (table.fields as FieldDefinition[]).map((f) => ({ ...f, id: crypto.randomUUID() }))
+        );
+        setSaveError(null);
+        setEditing(true);
+    }
+
+    function cancelEdit() {
+        setEditing(false);
+        setSaveError(null);
+    }
+
+    async function handleSave() {
+        const validFields = draftFields.filter((f) => f.name);
+        if (validFields.length === 0) { setSaveError("At least one field is required"); return; }
+        setSaving(true);
+        setSaveError(null);
+        try {
+            const updated = await TableService.updateTable(projectId, table.id, {
+                fields: validFields.map(({ id: _id, ...rest }) => rest),
+            });
+            onUpdated(updated);
+            setEditing(false);
+        } catch (err: unknown) {
+            const msg =
+                err && typeof err === "object" && "response" in err
+                    ? ((err as Record<string, Record<string, Record<string, string>>>).response?.data?.message ?? "Failed to save")
+                    : "Failed to save";
+            setSaveError(msg);
+        } finally {
+            setSaving(false);
+        }
+    }
 
     async function handleDelete() {
         if (!confirm(`Remove definition for "${table.displayName}"? This does NOT drop the tenant table.`)) return;
@@ -212,6 +252,14 @@ function TableCard({
         }
     }
 
+    function updateDraftField(id: string, updated: DraftField) {
+        setDraftFields((prev) => prev.map((x) => (x.id === id ? updated : x)));
+    }
+
+    function removeDraftField(id: string) {
+        setDraftFields((prev) => prev.filter((x) => x.id !== id));
+    }
+
     const fields = table.fields as FieldDefinition[];
 
     return (
@@ -221,30 +269,58 @@ function TableCard({
                     <div className="flex items-center gap-2">
                         <CardTitle className="text-base">{table.displayName}</CardTitle>
                         <code className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{table.name}</code>
-
                     </div>
                     <div className="flex items-center gap-2">
+                        {!editing && (
+                            <Button size="sm" variant="outline" onClick={openEdit}>Edit Columns</Button>
+                        )}
                         <Button size="sm" variant="outline" className="text-red-400 border-red-400/30 hover:bg-red-400/10" disabled={deleting} onClick={handleDelete}>
                             {deleting ? "…" : "Delete"}
                         </Button>
                     </div>
                 </div>
             </CardHeader>
-            <CardContent>
-                <div className="flex flex-wrap gap-2">
-                    {/* System columns */}
-                    {["id (uuid)", "created_at", "updated_at"].map((c) => (
-                        <Badge key={c} variant="outline" className="text-xs text-zinc-500 border-zinc-700">{c}</Badge>
-                    ))}
-                    {fields.map((f) => (
-                        <Badge key={f.name} variant="outline" className="text-xs">
-                            {f.name}
-                            <span className="ml-1 text-muted-foreground">{f.type}</span>
-                            {f.required && <span className="ml-1 text-amber-400">*</span>}
-                            {f.unique && <span className="ml-1 text-sky-400">u</span>}
-                        </Badge>
-                    ))}
-                </div>
+            <CardContent className="flex flex-col gap-3">
+                {!editing && (
+                    <div className="flex flex-wrap gap-2">
+                        {["id (uuid)", "created_at", "updated_at"].map((c) => (
+                            <Badge key={c} variant="outline" className="text-xs text-zinc-500 border-zinc-700">{c}</Badge>
+                        ))}
+                        {fields.map((f) => (
+                            <Badge key={f.name} variant="outline" className="text-xs">
+                                {f.name}
+                                <span className="ml-1 text-muted-foreground">{f.type}</span>
+                                {f.required && <span className="ml-1 text-amber-400">*</span>}
+                                {f.unique && <span className="ml-1 text-sky-400">u</span>}
+                            </Badge>
+                        ))}
+                    </div>
+                )}
+                {editing && (
+                    <div className="flex flex-col gap-2">
+                        <div className="grid grid-cols-[1fr_140px_auto_auto_auto] gap-2 text-xs font-medium text-muted-foreground px-0.5">
+                            <span>Column name</span><span>Type</span><span>Required</span><span>Unique</span><span />
+                        </div>
+                        {draftFields.map((f) => (
+                            <FieldRow
+                                key={f.id}
+                                field={f}
+                                onChange={(u) => updateDraftField(f.id, u)}
+                                onRemove={() => removeDraftField(f.id)}
+                            />
+                        ))}
+                        <Button type="button" variant="outline" size="sm" onClick={() => setDraftFields((p) => [...p, newField()])}>
+                            + Add Column
+                        </Button>
+                        {saveError && <p className="text-sm text-red-400">{saveError}</p>}
+                        <div className="flex gap-2 pt-1">
+                            <Button size="sm" onClick={handleSave} disabled={saving}>
+                                {saving ? "Saving…" : "Save"}
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={cancelEdit} disabled={saving}>Cancel</Button>
+                        </div>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );
@@ -284,6 +360,10 @@ export default function ProjectTablesPage() {
 
     function handleDeleted(id: string) {
         setTables((prev) => prev.filter((t) => t.id !== id));
+    }
+
+    function handleUpdated(updated: CustomTable) {
+        setTables((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
     }
 
     return (
@@ -336,6 +416,7 @@ export default function ProjectTablesPage() {
                         table={t}
                         projectId={projectId}
                         onDeleted={handleDeleted}
+                        onUpdated={handleUpdated}
                     />
                 ))}
             </div>
