@@ -74,6 +74,7 @@ const nextConfig: NextConfig = {
                 process.env.NEXT_PUBLIC_BACKEND_URL || "",
                 "wss: ws:",
               ].filter(Boolean).join(" "),
+              "worker-src blob:",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
