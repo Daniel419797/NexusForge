@@ -9,20 +9,14 @@ import DeployService from "@/services/DeployService";
 
 /** Safely extract an error message from Axios-style errors or generic unknown errors */
 function extractErrorMessage(err: unknown, fallback: string): string {
-    if (err && typeof err === "object") {
-        // Axios-style: err.response.data.message
-        const response = (err as Record<string, unknown>).response;
-        if (response && typeof response === "object") {
-            const data = (response as Record<string, unknown>).data;
-            if (data && typeof data === "object") {
-                const msg = (data as Record<string, unknown>).message;
-                if (typeof msg === "string" && msg.length > 0) return msg;
-            }
-        }
-        // Generic Error
-        if ("message" in err && typeof (err as Error).message === "string") {
-            return (err as Error).message;
-        }
+    if (err == null || typeof err !== "object") return fallback;
+    const rec = err as Record<string, unknown>;
+    // Axios-style: err.response.data.message
+    const msg = ((rec.response as Record<string, unknown>)?.data as Record<string, unknown>)?.message;
+    if (typeof msg === "string" && msg.length > 0) return msg;
+    // Generic Error
+    if ("message" in rec && typeof (rec as unknown as Error).message === "string") {
+        return (rec as unknown as Error).message;
     }
     return fallback;
 }
@@ -108,7 +102,7 @@ export const useDeployStore = create<DeployState>((set, get) => ({
         }
     },
 
-    fetchDeployments: async (projectId, limit = 20, offset = 0, status) => {
+    fetchDeployments: async (projectId, limit = 20, offset = 0, status = undefined) => {
         set({ isLoadingList: true, error: null });
         try {
             const result = await DeployService.listDeployments(projectId, { limit, offset, status });
@@ -130,8 +124,7 @@ export const useDeployStore = create<DeployState>((set, get) => ({
             set({ currentDeployment: current, isLoadingCurrentDeployment: false });
         } catch (err: unknown) {
             // Swallow 404 (no live deployment yet) but surface other errors
-            const isNotFound = err && typeof err === "object" && "response" in err &&
-                (err as Record<string, Record<string, unknown>>).response?.status === 404;
+            const isNotFound = (err as Record<string, Record<string, unknown>>)?.response?.status === 404;
             set({ isLoadingCurrentDeployment: false });
             if (!isNotFound) {
                 const message = extractErrorMessage(err, "Failed to fetch current deployment");
@@ -173,7 +166,7 @@ export const useDeployStore = create<DeployState>((set, get) => ({
     /** Called by WebSocket handler when a step update arrives */
     updateDeploymentStep: (deploymentId, log) => {
         const { activeDeployment } = get();
-        if (!activeDeployment || activeDeployment.deployment.id !== deploymentId) return;
+        if (activeDeployment?.deployment.id !== deploymentId) return;
 
         const existingIdx = activeDeployment.logs.findIndex((l) => l.step === log.step);
         let updatedLogs: DeploymentLog[];
@@ -200,7 +193,7 @@ export const useDeployStore = create<DeployState>((set, get) => ({
             const active = s.activeDeployment;
             return {
                 deployments: updated,
-                activeDeployment: active && active.deployment.id === deploymentId
+                activeDeployment: active?.deployment.id === deploymentId
                     ? { ...active, deployment: { ...active.deployment, status: "live" as const } }
                     : active,
                 isDeploying: false,
@@ -217,7 +210,7 @@ export const useDeployStore = create<DeployState>((set, get) => ({
             const active = s.activeDeployment;
             return {
                 deployments: updated,
-                activeDeployment: active && active.deployment.id === deploymentId
+                activeDeployment: active?.deployment.id === deploymentId
                     ? { ...active, deployment: { ...active.deployment, status: "failed" as const, errorMessage: error } }
                     : active,
                 isDeploying: false,
