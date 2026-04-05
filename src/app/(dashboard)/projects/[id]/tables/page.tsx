@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import TableService, { type CustomTable, type FieldDefinition, type FieldType } from "@/services/TableService";
 import { useProjectStore } from "@/store/projectStore";
 
@@ -43,63 +42,6 @@ function newField(): DraftField {
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
-
-function MigrateButton({
-    table,
-    onMigrated,
-}: Readonly<{ table: CustomTable; onMigrated: (ddl: string) => void }>) {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const params = useParams<{ id: string }>();
-
-    async function handleMigrate() {
-        setLoading(true);
-        setError(null);
-        try {
-            const result = await TableService.migrateTable(params.id, table.id);
-            onMigrated(result.ddl);
-        } catch (err: unknown) {
-            const msg =
-                err && typeof err === "object" && "response" in err
-                    ? ((err as Record<string, Record<string, Record<string, string>>>).response?.data?.message ?? "Migration failed")
-                    : "Migration failed";
-            setError(msg);
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    let migrateLabel = "Run Migration";
-    if (loading) migrateLabel = "Migrating\u2026";
-    else if (table.migratedAt) migrateLabel = "Migrated \u2713";
-
-    return (
-        <div className="flex flex-col gap-1">
-            <Button size="sm" onClick={handleMigrate} disabled={loading || !!table.migratedAt}>
-                {migrateLabel}
-            </Button>
-            {error && <p className="text-xs text-red-400">{error}</p>}
-        </div>
-    );
-}
-
-function DdlDialog({
-    ddl,
-    onClose,
-}: Readonly<{ ddl: string | null; onClose: () => void }>) {
-    return (
-        <Dialog open={!!ddl} onOpenChange={onClose}>
-            <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                    <DialogTitle>Applied DDL</DialogTitle>
-                </DialogHeader>
-                <pre className="text-xs bg-zinc-900 rounded p-4 overflow-x-auto text-emerald-300">
-                    {ddl}
-                </pre>
-            </DialogContent>
-        </Dialog>
-    );
-}
 
 function FieldRow({
     field,
@@ -256,8 +198,7 @@ function TableCard({
     table,
     projectId,
     onDeleted,
-    onMigrated,
-}: Readonly<{ table: CustomTable; projectId: string; onDeleted: (id: string) => void; onMigrated: (id: string, ddl: string) => void }>) {
+}: Readonly<{ table: CustomTable; projectId: string; onDeleted: (id: string) => void }>) {
     const [deleting, setDeleting] = useState(false);
 
     async function handleDelete() {
@@ -280,13 +221,9 @@ function TableCard({
                     <div className="flex items-center gap-2">
                         <CardTitle className="text-base">{table.displayName}</CardTitle>
                         <code className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{table.name}</code>
-                        {table.migratedAt
-                            ? <Badge className="bg-emerald-600/20 text-emerald-400 text-xs">Migrated</Badge>
-                            : <Badge variant="outline" className="text-amber-400 border-amber-400/30 text-xs">Pending Migration</Badge>
-                        }
+
                     </div>
                     <div className="flex items-center gap-2">
-                        <MigrateButton table={table} onMigrated={(ddl) => onMigrated(table.id, ddl)} />
                         <Button size="sm" variant="outline" className="text-red-400 border-red-400/30 hover:bg-red-400/10" disabled={deleting} onClick={handleDelete}>
                             {deleting ? "…" : "Delete"}
                         </Button>
@@ -326,7 +263,6 @@ export default function ProjectTablesPage() {
 
     const [tables, setTables] = useState<CustomTable[]>([]);
     const [loading, setLoading] = useState(true);
-    const [ddl, setDdl] = useState<string | null>(null);
 
     const loadTables = useCallback(async () => {
         setLoading(true);
@@ -350,19 +286,12 @@ export default function ProjectTablesPage() {
         setTables((prev) => prev.filter((t) => t.id !== id));
     }
 
-    function handleMigrated(id: string, newDdl: string) {
-        setTables((prev) =>
-            prev.map((t) => (t.id === id ? { ...t, migratedAt: new Date().toISOString() } : t))
-        );
-        setDdl(newDdl);
-    }
-
     return (
         <div className="p-6 flex flex-col gap-6 max-w-4xl mx-auto">
             <div>
                 <h1 className="text-2xl font-semibold">Custom Tables</h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                    Define tables in your project database, run migrations, then use the auto-generated REST endpoints.
+                    Define tables in your project database and use the auto-generated REST endpoints.
                 </p>
             </div>
 
@@ -407,12 +336,10 @@ export default function ProjectTablesPage() {
                         table={t}
                         projectId={projectId}
                         onDeleted={handleDeleted}
-                        onMigrated={handleMigrated}
                     />
                 ))}
             </div>
 
-            <DdlDialog ddl={ddl} onClose={() => setDdl(null)} />
         </div>
     );
 }
