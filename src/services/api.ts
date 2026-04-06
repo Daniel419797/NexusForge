@@ -1,7 +1,5 @@
 import axios from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-
 // ── Global error event emitter for toast integration ──
 type ErrorListener = (message: string) => void;
 const errorListeners = new Set<ErrorListener>();
@@ -18,7 +16,7 @@ function emitApiError(message: string) {
  * Interceptors handle auth token injection and auto-refresh.
  */
 const api = axios.create({
-    baseURL: `${API_BASE_URL}/api/v1`,
+    baseURL: '/api/v1',
     timeout: 15000,
     headers: {
         "Content-Type": "application/json",
@@ -82,7 +80,7 @@ api.interceptors.response.use(
                 const refreshToken = localStorage.getItem("refreshToken");
                 if (!refreshToken) throw new Error("No refresh token");
 
-                const { data } = await axios.post(`${API_BASE_URL}/api/v1/auth/refresh`, {
+                const { data } = await axios.post('/api/v1/auth/refresh', {
                     refreshToken,
                 });
 
