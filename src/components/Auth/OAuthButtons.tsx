@@ -7,8 +7,8 @@ interface OAuthButtonsProps {
 }
 
 export default function OAuthButtons({ mode }: OAuthButtonsProps) {
-    const googleUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/v1/auth/oauth/google`;
-    const githubUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/v1/auth/oauth/github`;
+    const googleUrl = '/api/v1/auth/oauth/google';
+    const githubUrl = '/api/v1/auth/oauth/github';
 
     return (
         <div className="space-y-3">
