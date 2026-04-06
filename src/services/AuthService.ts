@@ -49,11 +49,11 @@ const AuthService = {
     },
 
     getGoogleAuthUrl() {
-        return `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3001"}/api/v1/auth/oauth/google`;
+        return '/api/v1/auth/oauth/google';
     },
 
     getGitHubAuthUrl() {
-        return `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3001"}/api/v1/auth/oauth/github`;
+        return '/api/v1/auth/oauth/github';
     },
 
     async verifyEmail(token: string) {
