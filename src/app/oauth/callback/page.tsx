@@ -42,17 +42,24 @@ function OAuthCallbackInner() {
                 router.replace("/projects");
             })
             .catch((err) => {
-                // If Redis was down during OAuth callback, the code won't exist.
-                // Check if this is a 404/not found error (code doesn't exist in Redis).
-                const isCodeNotFound = err?.status === 404 || err?.message?.includes('not found');
-                
                 if (searchParams.get("code") !== code) return;
+                
+                // Determine error type and show appropriate message
+                const status = err?.response?.status || err?.status;
+                const isServiceUnavailable = status === 503;
+                const isNotFound = status === 404;
+                
                 logout();
                 
-                // Show a more specific error message if Redis was down
-                const errorMsg = isCodeNotFound 
-                    ? 'oauth_service_unavailable' 
-                    : 'oauth_failed';
+                let errorMsg = 'oauth_failed';
+                if (isServiceUnavailable) {
+                    // Redis or other service is temporarily down — user can retry
+                    errorMsg = 'oauth_service_unavailable';
+                } else if (isNotFound || err?.message?.includes('not found')) {
+                    // Code expired or never stored in Redis
+                    errorMsg = 'oauth_code_expired';
+                }
+                
                 router.replace(`/login?error=${errorMsg}`);
             })
             .finally(() => {
