@@ -41,10 +41,19 @@ function OAuthCallbackInner() {
                 setUser(result.user);
                 router.replace("/projects");
             })
-            .catch(() => {
+            .catch((err) => {
+                // If Redis was down during OAuth callback, the code won't exist.
+                // Check if this is a 404/not found error (code doesn't exist in Redis).
+                const isCodeNotFound = err?.status === 404 || err?.message?.includes('not found');
+                
                 if (searchParams.get("code") !== code) return;
                 logout();
-                router.replace("/login?error=oauth_failed");
+                
+                // Show a more specific error message if Redis was down
+                const errorMsg = isCodeNotFound 
+                    ? 'oauth_service_unavailable' 
+                    : 'oauth_failed';
+                router.replace(`/login?error=${errorMsg}`);
             })
             .finally(() => {
                 inFlight.delete(code);
