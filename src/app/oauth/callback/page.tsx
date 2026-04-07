@@ -41,10 +41,26 @@ function OAuthCallbackInner() {
                 setUser(result.user);
                 router.replace("/projects");
             })
-            .catch(() => {
+            .catch((err) => {
                 if (searchParams.get("code") !== code) return;
+                
+                // Determine error type and show appropriate message
+                const status = err?.response?.status || err?.status;
+                const isServiceUnavailable = status === 503;
+                const isNotFound = status === 404;
+                
                 logout();
-                router.replace("/login?error=oauth_failed");
+                
+                let errorMsg = 'oauth_failed';
+                if (isServiceUnavailable) {
+                    // Redis or other service is temporarily down — user can retry
+                    errorMsg = 'oauth_service_unavailable';
+                } else if (isNotFound || err?.message?.includes('not found')) {
+                    // Code expired or never stored in Redis
+                    errorMsg = 'oauth_code_expired';
+                }
+                
+                router.replace(`/login?error=${errorMsg}`);
             })
             .finally(() => {
                 inFlight.delete(code);
