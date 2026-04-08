@@ -3,7 +3,7 @@ import { ClientBackground } from "@/components/Landing/ClientBackground";
 import NavbarLanding from "@/components/Landing/NavbarLanding";
 import HeroSection from "@/components/Landing/HeroSection";
 
-/* Below-fold: code-split & lazy-loaded */
+/* Below-fold sections: code-split & lazy-loaded */
 const ProblemSolution = dynamic(() => import("@/components/Landing/ProblemSolution"), { ssr: true });
 const CoreSuperpowers = dynamic(() => import("@/components/Landing/CoreSuperpowers"), { ssr: true });
 const HowItWorks = dynamic(() => import("@/components/Landing/HowItWorks"), { ssr: true });
@@ -13,15 +13,14 @@ const FooterLanding = dynamic(() => import("@/components/Landing/FooterLanding")
 
 export default function HomePage() {
   return (
-    <>
-      {/* Immersive WebGL background + cursor trail */}
-      <ClientBackground />
-
+    <div className="bg-[#0e0e0e] min-h-screen">
       <NavbarLanding />
-      <main className="relative z-[1]">
+      <main id="main-content" className="relative z-[1]">
         <HeroSection />
-        <ProblemSolution />
         <section id="features">
+          <ProblemSolution />
+        </section>
+        <section id="data-engine">
           <CoreSuperpowers />
         </section>
         <section id="how-it-works">
@@ -35,6 +34,6 @@ export default function HomePage() {
         </section>
       </main>
       <FooterLanding />
-    </>
+    </div>
   );
 }
