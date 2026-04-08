@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, JetBrains_Mono } from "next/font/google";
+import { DM_Sans, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
 import { ToastProvider } from "@/components/ui/toast-provider";
@@ -36,7 +36,12 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
 
 export default function RootLayout({
   children,
@@ -45,7 +50,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${dmSans.variable} ${jetbrainsMono.variable} antialiased grain relative`}>
+      <body className={`${dmSans.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable} antialiased grain relative`}>
         <AuthInitializer />
         <ToastProvider>
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg">
