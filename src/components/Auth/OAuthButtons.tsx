@@ -5,8 +5,24 @@ interface OAuthButtonsProps {
 }
 
 export default function OAuthButtons({ mode }: OAuthButtonsProps) {
-    const googleUrl = '/api/v1/auth/oauth/google';
-    const githubUrl = '/api/v1/auth/oauth/github';
+    // Navigate directly to the Render backend instead of going through
+    // Vercel's Next.js rewrite proxy.  Proxying OAuth 302 redirects through
+    // the rewrite layer causes a 502 when Render's free-tier container is
+    // cold-starting: Vercel's ~30 s proxy timeout fires before the container
+    // is ready.  A direct browser navigation has no such timeout — the browser
+    // simply waits for Render to wake up.
+    const backendBase = (
+        process.env.NEXT_PUBLIC_BACKEND_URL ||
+        process.env.NEXT_PUBLIC_API_URL ||
+        ''
+    ).replace(/\/+$/, '');
+
+    const googleUrl = backendBase
+        ? `${backendBase}/api/v1/auth/oauth/google`
+        : '/api/v1/auth/oauth/google';
+    const githubUrl = backendBase
+        ? `${backendBase}/api/v1/auth/oauth/github`
+        : '/api/v1/auth/oauth/github';
 
     // Use window.location.href to force a full browser navigation.
     // Next.js App Router intercepts same-origin <a> clicks and makes RSC

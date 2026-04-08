@@ -72,6 +72,7 @@ const nextConfig: NextConfig = {
                 process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3001",
                 process.env.NEXT_PUBLIC_API_URL || "",
                 process.env.NEXT_PUBLIC_BACKEND_URL || "",
+                process.env.NEXT_PUBLIC_REUSE_TEST_API_URL || "",
                 "wss: ws:",
               ].filter(Boolean).join(" "),
               "worker-src blob:",
