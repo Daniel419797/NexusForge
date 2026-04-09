@@ -2,15 +2,8 @@
 
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import GlassPanel from "./GlassPanel";
-
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   WizardCTA â€” Call-to-action banner
-   Clean, brand-accented flat card
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 interface WizardCTAProps {
-  /** Callback to open the create-project dialog from the parent */
   onOpenWizard?: () => void;
 }
 
@@ -19,50 +12,42 @@ export default function WizardCTA({ onOpenWizard }: WizardCTAProps) {
   const inView = useInView(ref, { once: true, margin: "-40px" });
 
   return (
-    <div ref={ref}>
-      <GlassPanel accent="brand">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="max-w-md">
-            <motion.h3
-              className="text-xl font-bold text-white/90"
-              initial={{ opacity: 0, y: 8 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.4 }}
-            >
-              Launch your backend in minutes
-            </motion.h3>
-            <motion.p
-              className="mt-2 text-sm leading-relaxed text-white/45"
-              initial={{ opacity: 0, y: 8 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.4, delay: 0.08 }}
-            >
-              Our Configuration Wizard walks you through models, auth, storage, blockchain, and plugin setup â€” all from a single interface.
-            </motion.p>
-          </div>
-
-          <motion.button
-            onClick={onOpenWizard}
-            className="relative shrink-0 rounded-md px-7 py-3 text-sm font-semibold text-white"
-            style={{
-              background: "rgba(220,50,78,0.18)",
-              border: "1px solid rgba(220,50,78,0.25)",
-            }}
-            whileHover={{ scale: 1.03, background: "rgba(220,50,78,0.25)" }}
-            whileTap={{ scale: 0.97 }}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={inView ? { opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 0.35, delay: 0.15 }}
+    <div ref={ref} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-white/[0.04] pb-6">
+      <div className="flex items-start gap-4">
+        <div className="shrink-0 mt-1 w-[3px] self-stretch rounded-full" style={{ background: "rgba(129,236,255,0.5)" }} />
+        <div className="max-w-md">
+          <motion.h3
+            className="text-base font-semibold text-white/80"
+            initial={{ opacity: 0, y: 6 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.4 }}
           >
-            <span className="flex items-center gap-2">
-              <svg aria-hidden="true" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Open Wizard
-            </span>
-          </motion.button>
+            Launch your backend in minutes
+          </motion.h3>
+          <motion.p
+            className="mt-1 text-sm leading-relaxed text-white/35"
+            initial={{ opacity: 0, y: 6 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.4, delay: 0.08 }}
+          >
+            The Configuration Wizard walks you through models, auth, storage, and plugin setup.
+          </motion.p>
         </div>
-      </GlassPanel>
+      </div>
+
+      <motion.button
+        onClick={onOpenWizard}
+        className="shrink-0 self-start sm:self-auto text-sm font-medium text-[#81ecff] hover:text-white transition-colors flex items-center gap-1.5"
+        initial={{ opacity: 0 }}
+        animate={inView ? { opacity: 1 } : {}}
+        transition={{ duration: 0.35, delay: 0.15 }}
+        whileTap={{ scale: 0.97 }}
+      >
+        <svg aria-hidden="true" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        Open Wizard
+      </motion.button>
     </div>
   );
 }

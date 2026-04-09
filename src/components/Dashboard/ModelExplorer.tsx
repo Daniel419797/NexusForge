@@ -60,22 +60,12 @@ export default function ModelExplorer() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="divide-y divide-white/[0.04]">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="rounded-md p-4 border border-white/[0.04] animate-pulse"
-                style={{ background: "rgba(255,255,255,0.02)" }}
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-5 w-5 rounded bg-white/[0.06]" />
-                  <div className="h-3.5 w-1/3 rounded bg-white/[0.08]" />
-                  <div className="ml-auto h-2.5 w-1/4 rounded bg-white/[0.04]" />
-                </div>
-                <div className="space-y-2">
-                  <div className="h-2.5 w-3/4 rounded bg-white/[0.04]" />
-                  <div className="h-2.5 w-1/2 rounded bg-white/[0.03]" />
-                </div>
+              <div key={i} className="flex items-center gap-3 py-3 animate-pulse">
+                <div className="h-4 w-4 rounded bg-white/[0.06]" />
+                <div className="h-3 w-1/3 rounded bg-white/[0.08]" />
+                <div className="ml-auto h-2.5 w-1/5 rounded bg-white/[0.04]" />
               </div>
             ))}
           </div>
@@ -94,66 +84,41 @@ export default function ModelExplorer() {
             <p className="text-xs text-white/25">No data models found</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="divide-y divide-white/[0.04]">
             {models.map((model, i) => (
-              <motion.button
-                key={model.id}
-                onClick={() =>
-                  setExpanded(expanded === model.id ? null : model.id)
-                }
-                className="text-left rounded-md p-4 transition-colors border border-white/[0.04] hover:border-white/[0.08]"
-                style={{ background: "rgba(255,255,255,0.02)" }}
-                initial={{ opacity: 0, y: 16 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
-                whileHover={{ y: -2 }}
+              <motion.div key={model.id}
+                initial={{ opacity: 0, x: -8 }}
+                animate={inView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.3, delay: i * 0.06 }}
               >
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-lg">{model.icon}</span>
-                  <span className="text-sm font-semibold text-white/90">
-                    {model.name}
-                  </span>
-                  <span className="ml-auto text-xs text-white/25">
+                <button
+                  onClick={() => setExpanded(expanded === model.id ? null : model.id)}
+                  className="w-full text-left py-3 flex items-center gap-3 hover:bg-white/[0.02] -mx-2 px-2 rounded transition-colors"
+                >
+                  <span className="text-base shrink-0">{model.icon}</span>
+                  <span className="text-sm font-medium text-white/75">{model.name}</span>
+                  <span className="ml-auto text-xs text-white/25 shrink-0">
                     {model.recordCount.toLocaleString()} rows
                   </span>
-                </div>
+                  <svg className={`shrink-0 w-3 h-3 text-white/20 transition-transform ${expanded === model.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
 
-                {/* Fields preview (always show first 2 + expand) */}
-                <div className="space-y-1.5">
-                  {model.fields
-                    .slice(
-                      0,
-                      expanded === model.id ? model.fields.length : 2,
-                    )
-                    .map((f) => (
-                      <div
-                        key={f.name}
-                        className="flex items-center gap-2 text-xs"
-                      >
-                        <span className="text-white/50 font-mono">
-                          {f.name}
-                        </span>
-                        {f.required && (
-                          <span className="text-rose-400/50 text-[10px]">
-                            *
-                          </span>
-                        )}
-                        <span
-                          className={`ml-auto rounded-md px-1.5 py-0.5 text-[10px] font-medium ${
-                            TYPE_BADGE[f.type] || "text-white/40 bg-white/5"
-                          }`}
-                        >
+                {expanded === model.id && (
+                  <div className="pb-3 pl-8 space-y-1.5">
+                    {model.fields.map((f) => (
+                      <div key={f.name} className="flex items-center gap-2 text-xs">
+                        <span className="text-white/40 font-mono">{f.name}</span>
+                        {f.required && <span className="text-rose-400/40 text-[10px]">*</span>}
+                        <span className={`ml-auto text-[10px] font-medium ${TYPE_BADGE[f.type] || 'text-white/30'}`}>
                           {f.type}
                         </span>
                       </div>
                     ))}
-                  {model.fields.length > 2 && expanded !== model.id && (
-                    <p className="text-[10px] text-white/20">
-                      +{model.fields.length - 2} more fields
-                    </p>
-                  )}
-                </div>
-              </motion.button>
+                  </div>
+                )}
+              </motion.div>
             ))}
           </div>
         )}

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion, useInView } from "framer-motion";
 import { useRef, useEffect, useState, useCallback } from "react";
@@ -7,10 +7,10 @@ import PluginService, {
 } from "@/services/PluginService";
 import { useProjectStore } from "@/store/projectStore";
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   PluginGrid â€” Plugin marketplace preview
+/* -----------------------------------
+   PluginGrid - Plugin marketplace preview
    Wired to real PluginService endpoints
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+   ----------------------------------- */
 
 type Accent = "cyan" | "purple" | "magenta" | "emerald" | "amber";
 
@@ -36,14 +36,14 @@ const CATEGORY_ACCENTS: Record<string, Accent> = {
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
-  core: "âš™ï¸",
-  payments: "ðŸ’°",
-  ai: "ðŸ§ ",
-  web3: "â›“ï¸",
-  blockchain: "â›“ï¸",
-  comms: "ðŸ””",
-  storage: "ðŸ“",
-  auth: "ðŸ”",
+  core: "",
+  payments: "",
+  ai: "",
+  web3: "",
+  blockchain: "",
+  comms: "",
+  storage: "",
+  auth: "",
 };
 
 function resolveAccent(category?: string): Accent {
@@ -53,16 +53,16 @@ function resolveAccent(category?: string): Accent {
 
 function resolveIcon(meta: PluginMeta): string {
   if (meta.icon) return meta.icon;
-  if (meta.category) return CATEGORY_ICONS[meta.category.toLowerCase()] ?? "ðŸ§©";
-  return "ðŸ§©";
+  if (meta.category) return CATEGORY_ICONS[meta.category.toLowerCase()] ?? "";
+  return "";
 }
 
 const ACCENT_BG: Record<string, string> = {
-  cyan: "rgba(0,245,255,0.04)",
-  purple: "rgba(220,50,78,0.06)",
-  magenta: "rgba(220,50,78,0.06)",
-  emerald: "rgba(16,185,129,0.06)",
-  amber: "rgba(245,158,11,0.06)",
+  cyan:    "rgba(129,236,255,0.03)",
+  purple:  "rgba(166,140,255,0.03)",
+  magenta: "rgba(166,140,255,0.03)",
+  emerald: "rgba(16,185,129,0.03)",
+  amber:   "rgba(245,158,11,0.03)",
 };
 
 export default function PluginGrid() {
@@ -107,7 +107,7 @@ export default function PluginGrid() {
             id: `inst-${ip.name}`,
             name: ip.name,
             description: `Installed v${ip.version}`,
-            icon: "ðŸ§©",
+            icon: "",
             installed: true,
             category: "Custom",
             accent: "purple",
@@ -137,26 +137,20 @@ export default function PluginGrid() {
             Plugins
           </h3>
           <span className="text-xs text-white/30">
-            {loading ? "â€¦" : `${installedCount}/${plugins.length} active`}
+            {loading ? "..." : `${installedCount}/${plugins.length} active`}
           </span>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="divide-y divide-white/[0.04]">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className="rounded-md p-3.5 border border-white/[0.03] animate-pulse"
-                style={{ background: "rgba(255,255,255,0.02)" }}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="h-6 w-6 rounded bg-white/[0.06]" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3 w-2/3 rounded bg-white/[0.06]" />
-                    <div className="h-2 w-full rounded bg-white/[0.04]" />
-                    <div className="h-2 w-1/3 rounded bg-white/[0.03]" />
-                  </div>
+              <div key={i} className="flex items-center gap-3 py-2.5 animate-pulse">
+                <div className="h-5 w-5 rounded bg-white/[0.06]" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3 w-1/3 rounded bg-white/[0.06]" />
+                  <div className="h-2 w-2/3 rounded bg-white/[0.04]" />
                 </div>
+                <div className="h-2.5 w-10 rounded bg-white/[0.03]" />
               </div>
             ))}
           </div>
@@ -177,48 +171,29 @@ export default function PluginGrid() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="divide-y divide-white/[0.04]">
             {plugins.map((plugin, i) => (
               <motion.div
                 key={plugin.id}
-                className="group relative rounded-md p-3.5 border transition-colors cursor-pointer"
-                style={{
-                  background: ACCENT_BG[plugin.accent],
-                  borderColor: plugin.installed
-                    ? "rgba(255,255,255,0.06)"
-                    : "rgba(255,255,255,0.03)",
-                }}
-                initial={{ opacity: 0, scale: 0.92 }}
-                animate={inView ? { opacity: 1, scale: 1 } : {}}
-                transition={{ duration: 0.35, delay: i * 0.06 }}
-                whileHover={{ y: -3, borderColor: "rgba(255,255,255,0.12)" }}
+                className="group flex items-center gap-3 py-2.5 -mx-2 px-2 hover:bg-white/[0.02] rounded transition-colors cursor-pointer"
+                initial={{ opacity: 0, x: -8 }}
+                animate={inView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.3, delay: i * 0.04 }}
               >
-                <div className="flex items-start gap-3">
-                  <span className="text-xl shrink-0">{plugin.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-white/85 truncate">
-                        {plugin.name}
-                      </span>
-                      {plugin.installed && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
-                      )}
-                    </div>
-                    <p className="mt-0.5 text-[11px] leading-relaxed text-white/35 line-clamp-2">
-                      {plugin.description}
-                    </p>
-                    <span className="mt-2 inline-block text-[10px] uppercase tracking-wider text-white/20 font-medium">
-                      {plugin.category}
-                    </span>
+                <span className="text-base shrink-0">{plugin.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-white/75 truncate">{plugin.name}</span>
+                    {plugin.installed && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
+                    )}
                   </div>
+                  <p className="text-[11px] text-white/30 line-clamp-1">{plugin.description}</p>
                 </div>
-
-                {/* Install / Manage overlay on hover */}
-                <div className="absolute inset-x-0 bottom-0 flex items-center justify-center rounded-b-md py-1.5 opacity-0 group-hover:opacity-100 transition-opacity bg-white/[0.03]">
-                  <span className="text-[11px] font-medium text-white/50">
-                    {plugin.installed ? "Manage â†’" : "Install â†’"}
-                  </span>
-                </div>
+                <span className="text-[10px] text-white/20 uppercase tracking-wider shrink-0 hidden sm:block">{plugin.category}</span>
+                <span className="text-[11px] text-white/20 group-hover:text-[#81ecff] transition-colors shrink-0">
+                  {plugin.installed ? "Manage" : "Install"} &rarr;
+                </span>
               </motion.div>
             ))}
           </div>
