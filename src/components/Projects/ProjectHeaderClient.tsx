@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, usePathname } from "next/navigation";
 import Link from "next/link";
-import { Skeleton } from "@/components/ui/skeleton";
 import ProjectService from "@/services/ProjectService";
 import { useProjectStore } from "@/store/projectStore";
 import ProjectDashboard from "@/components/Projects/ProjectDashboard";
@@ -51,14 +50,14 @@ export default function ProjectHeaderClient({ children }: { children: React.Reac
 
     if (loading) {
         return (
-            <div className="space-y-6">
-                <Skeleton className="w-48 h-8" />
-                <div className="flex gap-4">
-                    <Skeleton className="w-24 h-9" />
-                    <Skeleton className="w-24 h-9" />
-                    <Skeleton className="w-24 h-9" />
+            <div className="border-b border-white/[0.04] pb-5 mb-6">
+                <div className="flex items-center gap-3 animate-pulse">
+                    <div className="shrink-0 w-[3px] h-10 rounded-full bg-white/[0.06]" />
+                    <div className="flex flex-col gap-2">
+                        <div className="h-5 w-44 rounded bg-white/[0.06]" />
+                        <div className="h-2.5 w-28 rounded bg-white/[0.04]" />
+                    </div>
                 </div>
-                <Skeleton className="w-full h-64 rounded-xl" />
             </div>
         );
     }
