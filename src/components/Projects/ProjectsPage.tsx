@@ -307,13 +307,13 @@ export default function ProjectsPage() {
             </motion.div>
 
             {/* ────── Plugin Grid ────── */}
-            <motion.div
+            {/* <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.55 }}
             >
                 <PluginGrid />
-            </motion.div>
+            </motion.div> */}
 
             {/* Non-core features hidden: Blockchain, X402, AI Assistant */}
 
