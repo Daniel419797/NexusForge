@@ -7,10 +7,10 @@ import DashboardAssistantService, {
 } from "@/services/DashboardAssistantService";
 import { useProjectStore } from "@/store/projectStore";
 
-/* ──────────────────────────────────────
-   AIAssistantOrb — Floating AI chat widget
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   AIAssistantOrb â€” Floating AI chat widget
    Wired to real DashboardAssistantService
-   ────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 interface Message {
   id: string;
@@ -22,7 +22,7 @@ const WELCOME: Message[] = [
   {
     id: "0",
     role: "ai",
-    text: "Hi! I'm your NexusForge AI assistant. Ask me anything about your project — schemas, deployments, API design, or blockchain config.",
+    text: "Hi! I'm your NexusForge AI assistant. Ask me anything about your project â€” schemas, deployments, API design, or blockchain config.",
   },
 ];
 
@@ -50,7 +50,7 @@ export default function AIAssistantOrb() {
         setMessages([...WELCOME, ...mapped]);
       }
     } catch {
-      // Silently fail — keep welcome message
+      // Silently fail â€” keep welcome message
     } finally {
       setHistoryLoaded(true);
     }
@@ -155,7 +155,7 @@ export default function AIAssistantOrb() {
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed bottom-24 right-4 left-4 sm:left-auto sm:right-6 z-50 sm:w-[360px] max-h-[70vh] sm:max-h-[520px] flex flex-col rounded-2xl overflow-hidden"
+            className="fixed bottom-24 right-4 left-4 sm:left-auto sm:right-6 z-50 sm:w-[360px] max-h-[70vh] sm:max-h-[520px] flex flex-col rounded-lg overflow-hidden"
             style={{
               background: "rgba(10,12,28,0.96)",
             border: "1px solid rgba(255,255,255,0.08)",
@@ -178,12 +178,12 @@ export default function AIAssistantOrb() {
                 className="h-8 w-8 rounded-full flex items-center justify-center shrink-0"
                 style={{ background: "rgba(255,255,255,0.08)" }}
               >
-                <span className="text-sm">🤖</span>
+                <span className="text-sm">ðŸ¤–</span>
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-white/90">NexusForge AI</p>
                 <p className="text-[10px] text-emerald-400/60">
-                  {sending ? "Thinking…" : activeProject ? `${activeProject.name}` : "Online"}
+                  {sending ? "Thinkingâ€¦" : activeProject ? `${activeProject.name}` : "Online"}
                 </p>
               </div>
               {activeProject && (
@@ -218,7 +218,7 @@ export default function AIAssistantOrb() {
                   transition={{ duration: 0.25 }}
                 >
                   <div
-                    className={`max-w-[85%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                    className={`max-w-[85%] rounded-md px-3.5 py-2.5 text-sm leading-relaxed ${
                       msg.role === "user"
                         ? "text-white/90"
                         : "text-white/70"
@@ -247,7 +247,7 @@ export default function AIAssistantOrb() {
                   animate={{ opacity: 1 }}
                 >
                   <div
-                    className="rounded-xl px-4 py-3 flex items-center gap-1.5"
+                    className="rounded-md px-4 py-3 flex items-center gap-1.5"
                     style={{
                       background: "rgba(255,255,255,0.04)",
                       border: "1px solid rgba(255,255,255,0.04)",
@@ -271,14 +271,14 @@ export default function AIAssistantOrb() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
-                placeholder={activeProject ? "Ask anything..." : "Select a project first…"}
+                placeholder={activeProject ? "Ask anything..." : "Select a project firstâ€¦"}
                 disabled={sending || !activeProject}
-                className="flex-1 bg-white/[0.04] border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 outline-none focus:border-white/20 transition-colors disabled:opacity-40"
+                className="flex-1 bg-white/[0.04] border border-white/[0.06] rounded px-3 py-2 text-sm text-white/80 placeholder:text-white/20 outline-none focus:border-white/20 transition-colors disabled:opacity-40"
               />
               <motion.button
                 onClick={send}
                 disabled={sending || !activeProject || !input.trim()}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg disabled:opacity-30"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded disabled:opacity-30"
                 style={{
                   background: "rgba(129,236,255,0.12)",
                   border: "1px solid rgba(129,236,255,0.15)",

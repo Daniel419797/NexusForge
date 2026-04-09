@@ -2,11 +2,11 @@
 
 import { ReactNode } from "react";
 
-/* ─────────────────────────────────────────
-   GlassPanel — Flat dark surface card
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   GlassPanel â€” Flat dark surface card
    Clean, minimal. Accent adds a left border
    stripe for brand emphasis where needed.
-   ───────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 type Accent = "default" | "brand" | "warning" | "cyan" | "purple" | "magenta" | "emerald" | "amber";
 
@@ -52,7 +52,7 @@ export default function GlassPanel({
 
   return (
     <div
-      className={`relative rounded-xl overflow-hidden ${className}`}
+      className={`relative rounded-md overflow-hidden ${className}`}
       style={{
         background: "hsl(240 4% 8%)",
         border: `1px solid ${borderColor}`,

@@ -7,10 +7,10 @@ import X402Service, { type X402Config } from "@/services/X402Service";
 import BlockchainService, { type Transaction } from "@/services/BlockchainService";
 import { useProjectStore } from "@/store/projectStore";
 
-/* ──────────────────────────────────────
-   X402Panel — x402 micropayment overview
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   X402Panel â€” x402 micropayment overview
    Wired to real X402Service + BlockchainService
-   ────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 interface PaymentStat {
   label: string;
@@ -72,11 +72,11 @@ export default function X402Panel() {
     },
     {
       label: "Volume",
-      value: totalVolume > 0 ? `$${totalVolume.toFixed(2)}` : "—",
+      value: totalVolume > 0 ? `$${totalVolume.toFixed(2)}` : "â€”",
     },
     {
       label: "Avg. Payment",
-      value: avgPayment > 0 ? `$${avgPayment.toFixed(2)}` : "—",
+      value: avgPayment > 0 ? `$${avgPayment.toFixed(2)}` : "â€”",
     },
   ];
 
@@ -96,7 +96,7 @@ export default function X402Panel() {
           <div className="space-y-3 animate-pulse">
             <div className="grid grid-cols-2 gap-2.5">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="rounded-lg p-2.5" style={{ background: "rgba(255,255,255,0.02)" }}>
+                <div key={i} className="rounded p-2.5" style={{ background: "rgba(255,255,255,0.02)" }}>
                   <div className="h-2 w-1/2 rounded bg-white/[0.06] mb-2" />
                   <div className="h-4 w-3/4 rounded bg-white/[0.08]" />
                 </div>
@@ -124,7 +124,7 @@ export default function X402Panel() {
               {stats.map((s, i) => (
                 <motion.div
                   key={s.label}
-                  className="rounded-lg p-2.5"
+                  className="rounded p-2.5"
                   style={{ background: "rgba(255,255,255,0.02)" }}
                   initial={{ opacity: 0, y: 10 }}
                   animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -151,12 +151,12 @@ export default function X402Panel() {
 
             {/* Wallet info */}
             {config?.walletAddress && (
-              <div className="rounded-lg px-3 py-2 border border-white/[0.04] mb-3" style={{ background: "rgba(255,255,255,0.015)" }}>
+              <div className="rounded px-3 py-2 border border-white/[0.04] mb-3" style={{ background: "rgba(255,255,255,0.015)" }}>
                 <p className="text-[10px] uppercase tracking-wider text-white/25 mb-1">
                   Payment Wallet
                 </p>
                 <p className="text-xs font-mono text-white/50">
-                  {config.walletAddress.slice(0, 10)}…{config.walletAddress.slice(-6)}
+                  {config.walletAddress.slice(0, 10)}â€¦{config.walletAddress.slice(-6)}
                 </p>
                 {config.chain && (
                   <p className="text-[10px] text-white/25 mt-0.5">{config.chain}</p>
@@ -174,7 +174,7 @@ export default function X402Panel() {
                   {transactions.slice(0, 4).map((t, i) => (
                     <motion.div
                       key={t.id}
-                      className="flex items-center gap-3 rounded-lg px-2.5 py-2 border border-white/[0.03]"
+                      className="flex items-center gap-3 rounded px-2.5 py-2 border border-white/[0.03]"
                       style={{ background: "rgba(255,255,255,0.01)" }}
                       initial={{ opacity: 0, x: -10 }}
                       animate={inView ? { opacity: 1, x: 0 } : {}}
@@ -182,7 +182,7 @@ export default function X402Panel() {
                     >
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-mono text-white/50 truncate">
-                          {t.txHash.slice(0, 10)}…{t.txHash.slice(-6)}
+                          {t.txHash.slice(0, 10)}â€¦{t.txHash.slice(-6)}
                         </p>
                         <p className="text-[10px] text-white/20">
                           {new Date(t.createdAt).toLocaleTimeString()}

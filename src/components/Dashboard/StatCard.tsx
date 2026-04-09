@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import GlassPanel from "./GlassPanel";
 
-/* ───────────────────────────────────
-   StatCard — Animated stat counter
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   StatCard â€” Animated stat counter
    with accent glow & trending arrow
-   ─────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 type Accent = "cyan" | "purple" | "magenta" | "emerald" | "amber";
 type Trend = "up" | "down" | "flat";
@@ -52,9 +52,9 @@ const TREND_COLOR: Record<Trend, string> = {
 };
 
 const TREND_ICON: Record<Trend, string> = {
-  up: "↑",
-  down: "↓",
-  flat: "→",
+  up: "â†‘",
+  down: "â†“",
+  flat: "â†’",
 };
 
 export default function StatCard({
@@ -77,7 +77,7 @@ export default function StatCard({
         <div className="flex items-start justify-between gap-3">
           {/* Icon */}
           <div
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md"
             style={{
               background:
                 accent === "cyan"

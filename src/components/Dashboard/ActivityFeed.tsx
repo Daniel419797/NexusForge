@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion, useInView } from "framer-motion";
 import { useRef, useEffect, useState, useCallback } from "react";
@@ -6,10 +6,10 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import DashboardService, { type ActivityEntry } from "@/services/DashboardService";
 import { useProjectStore } from "@/store/projectStore";
 
-/* ───────────────────────────────────────
-   ActivityFeed — Live activity stream
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   ActivityFeed â€” Live activity stream
    Wired to GET /api/v1/dashboard/activity
-   ─────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 type ActivityType = "create" | "deploy" | "update" | "delete" | "ai";
 
@@ -122,7 +122,7 @@ export default function ActivityFeed() {
               return (
                 <motion.div
                   key={item.id}
-                  className="group flex items-start gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-white/[0.03]"
+                  className="group flex items-start gap-3 rounded px-2 py-2.5 transition-colors hover:bg-white/[0.03]"
                   initial={{ opacity: 0, x: -12 }}
                   animate={inView ? { opacity: 1, x: 0 } : {}}
                   transition={{ duration: 0.35, delay: i * 0.06 }}

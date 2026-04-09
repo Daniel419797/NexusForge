@@ -7,10 +7,10 @@ import PluginService, {
 } from "@/services/PluginService";
 import { useProjectStore } from "@/store/projectStore";
 
-/* ───────────────────────────────────────
-   PluginGrid — Plugin marketplace preview
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   PluginGrid â€” Plugin marketplace preview
    Wired to real PluginService endpoints
-   ─────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 type Accent = "cyan" | "purple" | "magenta" | "emerald" | "amber";
 
@@ -36,14 +36,14 @@ const CATEGORY_ACCENTS: Record<string, Accent> = {
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
-  core: "⚙️",
-  payments: "💰",
-  ai: "🧠",
-  web3: "⛓️",
-  blockchain: "⛓️",
-  comms: "🔔",
-  storage: "📁",
-  auth: "🔐",
+  core: "âš™ï¸",
+  payments: "ðŸ’°",
+  ai: "ðŸ§ ",
+  web3: "â›“ï¸",
+  blockchain: "â›“ï¸",
+  comms: "ðŸ””",
+  storage: "ðŸ“",
+  auth: "ðŸ”",
 };
 
 function resolveAccent(category?: string): Accent {
@@ -53,8 +53,8 @@ function resolveAccent(category?: string): Accent {
 
 function resolveIcon(meta: PluginMeta): string {
   if (meta.icon) return meta.icon;
-  if (meta.category) return CATEGORY_ICONS[meta.category.toLowerCase()] ?? "🧩";
-  return "🧩";
+  if (meta.category) return CATEGORY_ICONS[meta.category.toLowerCase()] ?? "ðŸ§©";
+  return "ðŸ§©";
 }
 
 const ACCENT_BG: Record<string, string> = {
@@ -107,7 +107,7 @@ export default function PluginGrid() {
             id: `inst-${ip.name}`,
             name: ip.name,
             description: `Installed v${ip.version}`,
-            icon: "🧩",
+            icon: "ðŸ§©",
             installed: true,
             category: "Custom",
             accent: "purple",
@@ -137,7 +137,7 @@ export default function PluginGrid() {
             Plugins
           </h3>
           <span className="text-xs text-white/30">
-            {loading ? "…" : `${installedCount}/${plugins.length} active`}
+            {loading ? "â€¦" : `${installedCount}/${plugins.length} active`}
           </span>
         </div>
 
@@ -146,7 +146,7 @@ export default function PluginGrid() {
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="rounded-xl p-3.5 border border-white/[0.03] animate-pulse"
+                className="rounded-md p-3.5 border border-white/[0.03] animate-pulse"
                 style={{ background: "rgba(255,255,255,0.02)" }}
               >
                 <div className="flex items-start gap-3">
@@ -181,7 +181,7 @@ export default function PluginGrid() {
             {plugins.map((plugin, i) => (
               <motion.div
                 key={plugin.id}
-                className="group relative rounded-xl p-3.5 border transition-colors cursor-pointer"
+                className="group relative rounded-md p-3.5 border transition-colors cursor-pointer"
                 style={{
                   background: ACCENT_BG[plugin.accent],
                   borderColor: plugin.installed
@@ -214,9 +214,9 @@ export default function PluginGrid() {
                 </div>
 
                 {/* Install / Manage overlay on hover */}
-                <div className="absolute inset-x-0 bottom-0 flex items-center justify-center rounded-b-xl py-1.5 opacity-0 group-hover:opacity-100 transition-opacity bg-white/[0.03]">
+                <div className="absolute inset-x-0 bottom-0 flex items-center justify-center rounded-b-md py-1.5 opacity-0 group-hover:opacity-100 transition-opacity bg-white/[0.03]">
                   <span className="text-[11px] font-medium text-white/50">
-                    {plugin.installed ? "Manage →" : "Install →"}
+                    {plugin.installed ? "Manage â†’" : "Install â†’"}
                   </span>
                 </div>
               </motion.div>

@@ -3,8 +3,8 @@
 import { useRef, useEffect, useState, useCallback, memo } from "react";
 import { motion } from "framer-motion";
 
-/* ──────────────────────────────────────────────────────
-   RealtimeStreamChart — Multi-stream glowing line chart
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   RealtimeStreamChart â€” Multi-stream glowing line chart
    with real-time animated data, pulsing leading dot,
    and configurable accent colors per stream.
 
@@ -16,14 +16,14 @@ import { motion } from "framer-motion";
    - Throttled tooltip state updates (prevents excessive re-renders)
    - ResizeObserver for responsive width
    - Cleanup of all timers/observers/RAF on unmount
-   ────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 type Accent = "cyan" | "purple" | "magenta" | "emerald" | "amber";
 
 export interface StreamConfig {
   label: string;
   accent: Accent;
-  /** Initial seed data (0–1). Falls back to random walk. */
+  /** Initial seed data (0â€“1). Falls back to random walk. */
   data?: number[];
 }
 
@@ -51,7 +51,7 @@ export interface RealtimeStreamChartProps {
   /**
    * When provided, each outer array entry maps 1:1 to `streams`.
    * The chart replaces internal points with these arrays.
-   * Values should be in 0–1 range.
+   * Values should be in 0â€“1 range.
    * When not provided, the chart falls back to the internal random walk.
    */
   externalData?: number[][];
@@ -79,7 +79,7 @@ const STATUS_LABELS: Record<ConnectionStatus, string> = {
   demo: "DEMO",
 };
 
-/** Throttle helper — prevents excessive tooltip state updates */
+/** Throttle helper â€” prevents excessive tooltip state updates */
 function useThrottle<T>(value: T, intervalMs: number): T {
   const [throttled, setThrottled] = useState(value);
   const lastUpdated = useRef(0);
@@ -140,12 +140,12 @@ function RealtimeStreamChartInner({
     }
   }, []);
 
-  // Connection status — tracks freshness of external data
+  // Connection status â€” tracks freshness of external data
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
     externalData ? "live" : "demo",
   );
 
-  // Initialize streams (stable — only reacts to stream count/label changes)
+  // Initialize streams (stable â€” only reacts to stream count/label changes)
   useEffect(() => {
     streamsRef.current = streams.map((s, i) => ({
       points:
@@ -437,7 +437,7 @@ function RealtimeStreamChartInner({
   return (
     <motion.div
       ref={containerRef}
-      className={`relative rounded-xl overflow-hidden ${className}`}
+      className={`relative rounded-md overflow-hidden ${className}`}
       style={{
         height,
         background: "rgba(8,10,25,0.6)",
@@ -508,7 +508,7 @@ function RealtimeStreamChartInner({
       {/* Tooltip */}
       {tooltip && (
         <div
-          className="absolute z-20 pointer-events-none px-2.5 py-1.5 rounded-lg text-xs font-mono"
+          className="absolute z-20 pointer-events-none px-2.5 py-1.5 rounded text-xs font-mono"
           style={{
             left: Math.min(tooltip.x + 12, w - 120),
             top: Math.max(tooltip.y - 8, 4),
@@ -533,6 +533,6 @@ function RealtimeStreamChartInner({
   );
 }
 
-/** Memoized export — prevents re-renders when parent state changes don't affect this chart */
+/** Memoized export â€” prevents re-renders when parent state changes don't affect this chart */
 const RealtimeStreamChart = memo(RealtimeStreamChartInner);
 export default RealtimeStreamChart;

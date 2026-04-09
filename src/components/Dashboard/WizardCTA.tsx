@@ -4,10 +4,10 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import GlassPanel from "./GlassPanel";
 
-/* ──────────────────────────────────────
-   WizardCTA — Call-to-action banner
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   WizardCTA â€” Call-to-action banner
    Clean, brand-accented flat card
-   ────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 interface WizardCTAProps {
   /** Callback to open the create-project dialog from the parent */
@@ -37,13 +37,13 @@ export default function WizardCTA({ onOpenWizard }: WizardCTAProps) {
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.4, delay: 0.08 }}
             >
-              Our Configuration Wizard walks you through models, auth, storage, blockchain, and plugin setup — all from a single interface.
+              Our Configuration Wizard walks you through models, auth, storage, blockchain, and plugin setup â€” all from a single interface.
             </motion.p>
           </div>
 
           <motion.button
             onClick={onOpenWizard}
-            className="relative shrink-0 rounded-xl px-7 py-3 text-sm font-semibold text-white"
+            className="relative shrink-0 rounded-md px-7 py-3 text-sm font-semibold text-white"
             style={{
               background: "rgba(220,50,78,0.18)",
               border: "1px solid rgba(220,50,78,0.25)",
