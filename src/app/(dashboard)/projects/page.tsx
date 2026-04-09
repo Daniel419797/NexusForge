@@ -96,8 +96,8 @@ export default function ProjectsPage() {
                             onClick={() => setCreateOpen(true)}
                             className="shrink-0 text-sm font-semibold"
                             style={{
-                                background: "rgba(220,50,78,0.15)",
-                                border: "1px solid rgba(220,50,78,0.25)",
+                                background: "rgba(129,236,255,0.08)",
+                                border: "1px solid rgba(129,236,255,0.20)",
                             }}
                         >
                             + New Project
@@ -348,8 +348,8 @@ function TabButton({
             style={
                 active
                     ? {
-                        background: "rgba(220,50,78,0.10)",
-                        border: "1px solid rgba(220,50,78,0.18)",
+                        background: "rgba(129,236,255,0.08)",
+                        border: "1px solid rgba(129,236,255,0.15)",
                     }
                     : { background: "transparent", border: "1px solid transparent" }
             }

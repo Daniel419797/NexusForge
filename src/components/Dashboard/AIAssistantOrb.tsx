@@ -125,8 +125,8 @@ export default function AIAssistantOrb() {
         onClick={() => setOpen(!open)}
         className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full"
         style={{
-          background: "rgba(220,50,78,0.85)",
-          border: "1px solid rgba(220,50,78,0.4)",
+          background: "rgba(129,236,255,0.85)",
+          border: "1px solid rgba(129,236,255,0.4)",
           boxShadow: open
             ? "0 4px 24px rgba(0,0,0,0.5)"
             : "0 2px 12px rgba(0,0,0,0.3)",
@@ -226,11 +226,11 @@ export default function AIAssistantOrb() {
                     style={{
                       background:
                         msg.role === "user"
-                          ? "rgba(220,50,78,0.18)"
+                          ? "rgba(129,236,255,0.12)"
                           : "rgba(255,255,255,0.04)",
                       border:
                         msg.role === "user"
-                          ? "1px solid rgba(220,50,78,0.15)"
+                          ? "1px solid rgba(129,236,255,0.15)"
                           : "1px solid rgba(255,255,255,0.04)",
                     }}
                   >
@@ -280,8 +280,8 @@ export default function AIAssistantOrb() {
                 disabled={sending || !activeProject || !input.trim()}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg disabled:opacity-30"
                 style={{
-                  background: "rgba(220,50,78,0.2)",
-                  border: "1px solid rgba(220,50,78,0.18)",
+                  background: "rgba(129,236,255,0.12)",
+                  border: "1px solid rgba(129,236,255,0.15)",
                 }}
                 whileHover={{ scale: sending ? 1 : 1.05 }}
                 whileTap={{ scale: sending ? 1 : 0.95 }}

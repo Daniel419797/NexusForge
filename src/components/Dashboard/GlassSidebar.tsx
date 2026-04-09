@@ -87,7 +87,7 @@ export default function GlassSidebar({
             className="h-9 w-9 shrink-0 rounded-xl flex items-center justify-center"
             style={
               {
-                background: "rgba(220,50,78,0.15)",
+                background: "rgba(129,236,255,0.10)",
               }
             }
           >
@@ -117,8 +117,8 @@ export default function GlassSidebar({
             <motion.div
               className="mx-3 mt-3 rounded-lg px-3 py-2"
               style={{
-                background: "rgba(220,50,78,0.06)",
-                border: "1px solid rgba(220,50,78,0.1)",
+                background: "rgba(129,236,255,0.05)",
+                border: "1px solid rgba(129,236,255,0.10)",
               }}
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -153,8 +153,8 @@ export default function GlassSidebar({
                     layoutId="sidebar-active"
                     className="absolute inset-0 rounded-xl"
                     style={{
-                      background: "rgba(220,50,78,0.08)",
-                      border: "1px solid rgba(220,50,78,0.12)",
+                      background: "rgba(129,236,255,0.06)",
+                      border: "1px solid rgba(129,236,255,0.12)",
                     }}
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
                   />
@@ -164,7 +164,7 @@ export default function GlassSidebar({
                 {isActive && (
                   <motion.span
                     className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-full"
-                    style={{ background: "rgba(220,50,78,0.72)" }}
+                    style={{ background: "rgba(129,236,255,0.80)" }}
                     layoutId="sidebar-bar"
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
                   />

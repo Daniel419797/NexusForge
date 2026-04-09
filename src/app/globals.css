@@ -142,8 +142,8 @@
   --popover: hsl(240 4% 8%);
   --popover-foreground: hsl(0 0% 92%);
 
-  --primary: hsl(353 72% 53%);
-  --primary-foreground: hsl(0 0% 100%);
+  --primary: hsl(189 100% 75%);
+  --primary-foreground: hsl(217 28% 8%);
 
   --secondary: hsl(240 4% 12%);
   --secondary-foreground: hsl(0 0% 75%);
@@ -151,16 +151,16 @@
   --muted: hsl(240 3% 11%);
   --muted-foreground: hsl(240 3% 45%);
 
-  --accent: hsl(353 72% 53%);
-  --accent-foreground: hsl(0 0% 100%);
+  --accent: hsl(189 100% 75%);
+  --accent-foreground: hsl(217 28% 8%);
 
   --destructive: hsl(0 62% 50%);
 
   --border: hsl(240 4% 14%);
   --input: hsl(240 4% 13%);
-  --ring: hsl(353 72% 53%);
+  --ring: hsl(189 100% 75%);
 
-  --chart-1: hsl(353 72% 53%);
+  --chart-1: hsl(189 100% 75%);
   --chart-2: hsl(160 55% 44%);
   --chart-3: hsl(32 85% 52%);
   --chart-4: hsl(240 15% 55%);
@@ -168,23 +168,23 @@
 
   --sidebar: hsl(240 6% 7%);
   --sidebar-foreground: hsl(0 0% 88%);
-  --sidebar-primary: hsl(353 72% 53%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-primary: hsl(189 100% 75%);
+  --sidebar-primary-foreground: hsl(217 28% 8%);
   --sidebar-accent: hsl(240 4% 11%);
   --sidebar-accent-foreground: hsl(0 0% 75%);
   --sidebar-border: hsl(240 5% 11%);
-  --sidebar-ring: hsl(353 72% 53%);
+  --sidebar-ring: hsl(189 100% 75%);
 
   /* Brand tokens */
-  --violet: hsl(353 72% 53%);
-  --violet-light: hsl(353 72% 68%);
-  --violet-dark: hsl(353 72% 40%);
+  --violet: hsl(189 100% 75%);
+  --violet-light: hsl(189 100% 85%);
+  --violet-dark: hsl(189 100% 55%);
   --emerald-accent: hsl(160 55% 44%);
   --emerald-light: hsl(160 50% 55%);
   --ember: hsl(32 85% 52%);
 
   /* Ambient mesh — near zero */
-  --mesh-1: hsl(353 72% 53% / 0.012);
+  --mesh-1: hsl(189 100% 75% / 0.04);
   --mesh-2: hsl(240 5% 40% / 0.018);
   --mesh-3: hsl(0 0% 50% / 0.008);
 }
@@ -281,13 +281,13 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 8px hsl(353 72% 53% / 0.18); }
-  50% { box-shadow: 0 0 24px hsl(353 72% 53% / 0.35); }
+  0%, 100% { box-shadow: 0 0 8px hsl(189 100% 75% / 0.18); }
+  50% { box-shadow: 0 0 24px hsl(189 100% 75% / 0.35); }
 }
 
 @keyframes border-glow {
-  0%, 100% { border-color: hsl(353 72% 53% / 0.12); }
-  50% { border-color: hsl(353 72% 53% / 0.3); }
+  0%, 100% { border-color: hsl(189 100% 75% / 0.12); }
+  50% { border-color: hsl(189 100% 75% / 0.3); }
 }
 
 @keyframes float {
@@ -336,7 +336,7 @@
 
   .glow-teal,
   .glow-violet {
-    box-shadow: 0 0 16px hsl(353 72% 53% / 0.18), 0 0 40px hsl(353 72% 53% / 0.06);
+    box-shadow: 0 0 16px hsl(189 100% 75% / 0.18), 0 0 40px hsl(189 100% 75% / 0.06);
   }
 
   .glow-emerald {

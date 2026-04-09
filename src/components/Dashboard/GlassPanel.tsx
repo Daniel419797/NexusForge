@@ -21,22 +21,22 @@ interface GlassPanelProps {
 
 const ACCENT_BORDER: Record<Accent, string> = {
   default:  "rgba(255,255,255,0.07)",
-  brand:    "rgba(224,53,83,0.25)",
+  brand:    "rgba(129,236,255,0.15)",
   warning:  "rgba(245,158,11,0.2)",
   cyan:     "rgba(255,255,255,0.07)",
   purple:   "rgba(255,255,255,0.07)",
-  magenta:  "rgba(224,53,83,0.2)",
+  magenta:  "rgba(166,140,255,0.18)",
   emerald:  "rgba(255,255,255,0.07)",
   amber:    "rgba(245,158,11,0.18)",
 };
 
 const ACCENT_LEFT: Record<Accent, string | null> = {
   default:  null,
-  brand:    "rgba(224,53,83,0.7)",
+  brand:    "rgba(129,236,255,0.75)",
   warning:  "rgba(245,158,11,0.6)",
   cyan:     null,
   purple:   null,
-  magenta:  "rgba(224,53,83,0.55)",
+  magenta:  "rgba(166,140,255,0.65)",
   emerald:  null,
   amber:    "rgba(245,158,11,0.55)",
 };

@@ -83,9 +83,9 @@ export default function StatCard({
                 accent === "cyan"
                   ? "rgba(0,245,255,0.08)"
                   : accent === "purple"
-                  ? "rgba(220,50,78,0.08)"
+                  ? "rgba(166,140,255,0.08)"
                   : accent === "magenta"
-                  ? "rgba(220,50,78,0.08)"
+                  ? "rgba(166,140,255,0.08)"
                   : accent === "emerald"
                   ? "rgba(16,185,129,0.08)"
                   : "rgba(245,158,11,0.08)",
