@@ -6,6 +6,8 @@ export interface NavItem {
     label: string;
     href: string;
     icon: React.ReactNode;
+    /** When true, only an exact pathname match marks this item active. */
+    exact?: boolean;
 }
 
 export const globalNavItems: NavItem[] = [
@@ -44,6 +46,7 @@ export function getProjectNavItems(projectId: string): NavItem[] {
         {
             label: "Overview",
             href: `/projects/${projectId}`,
+            exact: true,
             icon: (
                 <svg aria-hidden="true" className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h18M3 6h18M3 18h18" />

@@ -16,9 +16,9 @@ const MD_BREAKPOINT = 768;
 
 export default function DashboardLayout({
     children,
-}: {
+}: Readonly<{
     children: React.ReactNode;
-}) {
+}>) {
     const pathname = usePathname();
     const router = useRouter();
     const user = useAuthStore((s) => s.user);
@@ -27,7 +27,9 @@ export default function DashboardLayout({
     const onboardingCompleted = useOnboardingStore((s) => s.completed);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
+    const [isMobile, setIsMobile] = useState(
+        () => globalThis.window !== undefined && globalThis.matchMedia(`(max-width: ${MD_BREAKPOINT - 1}px)`).matches,
+    );
 
     // Redirect to onboarding if not completed (skip if already on /onboarding)
     useEffect(() => {
@@ -38,7 +40,7 @@ export default function DashboardLayout({
 
     // Track viewport width
     useEffect(() => {
-        const mq = window.matchMedia(`(max-width: ${MD_BREAKPOINT - 1}px)`);
+        const mq = globalThis.matchMedia(`(max-width: ${MD_BREAKPOINT - 1}px)`);
         const handler = (e: MediaQueryListEvent | MediaQueryList) => {
             setIsMobile(e.matches);
             if (!e.matches) setMobileOpen(false); // close drawer when resizing to desktop
@@ -54,6 +56,7 @@ export default function DashboardLayout({
     }, [pathname]);
 
     const toggleMobileDrawer = useCallback(() => setMobileOpen((v) => !v), []);
+    const toggleSidebarCollapsed = useCallback(() => setSidebarCollapsed((v) => !v), []);
 
     // Detect when we're viewing a specific project route (e.g. /projects/:id...)
     const pathSegments = pathname?.split("/").filter(Boolean) || [];
@@ -66,6 +69,8 @@ export default function DashboardLayout({
             : globalNavItems;
 
     const isOnboarding = pathname === "/onboarding";
+    const desktopMargin = sidebarCollapsed ? 64 : 240;
+    const contentMarginLeft = isMobile ? 0 : desktopMargin;
 
     // During onboarding, render a minimal chrome-less layout
     if (isOnboarding) {
@@ -85,7 +90,7 @@ export default function DashboardLayout({
                     items={navItems}
                     pathname={pathname}
                     collapsed={sidebarCollapsed}
-                    onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+                    onToggleCollapse={toggleSidebarCollapsed}
                     activeProjectName={activeProject?.name}
                     mobileOpen={mobileOpen}
                     onMobileClose={() => setMobileOpen(false)}
@@ -95,7 +100,7 @@ export default function DashboardLayout({
                 <div
                     className="flex-1 min-w-0 transition-all duration-300"
                     style={{
-                        marginLeft: isMobile ? 0 : sidebarCollapsed ? 64 : 240,
+                        marginLeft: contentMarginLeft,
                     }}
                 >
                     <GlassTopBar
@@ -104,7 +109,7 @@ export default function DashboardLayout({
                         sidebarCollapsed={sidebarCollapsed}
                         onLogout={() => {
                             logout();
-                            window.location.href = "/login";
+                            globalThis.location.href = "/login";
                         }}
                         onMenuToggle={toggleMobileDrawer}
                         isMobile={isMobile}
