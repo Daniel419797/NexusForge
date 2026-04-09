@@ -11,7 +11,7 @@ import { motion } from "framer-motion";
 type Accent = "brand" | "white" | "warning" | "cyan" | "purple" | "magenta" | "emerald" | "amber";
 
 const ACCENT_MAP: Record<Accent, { ring: string; bg: string; border: string }> = {
-  brand:   { ring: "rgba(220,50,78,0.5)",   bg: "rgba(220,50,78,0.15)",  border: "rgba(220,50,78,0.25)" },
+  brand:   { ring: "rgba(129,236,255,0.4)",   bg: "rgba(129,236,255,0.08)",  border: "rgba(129,236,255,0.20)" },
   white:   { ring: "rgba(255,255,255,0.2)", bg: "rgba(255,255,255,0.05)", border: "rgba(255,255,255,0.1)" },
   warning: { ring: "rgba(245,158,11,0.4)",  bg: "rgba(245,158,11,0.1)",  border: "rgba(245,158,11,0.2)" },
   cyan:    { ring: "rgba(220,50,78,0.5)",   bg: "rgba(220,50,78,0.15)",  border: "rgba(220,50,78,0.25)" },
