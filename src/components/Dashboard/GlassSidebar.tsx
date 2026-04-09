@@ -134,7 +134,7 @@ export default function GlassSidebar({
         <nav aria-label="Sidebar navigation" className="mt-4 flex-1 overflow-y-auto px-2 space-y-0.5">
           {items.map((item) => {
             const isActive = pathname === item.href ||
-              (item.href !== "/" && pathname?.startsWith(item.href));
+              (!item.exact && item.href !== "/" && pathname?.startsWith(item.href + "/"));
 
             return (
               <Link
