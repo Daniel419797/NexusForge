@@ -1,20 +1,17 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import TableService, { type CustomTable, type FieldDefinition, type FieldType } from "@/services/TableService";
 import { useProjectStore } from "@/store/projectStore";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// -- Types ---------------------------------------------------------------
 
 type DraftField = Omit<FieldDefinition, "defaultValue"> & { id: string };
 
@@ -27,7 +24,16 @@ const FIELD_TYPES: Array<{ value: FieldType; label: string }> = [
     { value: "object", label: "Object (JSON)" },
 ];
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+const TYPE_COLOR: Record<string, string> = {
+    string:  "text-[#81ecff]",
+    number:  "text-[#a68cff]",
+    boolean: "text-amber-400",
+    date:    "text-emerald-400",
+    array:   "text-orange-400",
+    object:  "text-pink-400",
+};
+
+// -- Helpers -------------------------------------------------------------
 
 function toSnakeCase(s: string) {
     return s
@@ -41,7 +47,7 @@ function newField(): DraftField {
     return { id: crypto.randomUUID(), name: "", type: "string", required: false, unique: false };
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// -- FieldRow (mobile-responsive) ----------------------------------------
 
 function FieldRow({
     field,
@@ -53,60 +59,116 @@ function FieldRow({
     onRemove: () => void;
 }>) {
     return (
-        <div className="grid grid-cols-[1fr_140px_auto_auto_auto] gap-2 items-center">
-            <Input
-                placeholder="field_name"
-                value={field.name}
-                onChange={(e) => onChange({ ...field, name: toSnakeCase(e.target.value) })}
-            />
-            <Select
-                value={field.type}
-                onValueChange={(v) => onChange({ ...field, type: v as FieldType })}
-            >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                    {FIELD_TYPES.map((t) => (
-                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-            <div className="flex items-center gap-1.5">
-                <Switch
-                    id={`req-${field.id}`}
-                    checked={field.required}
-                    onCheckedChange={(v) => onChange({ ...field, required: v })}
+        <div className="flex flex-col gap-2 py-2.5 border-b border-white/[0.04] last:border-0">
+            {/* Row 1: name + delete */}
+            <div className="flex items-center gap-2">
+                <Input
+                    placeholder="field_name"
+                    value={field.name}
+                    onChange={(e) => onChange({ ...field, name: toSnakeCase(e.target.value) })}
+                    className="flex-1 h-8 text-sm font-mono bg-white/[0.03] border-white/[0.06] focus:border-[#81ecff]/40"
                 />
-                <Label htmlFor={`req-${field.id}`} className="text-xs text-muted-foreground">Required</Label>
+                <button
+                    type="button"
+                    onClick={onRemove}
+                    className="shrink-0 h-8 w-8 flex items-center justify-center rounded text-white/25 hover:text-red-400 hover:bg-red-400/10 transition-colors text-sm"
+                >
+                    
+                </button>
             </div>
-            <div className="flex items-center gap-1.5">
-                <Switch
-                    id={`uniq-${field.id}`}
-                    checked={field.unique}
-                    onCheckedChange={(v) => onChange({ ...field, unique: v })}
-                />
-                <Label htmlFor={`uniq-${field.id}`} className="text-xs text-muted-foreground">Unique</Label>
+            {/* Row 2: type + required + unique */}
+            <div className="flex flex-wrap items-center gap-3">
+                <Select
+                    value={field.type}
+                    onValueChange={(v) => onChange({ ...field, type: v as FieldType })}
+                >
+                    <SelectTrigger className="h-7 w-40 text-xs bg-white/[0.03] border-white/[0.06]">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {FIELD_TYPES.map((t) => (
+                            <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+
+                <div className="flex items-center gap-1.5">
+                    <Switch
+                        id={`req-${field.id}`}
+                        checked={field.required}
+                        onCheckedChange={(v) => onChange({ ...field, required: v })}
+                        className="scale-90"
+                    />
+                    <Label htmlFor={`req-${field.id}`} className="text-[11px] text-white/40 cursor-pointer select-none">Required</Label>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                    <Switch
+                        id={`uniq-${field.id}`}
+                        checked={field.unique}
+                        onCheckedChange={(v) => onChange({ ...field, unique: v })}
+                        className="scale-90"
+                    />
+                    <Label htmlFor={`uniq-${field.id}`} className="text-[11px] text-white/40 cursor-pointer select-none">Unique</Label>
+                </div>
             </div>
-            <Button size="sm" variant="outline" onClick={onRemove} className="text-red-400 border-red-400/30 hover:bg-red-400/10">
-                ✕
-            </Button>
         </div>
     );
 }
 
-// ── Create Table Form ─────────────────────────────────────────────────────────
+// -- FieldList (shared between create and edit) ---------------------------
+
+function FieldList({
+    fields,
+    onUpdate,
+    onRemove,
+    onAdd,
+}: Readonly<{
+    fields: DraftField[];
+    onUpdate: (id: string, f: DraftField) => void;
+    onRemove: (id: string) => void;
+    onAdd: () => void;
+}>) {
+    return (
+        <div>
+            <div className="flex items-center justify-between mb-3">
+                <p className="text-[11px] uppercase tracking-wider text-white/30 font-mono">Columns</p>
+                <button
+                    type="button"
+                    onClick={onAdd}
+                    className="text-[11px] text-[#81ecff]/70 hover:text-[#81ecff] transition-colors flex items-center gap-1"
+                >
+                    + Add column
+                </button>
+            </div>
+            <div>
+                {fields.map((f) => (
+                    <FieldRow
+                        key={f.id}
+                        field={f}
+                        onChange={(u) => onUpdate(f.id, u)}
+                        onRemove={() => onRemove(f.id)}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// -- CreateTableForm -----------------------------------------------------
 
 function CreateTableForm({ projectId, onCreated }: Readonly<{ projectId: string; onCreated: (t: CustomTable) => void }>) {
     const [displayName, setDisplayName] = useState("");
     const [fields, setFields] = useState<DraftField[]>([newField()]);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [open, setOpen] = useState(false);
 
     const tableName = toSnakeCase(displayName);
 
     function updateField(id: string, updated: DraftField) {
         setFields((prev) => prev.map((f) => (f.id === id ? updated : f)));
     }
-
     function removeField(id: string) {
         setFields((prev) => prev.filter((f) => f.id !== id));
     }
@@ -116,7 +178,7 @@ function CreateTableForm({ projectId, onCreated }: Readonly<{ projectId: string;
         setError(null);
         if (!tableName) { setError("Table name is required"); return; }
         const validFields = fields.filter((f) => f.name);
-        if (validFields.length === 0) { setError("At least one field is required"); return; }
+        if (validFields.length === 0) { setError("At least one named field is required"); return; }
 
         setSaving(true);
         try {
@@ -128,6 +190,7 @@ function CreateTableForm({ projectId, onCreated }: Readonly<{ projectId: string;
             onCreated(created);
             setDisplayName("");
             setFields([newField()]);
+            setOpen(false);
         } catch (err: unknown) {
             const msg =
                 err && typeof err === "object" && "response" in err
@@ -140,61 +203,94 @@ function CreateTableForm({ projectId, onCreated }: Readonly<{ projectId: string;
     }
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="text-base">Define New Table</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    <div className="flex gap-4 items-end">
-                        <div className="flex-1">
-                            <Label htmlFor="displayName">Display Name</Label>
-                            <Input
-                                id="displayName"
-                                placeholder="Products"
-                                value={displayName}
-                                onChange={(e) => setDisplayName(e.target.value)}
+        <div className="border-b border-white/[0.04] pb-6">
+            <button
+                type="button"
+                onClick={() => setOpen((v) => !v)}
+                className="w-full flex items-center justify-between group text-left"
+            >
+                <div className="flex items-center gap-3">
+                    <span className="text-sm font-semibold text-white/70 group-hover:text-white/90 transition-colors">
+                        Define new table
+                    </span>
+                </div>
+                <span className="text-[11px] text-[#81ecff]/60 group-hover:text-[#81ecff] transition-colors shrink-0">
+                    {open ? "Cancel" : "+ New table"}
+                </span>
+            </button>
+
+            <AnimatePresence>
+                {open && (
+                    <motion.form
+                        key="create-form"
+                        onSubmit={handleSubmit}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                    >
+                        <div className="flex flex-col gap-5 pt-5">
+                            {/* Name row */}
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1">
+                                    <Label htmlFor="displayName" className="text-xs text-white/40 mb-1.5 block">Display name</Label>
+                                    <Input
+                                        id="displayName"
+                                        placeholder="Products"
+                                        value={displayName}
+                                        onChange={(e) => setDisplayName(e.target.value)}
+                                        className="bg-white/[0.03] border-white/[0.06] focus:border-[#81ecff]/40"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <Label className="text-xs text-white/25 mb-1.5 block">Table name (auto)</Label>
+                                    <Input
+                                        value={tableName || ""}
+                                        readOnly
+                                        className="font-mono text-sm text-white/30 bg-white/[0.02] border-white/[0.04] cursor-default"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Fields */}
+                            <FieldList
+                                fields={fields}
+                                onUpdate={updateField}
+                                onRemove={removeField}
+                                onAdd={() => setFields((p) => [...p, newField()])}
                             />
+
+                            {error && <p className="text-sm text-red-400/80">{error}</p>}
+
+                            <div className="flex gap-3">
+                                <Button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="bg-[#81ecff]/10 text-[#81ecff] border border-[#81ecff]/20 hover:bg-[#81ecff]/15 hover:text-white transition-colors"
+                                >
+                                    {saving ? "Saving..." : "Save table"}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() => setOpen(false)}
+                                    className="text-white/30 hover:text-white/60"
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
                         </div>
-                        <div className="flex-1">
-                            <Label className="text-muted-foreground text-xs">Table name (auto)</Label>
-                            <Input value={tableName} readOnly className="text-muted-foreground bg-muted" />
-                        </div>
-                    </div>
-
-                    <Separator />
-
-                    <div className="flex flex-col gap-2">
-                        <div className="grid grid-cols-[1fr_140px_auto_auto_auto] gap-2 text-xs font-medium text-muted-foreground px-0.5">
-                            <span>Column name</span><span>Type</span><span>Required</span><span>Unique</span><span />
-                        </div>
-                        {fields.map((f) => (
-                            <FieldRow
-                                key={f.id}
-                                field={f}
-                                onChange={(u) => updateField(f.id, u)}
-                                onRemove={() => removeField(f.id)}
-                            />
-                        ))}
-                        <Button type="button" variant="outline" size="sm" onClick={() => setFields((p) => [...p, newField()])}>
-                            + Add Column
-                        </Button>
-                    </div>
-
-                    {error && <p className="text-sm text-red-400">{error}</p>}
-
-                    <Button type="submit" disabled={saving}>
-                        {saving ? "Saving…" : "Save Definition"}
-                    </Button>
-                </form>
-            </CardContent>
-        </Card>
+                    </motion.form>
+                )}
+            </AnimatePresence>
+        </div>
     );
 }
 
-// ── Table Card ────────────────────────────────────────────────────────────────
+// -- TableRow (replaces TableCard) ----------------------------------------
 
-function TableCard({
+function TableRow({
     table,
     projectId,
     onDeleted,
@@ -202,16 +298,18 @@ function TableCard({
 }: Readonly<{ table: CustomTable; projectId: string; onDeleted: (id: string) => void; onUpdated: (t: CustomTable) => void }>) {
     const [deleting, setDeleting] = useState(false);
     const [editing, setEditing] = useState(false);
+    const [expanded, setExpanded] = useState(false);
     const [draftFields, setDraftFields] = useState<DraftField[]>([]);
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
 
+    const fields = table.fields as FieldDefinition[];
+
     function openEdit() {
-        setDraftFields(
-            (table.fields as FieldDefinition[]).map((f) => ({ ...f, id: crypto.randomUUID() }))
-        );
+        setDraftFields((table.fields as FieldDefinition[]).map((f) => ({ ...f, id: crypto.randomUUID() })));
         setSaveError(null);
         setEditing(true);
+        setExpanded(true);
     }
 
     function cancelEdit() {
@@ -255,78 +353,131 @@ function TableCard({
     function updateDraftField(id: string, updated: DraftField) {
         setDraftFields((prev) => prev.map((x) => (x.id === id ? updated : x)));
     }
-
     function removeDraftField(id: string) {
         setDraftFields((prev) => prev.filter((x) => x.id !== id));
     }
 
-    const fields = table.fields as FieldDefinition[];
-
     return (
-        <Card>
-            <CardHeader className="pb-2">
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-2">
-                        <CardTitle className="text-base">{table.displayName}</CardTitle>
-                        <code className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{table.name}</code>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {!editing && (
-                            <Button size="sm" variant="outline" onClick={openEdit}>Edit Columns</Button>
-                        )}
-                        <Button size="sm" variant="outline" className="text-red-400 border-red-400/30 hover:bg-red-400/10" disabled={deleting} onClick={handleDelete}>
-                            {deleting ? "…" : "Delete"}
-                        </Button>
-                    </div>
+        <div className="border-b border-white/[0.04] last:border-0">
+            {/* Summary row */}
+            <div className="flex items-center gap-3 py-3 group">
+                <button
+                    type="button"
+                    className="flex-1 min-w-0 flex items-center gap-3 text-left"
+                    onClick={() => !editing && setExpanded((v) => !v)}
+                >
+                    <span className="text-sm font-medium text-white/80 truncate group-hover:text-white transition-colors">
+                        {table.displayName}
+                    </span>
+                    <code className="shrink-0 text-[10px] text-white/25 font-mono bg-white/[0.04] px-1.5 py-0.5 rounded hidden sm:inline">
+                        {table.name}
+                    </code>
+                    <span className="shrink-0 text-[11px] text-white/20">
+                        {fields.length} col{fields.length !== 1 ? "s" : ""}
+                    </span>
+                </button>
+
+                <div className="flex items-center gap-2 shrink-0">
+                    {!editing && (
+                        <button
+                            type="button"
+                            onClick={openEdit}
+                            className="text-[11px] text-white/30 hover:text-[#81ecff] transition-colors hidden sm:inline"
+                        >
+                            Edit
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        onClick={handleDelete}
+                        disabled={deleting}
+                        className="text-[11px] text-white/20 hover:text-red-400 transition-colors"
+                    >
+                        {deleting ? "..." : "Delete"}
+                    </button>
+                    <span className="text-white/15 text-sm select-none transition-transform duration-200" style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}>
+                        &#8964;
+                    </span>
                 </div>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-                {!editing && (
-                    <div className="flex flex-wrap gap-2">
-                        {["id (uuid)", "created_at", "updated_at"].map((c) => (
-                            <Badge key={c} variant="outline" className="text-xs text-zinc-500 border-zinc-700">{c}</Badge>
-                        ))}
-                        {fields.map((f) => (
-                            <Badge key={f.name} variant="outline" className="text-xs">
-                                {f.name}
-                                <span className="ml-1 text-muted-foreground">{f.type}</span>
-                                {f.required && <span className="ml-1 text-amber-400">*</span>}
-                                {f.unique && <span className="ml-1 text-sky-400">u</span>}
-                            </Badge>
-                        ))}
-                    </div>
+            </div>
+
+            {/* Expanded detail */}
+            <AnimatePresence>
+                {expanded && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.18 }}
+                        className="overflow-hidden"
+                    >
+                        {!editing ? (
+                            <div className="pb-4 pl-0">
+                                {/* Field table */}
+                                <div className="mb-3">
+                                    <div className="grid grid-cols-[1fr_80px_50px_50px] sm:grid-cols-[1fr_120px_60px_60px] gap-x-3 py-1.5 border-b border-white/[0.03]">
+                                        <span className="text-[10px] uppercase tracking-wider text-white/20 font-mono">Column</span>
+                                        <span className="text-[10px] uppercase tracking-wider text-white/20 font-mono">Type</span>
+                                        <span className="text-[10px] uppercase tracking-wider text-white/20 font-mono">Req</span>
+                                        <span className="text-[10px] uppercase tracking-wider text-white/20 font-mono">Uniq</span>
+                                    </div>
+                                    {["id (uuid)", "created_at", "updated_at"].map((c) => (
+                                        <div key={c} className="grid grid-cols-[1fr_80px_50px_50px] sm:grid-cols-[1fr_120px_60px_60px] gap-x-3 py-1.5 border-b border-white/[0.02]">
+                                            <span className="text-xs font-mono text-white/30 truncate">{c}</span>
+                                            <span className="text-xs text-white/15 font-mono">system</span>
+                                            <span className="text-[10px] text-white/15"></span>
+                                            <span className="text-[10px] text-white/15"></span>
+                                        </div>
+                                    ))}
+                                    {fields.map((f) => (
+                                        <div key={f.name} className="grid grid-cols-[1fr_80px_50px_50px] sm:grid-cols-[1fr_120px_60px_60px] gap-x-3 py-1.5 border-b border-white/[0.02] last:border-0">
+                                            <span className="text-xs font-mono text-white/70 truncate">{f.name}</span>
+                                            <span className={`text-xs font-mono ${TYPE_COLOR[f.type] ?? "text-white/40"}`}>{f.type}</span>
+                                            <span className="text-[10px]">{f.required ? <span className="text-amber-400">yes</span> : <span className="text-white/15"></span>}</span>
+                                            <span className="text-[10px]">{f.unique ? <span className="text-sky-400">yes</span> : <span className="text-white/15"></span>}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={openEdit}
+                                    className="text-[11px] text-[#81ecff]/60 hover:text-[#81ecff] transition-colors sm:hidden"
+                                >
+                                    Edit columns
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="pb-4">
+                                <FieldList
+                                    fields={draftFields}
+                                    onUpdate={updateDraftField}
+                                    onRemove={removeDraftField}
+                                    onAdd={() => setDraftFields((p) => [...p, newField()])}
+                                />
+                                {saveError && <p className="text-sm text-red-400/80 mt-2">{saveError}</p>}
+                                <div className="flex gap-3 mt-4">
+                                    <Button
+                                        size="sm"
+                                        onClick={handleSave}
+                                        disabled={saving}
+                                        className="bg-[#81ecff]/10 text-[#81ecff] border border-[#81ecff]/20 hover:bg-[#81ecff]/15 hover:text-white transition-colors"
+                                    >
+                                        {saving ? "Saving..." : "Save"}
+                                    </Button>
+                                    <Button size="sm" variant="ghost" onClick={cancelEdit} disabled={saving} className="text-white/30 hover:text-white/60">
+                                        Cancel
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </motion.div>
                 )}
-                {editing && (
-                    <div className="flex flex-col gap-2">
-                        <div className="grid grid-cols-[1fr_140px_auto_auto_auto] gap-2 text-xs font-medium text-muted-foreground px-0.5">
-                            <span>Column name</span><span>Type</span><span>Required</span><span>Unique</span><span />
-                        </div>
-                        {draftFields.map((f) => (
-                            <FieldRow
-                                key={f.id}
-                                field={f}
-                                onChange={(u) => updateDraftField(f.id, u)}
-                                onRemove={() => removeDraftField(f.id)}
-                            />
-                        ))}
-                        <Button type="button" variant="outline" size="sm" onClick={() => setDraftFields((p) => [...p, newField()])}>
-                            + Add Column
-                        </Button>
-                        {saveError && <p className="text-sm text-red-400">{saveError}</p>}
-                        <div className="flex gap-2 pt-1">
-                            <Button size="sm" onClick={handleSave} disabled={saving}>
-                                {saving ? "Saving…" : "Save"}
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={cancelEdit} disabled={saving}>Cancel</Button>
-                        </div>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
+            </AnimatePresence>
+        </div>
     );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// -- Page ----------------------------------------------------------------
 
 export default function ProjectTablesPage() {
     const params = useParams<{ id: string }>();
@@ -357,68 +508,93 @@ export default function ProjectTablesPage() {
     function handleCreated(t: CustomTable) {
         setTables((prev) => [t, ...prev]);
     }
-
     function handleDeleted(id: string) {
         setTables((prev) => prev.filter((t) => t.id !== id));
     }
-
     function handleUpdated(updated: CustomTable) {
         setTables((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
     }
 
+    const base = subdomainBase ?? `/api/v1/p/${projectId}`;
+    const endpointLines = [
+        `GET    ${base}/table/[tableName]`,
+        `POST   ${base}/table/[tableName]`,
+        `PATCH  ${base}/table/[tableName]/[rowId]`,
+        `DELETE ${base}/table/[tableName]/[rowId]`,
+    ];
+
     return (
-        <div className="p-6 flex flex-col gap-6 max-w-4xl mx-auto">
-            <div>
-                <h1 className="text-2xl font-semibold">Custom Tables</h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                    Define tables in your project database and use the auto-generated REST endpoints.
+        <div className="flex flex-col gap-8 max-w-3xl mx-auto px-4 py-6 sm:px-6">
+
+            {/* Header */}
+            <div className="flex items-start gap-4 border-b border-white/[0.04] pb-6">
+                <div className="shrink-0 mt-1 w-[3px] self-stretch rounded-full" style={{ background: "rgba(129,236,255,0.5)" }} />
+                <div>
+                    <h1 className="text-2xl font-bold font-display tracking-tight text-white/90">Custom Tables</h1>
+                    <p className="text-sm text-white/35 mt-1">
+                        Define tables in your project database and use the auto-generated REST endpoints.
+                    </p>
+                </div>
+            </div>
+
+            {/* Endpoint reference */}
+            <div className="flex flex-col gap-3 border-b border-white/[0.04] pb-6">
+                <p className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Endpoint reference</p>
+                <div className="overflow-x-auto rounded-md bg-white/[0.02] border border-white/[0.04] px-4 py-3">
+                    {endpointLines.map((line) => (
+                        <code key={line} className="block text-xs font-mono text-[#81ecff]/70 leading-6 whitespace-pre">
+                            {line}
+                        </code>
+                    ))}
+                </div>
+                <p className="text-[11px] text-white/20">
+                    Replace <span className="text-white/40 font-mono">[tableName]</span> with e.g.{" "}
+                    <span className="text-white/40 font-mono">users</span>,{" "}
+                    <span className="text-white/40 font-mono">products</span>, etc.
+                    Requires project token or API key.
                 </p>
             </div>
 
-            <Card className="bg-muted/30 border-dashed">
-                <CardContent className="pt-4 pb-3 text-xs text-muted-foreground space-y-2">
-                    <p><strong className="text-foreground">Endpoint URLs</strong> (requires project token or API key):</p>
-                    {subdomainBase ? (
-                        <code className="block bg-zinc-900 rounded px-3 py-2 text-sky-300 leading-relaxed">
-                            GET &nbsp; {subdomainBase}/table/[tableName]<br />
-                            POST &nbsp;{subdomainBase}/table/[tableName]<br />
-                            PATCH {subdomainBase}/table/[tableName]/[rowId]<br />
-                            DELETE {subdomainBase}/table/[tableName]/[rowId]
-                        </code>
-                    ) : (
-                        <code className="block bg-zinc-900 rounded px-3 py-2 text-sky-300 leading-relaxed">
-                            GET &nbsp; /api/v1/p/{projectId}/table/[tableName]<br />
-                            POST &nbsp;/api/v1/p/{projectId}/table/[tableName]<br />
-                            PATCH /api/v1/p/{projectId}/table/[tableName]/[rowId]<br />
-                            DELETE /api/v1/p/{projectId}/table/[tableName]/[rowId]
-                        </code>
-                    )}
-                    <p className="text-zinc-500">Replace <span className="text-zinc-300">[tableName]</span> with e.g. <span className="text-zinc-300">users</span>, <span className="text-zinc-300">products</span>, etc.</p>
-                </CardContent>
-            </Card>
-
+            {/* Create form */}
             <CreateTableForm projectId={projectId} onCreated={handleCreated} />
 
-            <div className="flex flex-col gap-4">
-                <h2 className="text-base font-medium">Your Tables</h2>
+            {/* Table list */}
+            <div>
+                <div className="flex items-center justify-between mb-4">
+                    <p className="text-[11px] uppercase tracking-wider text-white/25 font-mono">
+                        Your tables{!loading && tables.length > 0 && ` (${tables.length})`}
+                    </p>
+                </div>
+
                 {loading && (
-                    <div className="flex flex-col gap-3">
-                        <Skeleton className="h-24 w-full" />
-                        <Skeleton className="h-24 w-full" />
+                    <div className="divide-y divide-white/[0.04]">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="flex items-center gap-3 py-3 animate-pulse">
+                                <div className="h-3 flex-1 max-w-[120px] rounded bg-white/[0.06]" />
+                                <div className="h-2.5 w-12 rounded bg-white/[0.04]" />
+                                <div className="h-2 w-8 rounded bg-white/[0.03]" />
+                            </div>
+                        ))}
                     </div>
                 )}
+
                 {!loading && tables.length === 0 && (
-                    <p className="text-sm text-muted-foreground">No tables defined yet.</p>
+                    <p className="text-sm text-white/25 py-3">No tables defined yet.</p>
                 )}
-                {!loading && tables.length > 0 && tables.map((t) => (
-                    <TableCard
-                        key={t.id}
-                        table={t}
-                        projectId={projectId}
-                        onDeleted={handleDeleted}
-                        onUpdated={handleUpdated}
-                    />
-                ))}
+
+                {!loading && tables.length > 0 && (
+                    <div>
+                        {tables.map((t) => (
+                            <TableRow
+                                key={t.id}
+                                table={t}
+                                projectId={projectId}
+                                onDeleted={handleDeleted}
+                                onUpdated={handleUpdated}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
 
         </div>
