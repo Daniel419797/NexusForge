@@ -208,7 +208,7 @@ export default function ProjectOverviewPage() {
                 <p className="text-sm text-muted-foreground mt-1">Project overview and quick access</p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-0 divide-x divide-border border rounded-lg overflow-hidden animate-in-up stagger-1">
+            <div className="flex flex-wrap items-center gap-0 divide-x divide-white/[0.04] border-y border-white/[0.04] animate-in-up stagger-1">
                 <div className="flex items-center gap-3 px-5 py-3.5 flex-1 min-w-0">
                     <span className={`status-dot shrink-0 ${project.status === "active" ? "status-active" : "status-inactive"}`} />
                     <div className="min-w-0">
@@ -239,7 +239,7 @@ export default function ProjectOverviewPage() {
                 <div>
                     <h3 className="text-xs font-mono text-muted-foreground mb-2 uppercase tracking-wider">Module Usage</h3>
                     {analyticsError ? (
-                        <div className="flex items-center justify-center rounded-xl h-70 text-xs font-mono text-white/20"
+                        <div className="flex items-center justify-center rounded-md h-70 text-xs font-mono text-white/20"
                             style={{ background: "rgba(8,10,25,0.6)", border: "1px solid rgba(255,255,255,0.04)" }}>
                             Failed to load analytics — will retry on next navigation
                         </div>
