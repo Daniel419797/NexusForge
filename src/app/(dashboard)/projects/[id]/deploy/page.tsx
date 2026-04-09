@@ -2,11 +2,8 @@
 
 import { useEffect, useCallback, useState, useRef } from "react";
 import { useParams } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useDeployStore } from "@/store/deployStore";
 import type { Deployment, DeploymentLog, DeployStep } from "@/types";
@@ -23,26 +20,15 @@ const STEP_LABELS: Record<DeployStep, string> = {
     go_live: "Go Live",
 };
 
-const STATUS_COLORS: Record<string, string> = {
-    pending: "bg-zinc-700 text-zinc-300",
-    running: "bg-blue-600/20 text-blue-400 animate-pulse",
-    done: "bg-emerald-600/20 text-emerald-400",
-    failed: "bg-red-600/20 text-red-400",
-    skipped: "bg-zinc-600/20 text-zinc-400",
+const STEP_STATUS_COLOR: Record<string, string> = {
+    pending: "text-white/20",
+    running: "text-[#81ecff] animate-pulse",
+    done: "text-emerald-400",
+    failed: "text-red-400",
+    skipped: "text-white/20",
 };
 
-const DEPLOY_STATUS_COLORS: Record<string, string> = {
-    pending: "bg-zinc-700 text-zinc-300",
-    validating: "bg-blue-600/20 text-blue-400",
-    provisioning: "bg-amber-600/20 text-amber-400",
-    activating: "bg-rose-600/20 text-rose-400",
-    live: "bg-emerald-600/20 text-emerald-400",
-    failed: "bg-red-600/20 text-red-400",
-    rolled_back: "bg-orange-600/20 text-orange-400",
-    superseded: "bg-zinc-600/20 text-zinc-400",
-};
-
-const STATUS_ICONS: Record<string, string> = {
+const STEP_STATUS_ICON: Record<string, string> = {
     pending: "○",
     running: "◉",
     done: "✓",
@@ -50,7 +36,30 @@ const STATUS_ICONS: Record<string, string> = {
     skipped: "—",
 };
 
-/* ── Readiness Panel ── */
+const DEPLOY_STATUS_COLOR: Record<string, string> = {
+    pending: "text-white/30",
+    validating: "text-[#81ecff]",
+    provisioning: "text-amber-400",
+    activating: "text-rose-400",
+    live: "text-emerald-400",
+    failed: "text-red-400",
+    rolled_back: "text-orange-400",
+    superseded: "text-white/25",
+};
+
+const DEPLOY_STATUS_DOT: Record<string, string> = {
+    pending: "bg-white/20",
+    validating: "bg-[#81ecff] animate-pulse",
+    provisioning: "bg-amber-400 animate-pulse",
+    activating: "bg-rose-400 animate-pulse",
+    live: "bg-emerald-400",
+    failed: "bg-red-400",
+    rolled_back: "bg-orange-400",
+    superseded: "bg-white/15",
+};
+
+/* -- Readiness Panel ----------------------------------------------- */
+
 function ReadinessPanel({ projectId }: Readonly<{ projectId: string }>) {
     const { readiness, isLoadingReadiness, fetchReadiness } = useDeployStore();
 
@@ -58,115 +67,90 @@ function ReadinessPanel({ projectId }: Readonly<{ projectId: string }>) {
         fetchReadiness(projectId);
     }, [projectId, fetchReadiness]);
 
-    if (isLoadingReadiness) {
-        return (
-            <Card className="bg-zinc-900/50 border-zinc-800">
-                <CardHeader><CardTitle className="text-sm text-zinc-400">Deploy Readiness</CardTitle></CardHeader>
-                <CardContent className="space-y-2">
-                    {Array.from({ length: 5 }, (_, i) => (
-                        <Skeleton key={`readiness-skeleton-${i}`} className="h-6 w-full bg-zinc-800" />
-                    ))}
-                </CardContent>
-            </Card>
-        );
-    }
-
-    if (!readiness) {
-        return (
-            <Card className="bg-zinc-900/50 border-zinc-800">
-                <CardHeader><CardTitle className="text-sm text-zinc-400">Deploy Readiness</CardTitle></CardHeader>
-                <CardContent>
-                    <p className="text-sm text-red-400">Failed to load readiness checks. Try refreshing the page.</p>
-                </CardContent>
-            </Card>
-        );
-    }
-
     return (
-        <Card className="bg-zinc-900/50 border-zinc-800">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm text-zinc-400">
-                    Deploy Readiness
-                    {readiness.ready ? (
-                        <Badge className="bg-emerald-600/20 text-emerald-400 text-xs">Ready</Badge>
-                    ) : (
-                        <Badge className="bg-red-600/20 text-red-400 text-xs">Not Ready</Badge>
-                    )}
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <ul className="space-y-2">
-                    {readiness.checks.map((check) => (
-                        <li key={check.name} className="flex items-center gap-3 text-sm">
-                            {(() => {
-                                const dotColorNonPass = check.status === "warn" ? "bg-amber-500" : "bg-red-500";
-                                const dotColor = check.status === "pass" ? "bg-emerald-500" : dotColorNonPass;
-                                const badgeColorNonPass = check.status === "warn" ? "text-amber-400 border-amber-800" : "text-red-400 border-red-800";
-                                const badgeColor = check.status === "pass" ? "text-emerald-400 border-emerald-800" : badgeColorNonPass;
-                                return (
-                                    <>
-                                        <span className={`inline-block w-2 h-2 rounded-full ${dotColor}`} />
-                                        <span className="text-zinc-300 flex-1">{check.message}</span>
-                                        <Badge variant="outline" className={`text-xs ${badgeColor}`}>
-                                        {check.status}
-                                        </Badge>
-                                    </>
-                                );
-                            })()}
-                        </li>
+        <div>
+            <div className="flex items-center justify-between mb-3">
+                <p className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Deploy Readiness</p>
+                {!isLoadingReadiness && readiness && (
+                    <span className={`text-[11px] font-medium ${readiness.ready ? "text-emerald-400" : "text-red-400"}`}>
+                        {readiness.ready ? "Ready" : "Not ready"}
+                    </span>
+                )}
+            </div>
+
+            {isLoadingReadiness && (
+                <div className="divide-y divide-white/[0.04] animate-pulse">
+                    {Array.from({ length: 5 }, (_, i) => (
+                        <div key={i} className="flex items-center gap-3 py-2.5">
+                            <div className="h-1.5 w-1.5 rounded-full bg-white/[0.06]" />
+                            <div className="h-2.5 flex-1 rounded bg-white/[0.04]" />
+                            <div className="h-2 w-8 rounded bg-white/[0.03]" />
+                        </div>
                     ))}
-                </ul>
-            </CardContent>
-        </Card>
+                </div>
+            )}
+
+            {!isLoadingReadiness && !readiness && (
+                <p className="text-xs text-red-400/70 py-2">Failed to load readiness checks.</p>
+            )}
+
+            {!isLoadingReadiness && readiness && (
+                <div className="divide-y divide-white/[0.04]">
+                    {readiness.checks.map((check) => {
+                        const dotColor = check.status === "pass" ? "bg-emerald-400" : check.status === "warn" ? "bg-amber-400" : "bg-red-400";
+                        const textColor = check.status === "pass" ? "text-white/60" : check.status === "warn" ? "text-amber-400/80" : "text-red-400/80";
+                        return (
+                            <div key={check.name} className="flex items-center gap-3 py-2.5">
+                                <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${dotColor}`} />
+                                <span className={`flex-1 text-xs ${textColor}`}>{check.message}</span>
+                                <span className={`shrink-0 text-[10px] uppercase tracking-wider font-mono ${
+                                    check.status === "pass" ? "text-emerald-400/60" : check.status === "warn" ? "text-amber-400/60" : "text-red-400/60"
+                                }`}>{check.status}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
     );
 }
 
-/* ── Deploy Log Console ── */
+/* -- Log Console --------------------------------------------------- */
+
 function DeployLogConsole({ logs }: Readonly<{ logs: DeploymentLog[] }>) {
     const consoleRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        // Auto-scroll to latest step
         if (consoleRef.current) {
             consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
         }
     }, [logs]);
 
     return (
-        <div ref={consoleRef} className="bg-black/60 rounded-lg p-4 max-h-80 overflow-y-auto font-mono text-xs space-y-1.5">
+        <div ref={consoleRef} className="bg-black/40 border border-white/[0.04] rounded-md px-4 py-3 max-h-72 overflow-y-auto font-mono text-xs space-y-1.5">
             {logs.map((log) => (
                 <div key={log.id || log.step} className="flex gap-3 items-start">
-                    {(() => {
-                        const iconColorNonDoneRunning = log.status === "failed" ? "text-red-400" : "text-zinc-500";
-                        const iconColorNonDone = log.status === "running" ? "text-blue-400" : iconColorNonDoneRunning;
-                        const iconColor = log.status === "done" ? "text-emerald-400" : iconColorNonDone;
-                        const messageColorNonRunningFailed = log.status === "done" ? "text-zinc-300" : "text-zinc-600";
-                        const messageColorNonRunning = log.status === "failed" ? "text-red-300" : messageColorNonRunningFailed;
-                        const messageColor = log.status === "running" ? "text-blue-300" : messageColorNonRunning;
-                        const messageText = log.message || (log.status === "pending" ? "Waiting…" : "");
-                        return (
-                            <>
-                                <span className={`shrink-0 w-4 text-center ${iconColor}`}>
-                                    {STATUS_ICONS[log.status] || "○"}
-                                </span>
-                                <span className="text-zinc-500 shrink-0 w-28">{STEP_LABELS[log.step] || log.step}</span>
-                                <span className={`flex-1 ${messageColor}`}>{messageText}</span>
-                            </>
-                        );
-                    })()}
-                    <Badge className={`text-[10px] px-1.5 py-0 ${STATUS_COLORS[log.status] || ""}`}>
+                    <span className={`shrink-0 w-4 text-center ${STEP_STATUS_COLOR[log.status] ?? "text-white/20"}`}>
+                        {STEP_STATUS_ICON[log.status] ?? "○"}
+                    </span>
+                    <span className="text-white/25 shrink-0 w-32">{STEP_LABELS[log.step] ?? log.step}</span>
+                    <span className={`flex-1 ${STEP_STATUS_COLOR[log.status] ?? "text-white/30"}`}>
+                        {log.message || (log.status === "pending" ? "Waiting…" : "")}
+                    </span>
+                    <span className={`shrink-0 text-[10px] uppercase tracking-wider ${STEP_STATUS_COLOR[log.status] ?? "text-white/20"}`}>
                         {log.status}
-                    </Badge>
+                    </span>
                 </div>
             ))}
             {logs.length === 0 && (
-                <div className="text-zinc-600 text-center py-4">No steps logged yet</div>
+                <div className="text-white/15 text-center py-4">No steps logged yet</div>
             )}
         </div>
     );
 }
 
-/* ── Deploy Trigger Card ── */
+/* -- Deploy Trigger ------------------------------------------------ */
+
 function DeployTrigger({ projectId }: Readonly<{ projectId: string }>) {
     const { readiness, isDeploying, triggerDeploy, activeDeployment, error, clearError } = useDeployStore();
     const [releaseNote, setReleaseNote] = useState("");
@@ -182,60 +166,59 @@ function DeployTrigger({ projectId }: Readonly<{ projectId: string }>) {
         ["pending", "validating", "provisioning", "activating"].includes(activeDeployment.deployment.status);
 
     return (
-        <Card className="bg-zinc-900/50 border-zinc-800">
-            <CardHeader>
-                <CardTitle className="text-sm text-zinc-400">
-                    {isActive ? "Deployment In Progress" : "Deploy"}
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                {isActive && activeDeployment ? (
-                    <>
-                        <div className="flex items-center gap-3 mb-2">
-                            <Badge className={DEPLOY_STATUS_COLORS[activeDeployment.deployment.status] || ""}>
-                                {activeDeployment.deployment.status}
-                            </Badge>
-                            <span className="text-xs text-zinc-500">v{activeDeployment.deployment.version}</span>
-                        </div>
-                        <DeployLogConsole logs={activeDeployment.logs} />
-                    </>
-                ) : (
-                    <>
-                        <Textarea
-                            placeholder="Release note (optional)"
-                            value={releaseNote}
-                            onChange={(e) => setReleaseNote(e.target.value)}
-                            className="bg-zinc-800/50 border-zinc-700 text-zinc-300 text-sm resize-none h-20"
-                            maxLength={500}
-                        />
-                        {error && (
-                            <div className="text-red-400 text-xs bg-red-900/20 rounded p-2">{error}</div>
+        <div className="border-t border-white/[0.04] pt-5 mt-6">
+            <p className="text-[11px] uppercase tracking-wider text-white/25 font-mono mb-3">
+                {isActive ? "Deployment in progress" : "Trigger deployment"}
+            </p>
+
+            {isActive && activeDeployment ? (
+                <div>
+                    <div className="flex items-center gap-2.5 mb-3">
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${DEPLOY_STATUS_DOT[activeDeployment.deployment.status] ?? "bg-white/20"}`} />
+                        <span className={`text-sm font-medium capitalize ${DEPLOY_STATUS_COLOR[activeDeployment.deployment.status] ?? "text-white/50"}`}>
+                            {activeDeployment.deployment.status}
+                        </span>
+                        <span className="text-xs text-white/20">v{activeDeployment.deployment.version}</span>
+                    </div>
+                    <DeployLogConsole logs={activeDeployment.logs} />
+                </div>
+            ) : (
+                <div className="flex flex-col gap-3">
+                    <Textarea
+                        placeholder="Release note (optional)"
+                        value={releaseNote}
+                        onChange={(e) => setReleaseNote(e.target.value)}
+                        className="bg-white/[0.03] border-white/[0.06] focus:border-[#81ecff]/30 text-sm text-white/70 resize-none h-20 placeholder:text-white/20"
+                        maxLength={500}
+                    />
+                    {error && (
+                        <p className="text-xs text-red-400/80 bg-red-400/5 border border-red-400/10 rounded px-3 py-2">{error}</p>
+                    )}
+                    {!readiness?.ready && readiness && (
+                        <p className="text-[11px] text-amber-400/70">Resolve all readiness checks before deploying</p>
+                    )}
+                    <Button
+                        onClick={handleDeploy}
+                        disabled={isDeploying || !readiness?.ready}
+                        className="self-start bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/25 hover:text-emerald-300 disabled:opacity-30 transition-colors"
+                    >
+                        {isDeploying ? (
+                            <span className="flex items-center gap-2">
+                                <span className="h-3 w-3 rounded-full border-2 border-emerald-400/30 border-t-emerald-400 animate-spin" />
+                                Deploying...
+                            </span>
+                        ) : (
+                            "Deploy Now"
                         )}
-                        <Button
-                            onClick={handleDeploy}
-                            disabled={isDeploying || !readiness?.ready}
-                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40"
-                        >
-                            {isDeploying ? (
-                                <span className="flex items-center gap-2">
-                                    <span className="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                                    <span>Deploying…</span>
-                                </span>
-                            ) : (
-                                "Deploy Now"
-                            )}
-                        </Button>
-                        {!readiness?.ready && readiness && (
-                            <p className="text-xs text-amber-400">Resolve all readiness checks before deploying</p>
-                        )}
-                    </>
-                )}
-            </CardContent>
-        </Card>
+                    </Button>
+                </div>
+            )}
+        </div>
     );
 }
 
-/* ── Deployment History ── */
+/* -- Deployment History --------------------------------------------- */
+
 function DeploymentHistory({ projectId }: Readonly<{ projectId: string }>) {
     const {
         deployments,
@@ -265,76 +248,74 @@ function DeploymentHistory({ projectId }: Readonly<{ projectId: string }>) {
         setPage(0);
     }, [projectId, rollback, fetchDeployments]);
 
-    if (isLoadingList) {
-        return (
-            <Card className="bg-zinc-900/50 border-zinc-800">
-                <CardHeader><CardTitle className="text-sm text-zinc-400">Deployment History</CardTitle></CardHeader>
-                <CardContent className="space-y-2">
-                    {Array.from({ length: 5 }, (_, i) => (
-                        <Skeleton key={`history-skeleton-${i}`} className="h-12 w-full bg-zinc-800" />
-                    ))}
-                </CardContent>
-            </Card>
-        );
-    }
-
     return (
-        <Card className="bg-zinc-900/50 border-zinc-800">
-            <CardHeader>
-                <CardTitle className="flex items-center justify-between text-sm text-zinc-400">
-                    <span>Deployment History</span>
-                    <span className="text-xs text-zinc-600">{total} total</span>
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                {deployments.length === 0 ? (
-                    <div className="text-center text-zinc-600 py-8 text-sm">No deployments yet</div>
-                ) : (
-                    <div className="space-y-2">
-                        {deployments.map((dep) => (
-                            <DeploymentRow
-                                key={dep.id}
-                                deployment={dep}
-                                isSelected={activeDeployment?.deployment.id === dep.id}
-                                onView={handleViewDetail}
-                                onRollback={handleRollback}
-                                isRollingBack={isRollingBack}
-                            />
-                        ))}
-                    </div>
+        <div className="border-t border-white/[0.04] pt-6">
+            <div className="flex items-center justify-between mb-3">
+                <p className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Deployment History</p>
+                {!isLoadingList && total > 0 && (
+                    <span className="text-[11px] text-white/15">{total} total</span>
                 )}
+            </div>
 
-                {total > LIMIT && (
-                    <div className="flex items-center justify-between pt-4 mt-4 border-t border-zinc-800">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setPage((p) => Math.max(0, p - 1))}
-                            disabled={page === 0}
-                            className="text-zinc-400"
-                        >
-                            Previous
-                        </Button>
-                        <span className="text-xs text-zinc-500">
-                            Page {page + 1} of {Math.ceil(total / LIMIT)}
-                        </span>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setPage((p) => p + 1)}
-                            disabled={(page + 1) * LIMIT >= total}
-                            className="text-zinc-400"
-                        >
-                            Next
-                        </Button>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
+            {isLoadingList && (
+                <div className="divide-y divide-white/[0.04] animate-pulse">
+                    {Array.from({ length: 5 }, (_, i) => (
+                        <div key={i} className="flex items-center gap-3 py-2.5">
+                            <div className="h-1.5 w-1.5 rounded-full bg-white/[0.06]" />
+                            <div className="h-2.5 w-8 rounded bg-white/[0.06]" />
+                            <div className="h-2.5 flex-1 rounded bg-white/[0.04]" />
+                            <div className="h-2 w-16 rounded bg-white/[0.03]" />
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {!isLoadingList && deployments.length === 0 && (
+                <p className="text-sm text-white/20 py-3">No deployments yet.</p>
+            )}
+
+            {!isLoadingList && deployments.length > 0 && (
+                <div className="divide-y divide-white/[0.04]">
+                    {deployments.map((dep) => (
+                        <DeploymentRow
+                            key={dep.id}
+                            deployment={dep}
+                            isSelected={activeDeployment?.deployment.id === dep.id}
+                            onView={handleViewDetail}
+                            onRollback={handleRollback}
+                            isRollingBack={isRollingBack}
+                        />
+                    ))}
+                </div>
+            )}
+
+            {total > LIMIT && (
+                <div className="flex items-center justify-between pt-4 mt-2">
+                    <button
+                        onClick={() => setPage((p) => Math.max(0, p - 1))}
+                        disabled={page === 0}
+                        className="text-xs text-white/30 hover:text-white/60 disabled:opacity-30 transition-colors"
+                    >
+                        ← Previous
+                    </button>
+                    <span className="text-[11px] text-white/20">
+                        {page + 1} / {Math.ceil(total / LIMIT)}
+                    </span>
+                    <button
+                        onClick={() => setPage((p) => p + 1)}
+                        disabled={(page + 1) * LIMIT >= total}
+                        className="text-xs text-white/30 hover:text-white/60 disabled:opacity-30 transition-colors"
+                    >
+                        Next →
+                    </button>
+                </div>
+            )}
+        </div>
     );
 }
 
-/* ── Deployment Row ── */
+/* -- Deployment Row ------------------------------------------------ */
+
 function DeploymentRow({
     deployment,
     isSelected,
@@ -351,59 +332,57 @@ function DeploymentRow({
     const canRollback = deployment.status === "live" || deployment.status === "superseded";
 
     return (
-        <button
-            type="button"
-            className={`w-full flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors text-left ${isSelected ? "bg-zinc-800/80 ring-1 ring-zinc-700" : "bg-zinc-800/30 hover:bg-zinc-800/50"
-                }`}
+        <div
+            className={`flex items-center gap-3 py-2.5 -mx-2 px-2 rounded transition-colors cursor-pointer ${
+                isSelected ? "bg-white/[0.04]" : "hover:bg-white/[0.02]"
+            }`}
             onClick={() => onView(deployment.id)}
-            aria-label={`View deployment v${deployment.version} — ${deployment.status}`}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === "Enter" && onView(deployment.id)}
+            aria-label={`View deployment v${deployment.version}`}
         >
+            <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${DEPLOY_STATUS_DOT[deployment.status] ?? "bg-white/20"}`} />
+
             <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-zinc-200">v{deployment.version}</span>
-                    <Badge className={`text-[10px] ${DEPLOY_STATUS_COLORS[deployment.status] || ""}`}>
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-mono font-medium text-white/70">v{deployment.version}</span>
+                    <span className={`text-xs capitalize ${DEPLOY_STATUS_COLOR[deployment.status] ?? "text-white/30"}`}>
                         {deployment.status}
-                    </Badge>
-                </div>
-                <div className="text-xs text-zinc-500 mt-0.5 truncate">
-                    {deployment.releaseNote || "No release note"}
+                    </span>
                     {deployment.errorMessage && (
-                        <span className="text-red-400 ml-2">— {deployment.errorMessage}</span>
+                        <span className="text-[11px] text-red-400/70 truncate">{deployment.errorMessage}</span>
                     )}
                 </div>
+                {deployment.releaseNote && (
+                    <p className="text-[11px] text-white/25 truncate mt-0.5">{deployment.releaseNote}</p>
+                )}
             </div>
 
-            <div className="text-right shrink-0">
-                <div className="text-xs text-zinc-500">
-                    {new Date(deployment.createdAt).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                    })}
+            <div className="text-right shrink-0 hidden sm:block">
+                <div className="text-[11px] text-white/20">
+                    {new Date(deployment.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                    {" "}
+                    <span className="text-white/15">{new Date(deployment.createdAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</span>
                 </div>
                 {deployment.liveAt && (
-                    <div className="text-[10px] text-emerald-500">
-                        Live: {new Date(deployment.liveAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                    <div className="text-[10px] text-emerald-400/50">
+                        Live {new Date(deployment.liveAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
                     </div>
                 )}
             </div>
 
             {canRollback && (
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onRollback(deployment.id, deployment.version);
-                    }}
+                <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onRollback(deployment.id, deployment.version); }}
                     disabled={isRollingBack}
-                    className="text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-900/20 shrink-0"
+                    className="shrink-0 text-[11px] text-amber-400/50 hover:text-amber-400 transition-colors disabled:opacity-30"
                 >
                     Rollback
-                </Button>
+                </button>
             )}
-        </button>
+        </div>
     );
 }
 
@@ -413,92 +392,84 @@ function DeploymentDetailPanel() {
 
     if (isLoadingDetail) {
         return (
-            <Card className="bg-zinc-900/50 border-zinc-800">
-                <CardContent className="py-6 space-y-3">
-                    <Skeleton className="h-6 w-48 bg-zinc-800" />
-                    <Skeleton className="h-64 w-full bg-zinc-800" />
-                </CardContent>
-            </Card>
+            <div className="space-y-3 animate-pulse">
+                <div className="h-4 w-32 rounded bg-white/[0.06]" />
+                <div className="h-48 rounded bg-white/[0.03]" />
+            </div>
         );
     }
 
     if (!activeDeployment) {
         return (
-            <Card className="bg-zinc-900/50 border-zinc-800">
-                <CardContent className="py-8">
-                    <p className="text-sm text-zinc-500 text-center">Select a deployment to view details</p>
-                </CardContent>
-            </Card>
+            <div className="py-8 text-center">
+                <p className="text-sm text-white/20">Select a deployment to view details</p>
+            </div>
         );
     }
 
     const { deployment, logs } = activeDeployment;
 
     return (
-        <Card className="bg-zinc-900/50 border-zinc-800">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-sm text-zinc-400">
-                    <span>v{deployment.version} Detail</span>
-                    <Badge className={DEPLOY_STATUS_COLORS[deployment.status] || ""}>
-                        {deployment.status}
-                    </Badge>
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                {/* Meta info */}
-                <div className="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <span className="text-zinc-500">Created</span>
-                        <div className="text-zinc-300">{new Date(deployment.createdAt).toLocaleString()}</div>
-                    </div>
-                    {deployment.liveAt && (
-                        <div>
-                            <span className="text-zinc-500">Live Since</span>
-                            <div className="text-emerald-400">{new Date(deployment.liveAt).toLocaleString()}</div>
-                        </div>
-                    )}
-                    {deployment.apiUrl && (
-                        <div>
-                            <span className="text-zinc-500">API URL</span>
-                            <div className="text-zinc-300 font-mono">{deployment.apiUrl}</div>
-                        </div>
-                    )}
-                    {deployment.enabledModules && deployment.enabledModules.length > 0 && (
-                        <div>
-                            <span className="text-zinc-500">Modules</span>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                                {deployment.enabledModules.map((m) => (
-                                    <Badge key={m} variant="outline" className="text-[10px] text-zinc-400 border-zinc-700">
-                                        {m}
-                                    </Badge>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+        <motion.div
+            key={deployment.id}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col gap-4"
+        >
+            <div className="flex items-center gap-2.5">
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${DEPLOY_STATUS_DOT[deployment.status] ?? "bg-white/20"}`} />
+                <span className="text-sm font-mono font-medium text-white/70">v{deployment.version}</span>
+                <span className={`text-sm capitalize ${DEPLOY_STATUS_COLOR[deployment.status] ?? "text-white/30"}`}>{deployment.status}</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                <div>
+                    <p className="text-[10px] uppercase tracking-wider text-white/20 font-mono mb-0.5">Created</p>
+                    <p className="text-xs text-white/50">{new Date(deployment.createdAt).toLocaleString()}</p>
                 </div>
-
-                {deployment.releaseNote && (
-                    <div className="text-xs text-zinc-400 bg-zinc-800/50 rounded p-2 italic">
-                        {deployment.releaseNote}
+                {deployment.liveAt && (
+                    <div>
+                        <p className="text-[10px] uppercase tracking-wider text-white/20 font-mono mb-0.5">Live since</p>
+                        <p className="text-xs text-emerald-400">{new Date(deployment.liveAt).toLocaleString()}</p>
                     </div>
                 )}
-
-                {deployment.errorMessage && (
-                    <div className="text-xs text-red-400 bg-red-900/20 rounded p-2">
-                        {deployment.errorMessage}
+                {deployment.apiUrl && (
+                    <div className="col-span-2">
+                        <p className="text-[10px] uppercase tracking-wider text-white/20 font-mono mb-0.5">API URL</p>
+                        <p className="text-xs font-mono text-[#81ecff]/70 break-all">{deployment.apiUrl}</p>
                     </div>
                 )}
+                {deployment.enabledModules && deployment.enabledModules.length > 0 && (
+                    <div className="col-span-2">
+                        <p className="text-[10px] uppercase tracking-wider text-white/20 font-mono mb-1">Modules</p>
+                        <div className="flex flex-wrap gap-1.5">
+                            {deployment.enabledModules.map((m) => (
+                                <span key={m} className="text-[10px] font-mono text-white/30 border border-white/[0.06] px-1.5 py-0.5 rounded">{m}</span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
 
-                <Separator className="bg-zinc-800" />
+            {deployment.releaseNote && (
+                <p className="text-xs text-white/35 italic border-l-2 border-white/[0.06] pl-3 py-1">{deployment.releaseNote}</p>
+            )}
 
-                {/* Step log */}
+            {deployment.errorMessage && (
+                <p className="text-xs text-red-400/80 bg-red-400/5 border border-red-400/10 rounded px-3 py-2">{deployment.errorMessage}</p>
+            )}
+
+            <div>
+                <p className="text-[10px] uppercase tracking-wider text-white/20 font-mono mb-2">Step log</p>
                 <DeployLogConsole logs={logs} />
-            </CardContent>
-        </Card>
+            </div>
+        </motion.div>
     );
 }
 
-/* ── Main Page ── */
+/* -- Page ---------------------------------------------------------- */
+
 export default function DeployPage() {
     const params = useParams();
     const rawId = params.id;
@@ -511,47 +482,59 @@ export default function DeployPage() {
     }, [projectId, fetchCurrentDeployment]);
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h2 className="text-xl font-semibold text-zinc-100">Deploy</h2>
-                <p className="text-sm text-zinc-500 mt-1">
-                    Deploy your backend configuration to make it live. Each deployment creates an immutable versioned snapshot.
-                </p>
+        <div className="flex flex-col gap-8 max-w-5xl mx-auto px-4 py-6 sm:px-6">
+
+            {/* Header */}
+            <div className="flex items-start gap-4 border-b border-white/[0.04] pb-6">
+                <div className="shrink-0 mt-1 w-[3px] self-stretch rounded-full" style={{ background: "rgba(129,236,255,0.5)" }} />
+                <div>
+                    <h1 className="text-2xl font-bold font-display tracking-tight text-white/90">Deploy</h1>
+                    <p className="text-sm text-white/35 mt-1">
+                        Deploy your backend configuration to make it live. Each deployment creates an immutable versioned snapshot.
+                    </p>
+                </div>
             </div>
 
-            {/* Live deployment banner */}
-            {currentDeployment?.deployment?.status === "live" && currentDeployment.deployment.apiUrl && (
-                <Card className="bg-emerald-950/30 border-emerald-800/40">
-                    <CardContent className="py-3 px-4 flex flex-wrap items-center gap-3">
-                        <Badge className="bg-emerald-600/20 text-emerald-400 shrink-0">Live</Badge>
-                        <span className="text-xs text-zinc-400 shrink-0">v{currentDeployment.deployment.version} · API URL</span>
-                        <code className="text-sm font-mono text-emerald-300 flex-1 break-all">
-                            {currentDeployment.deployment.apiUrl}
-                        </code>
+            {/* Live deployment strip */}
+            <AnimatePresence>
+                {currentDeployment?.deployment?.status === "live" && currentDeployment.deployment.apiUrl && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-md border border-emerald-500/15 bg-emerald-500/5 overflow-hidden"
+                    >
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                        <span className="text-xs text-emerald-400 font-medium shrink-0">Live</span>
+                        <span className="text-xs text-white/25 shrink-0">v{currentDeployment.deployment.version} &middot; API URL</span>
+                        <code className="text-xs font-mono text-[#81ecff]/70 flex-1 break-all min-w-0">{currentDeployment.deployment.apiUrl}</code>
                         <button
                             onClick={() => navigator.clipboard.writeText(currentDeployment.deployment.apiUrl!)}
-                            className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors shrink-0"
+                            className="shrink-0 text-[11px] text-white/25 hover:text-white/60 transition-colors"
                         >
                             Copy
                         </button>
-                    </CardContent>
-                </Card>
-            )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left column — readiness + trigger */}
-                <div className="space-y-6">
+            {/* Main grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-8">
+                {/* Left: readiness + trigger */}
+                <div>
                     <ReadinessPanel projectId={projectId} />
                     <DeployTrigger projectId={projectId} />
                 </div>
 
-                {/* Right column — detail panel */}
-                <div className="space-y-6">
+                {/* Right: detail panel */}
+                <div>
+                    <p className="text-[11px] uppercase tracking-wider text-white/25 font-mono mb-3">Deployment detail</p>
                     <DeploymentDetailPanel />
                 </div>
             </div>
 
             <DeploymentHistory projectId={projectId} />
+
         </div>
     );
 }
