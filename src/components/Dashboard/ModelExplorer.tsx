@@ -6,10 +6,10 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import DashboardService, { type DataModelInfo } from "@/services/DashboardService";
 import { useProjectStore } from "@/store/projectStore";
 
-/* ──────────────────────────────────────
-   ModelExplorer — Dynamic data models
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   ModelExplorer â€” Dynamic data models
    Wired to GET /api/v1/dashboard/models
-   ────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const TYPE_BADGE: Record<string, string> = {
   uuid: "text-cyan-400/70 bg-cyan-400/10",
@@ -55,7 +55,7 @@ export default function ModelExplorer() {
             Data Models
           </h3>
           <span className="text-xs text-white/30">
-            {loading ? "…" : `${models.length} schemas`}
+            {loading ? "â€¦" : `${models.length} schemas`}
           </span>
         </div>
 
@@ -64,7 +64,7 @@ export default function ModelExplorer() {
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="rounded-xl p-4 border border-white/[0.04] animate-pulse"
+                className="rounded-md p-4 border border-white/[0.04] animate-pulse"
                 style={{ background: "rgba(255,255,255,0.02)" }}
               >
                 <div className="flex items-center gap-3 mb-3">
@@ -101,7 +101,7 @@ export default function ModelExplorer() {
                 onClick={() =>
                   setExpanded(expanded === model.id ? null : model.id)
                 }
-                className="text-left rounded-xl p-4 transition-colors border border-white/[0.04] hover:border-white/[0.08]"
+                className="text-left rounded-md p-4 transition-colors border border-white/[0.04] hover:border-white/[0.08]"
                 style={{ background: "rgba(255,255,255,0.02)" }}
                 initial={{ opacity: 0, y: 16 }}
                 animate={inView ? { opacity: 1, y: 0 } : {}}

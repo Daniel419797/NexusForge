@@ -22,14 +22,14 @@ export default function AILayout({ children }: { children: React.ReactNode }) {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.03] border border-white/[0.06] w-fit mb-6">
+                <div className="flex items-center gap-1 p-1 rounded-md bg-white/[0.03] border border-white/[0.06] w-fit mb-6">
                     {tabs.map((tab) => {
                         const isActive = pathname === tab.href;
                         return (
                             <Link
                                 key={tab.href}
                                 href={tab.href}
-                                className={`px-5 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
+                                className={`px-5 py-2 text-sm font-medium rounded transition-all duration-300 ${
                                     isActive
                                         ? "bg-white/[0.08] text-white"
                                         : "text-white/50 hover:text-white/70"

@@ -4,11 +4,11 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import type { NavItem } from "@/components/layout/nav-items";
 
-/* ────────────────────────────────────────
-   GlassSidebar — Spatial glass navigation
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   GlassSidebar â€” Spatial glass navigation
    Desktop: fixed collapsible sidebar
    Mobile: overlay drawer with backdrop
-   ──────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 interface GlassSidebarProps {
   items: NavItem[];
@@ -33,7 +33,7 @@ export default function GlassSidebar({
 }: GlassSidebarProps) {
   return (
     <>
-      {/* ── Mobile backdrop ── */}
+      {/* â”€â”€ Mobile backdrop â”€â”€ */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -49,7 +49,7 @@ export default function GlassSidebar({
         )}
       </AnimatePresence>
 
-      {/* ── Sidebar ── */}
+      {/* â”€â”€ Sidebar â”€â”€ */}
       <motion.aside
         className={`fixed left-0 top-0 z-50 flex h-screen flex-col ${
           mobileOpen
@@ -66,16 +66,16 @@ export default function GlassSidebar({
           borderRight: "1px solid rgba(255,255,255,0.05)",
         }}
       >
-        {/* ── Logo ── */}
+        {/* â”€â”€ Logo â”€â”€ */}
         <div
           className="flex h-16 items-center gap-3 px-4 shrink-0"
           style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
         >
-          {/* Close button — mobile only */}
+          {/* Close button â€” mobile only */}
           <button
             onClick={onMobileClose}
             aria-label="Close sidebar"
-            className="mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white/40 hover:text-white/60 md:hidden"
+            className="mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded text-white/40 hover:text-white/60 md:hidden"
           >
             <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
               <path d="M18 6L6 18M6 6l12 12" />
@@ -84,7 +84,7 @@ export default function GlassSidebar({
 
           {/* Orb */}
           <div
-            className="h-9 w-9 shrink-0 rounded-xl flex items-center justify-center"
+            className="h-9 w-9 shrink-0 rounded-md flex items-center justify-center"
             style={
               {
                 background: "rgba(129,236,255,0.10)",
@@ -111,11 +111,11 @@ export default function GlassSidebar({
           </AnimatePresence>
         </div>
 
-        {/* ── Active project indicator ── */}
+        {/* â”€â”€ Active project indicator â”€â”€ */}
         <AnimatePresence>
           {activeProjectName && (!collapsed || mobileOpen) && (
             <motion.div
-              className="mx-3 mt-3 rounded-lg px-3 py-2"
+              className="mx-3 mt-3 rounded px-3 py-2"
               style={{
                 background: "rgba(129,236,255,0.05)",
                 border: "1px solid rgba(129,236,255,0.10)",
@@ -130,7 +130,7 @@ export default function GlassSidebar({
           )}
         </AnimatePresence>
 
-        {/* ── Navigation ── */}
+        {/* â”€â”€ Navigation â”€â”€ */}
         <nav aria-label="Sidebar navigation" className="mt-4 flex-1 overflow-y-auto px-2 space-y-0.5">
           {items.map((item) => {
             const isActive = pathname === item.href ||
@@ -141,7 +141,7 @@ export default function GlassSidebar({
                 key={item.href}
                 href={item.href}
                 onClick={onMobileClose}
-                className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${
+                className={`group relative flex items-center gap-3 rounded-md px-3 py-2.5 transition-colors ${
                   isActive
                     ? "text-white/95"
                     : "text-white/40 hover:text-white/65 hover:bg-white/[0.03]"
@@ -151,7 +151,7 @@ export default function GlassSidebar({
                 {isActive && (
                   <motion.div
                     layoutId="sidebar-active"
-                    className="absolute inset-0 rounded-xl"
+                    className="absolute inset-0 rounded-md"
                     style={{
                       background: "rgba(129,236,255,0.06)",
                       border: "1px solid rgba(129,236,255,0.12)",
@@ -188,7 +188,7 @@ export default function GlassSidebar({
 
                 {/* Tooltip when collapsed (desktop only) */}
                 {collapsed && !mobileOpen && (
-                  <div className="pointer-events-none absolute left-full ml-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-white/80 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block"
+                  <div className="pointer-events-none absolute left-full ml-2 rounded px-2.5 py-1.5 text-xs font-medium text-white/80 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block"
                     style={{
                     background: "rgba(10,10,12,0.97)",
                       border: "1px solid rgba(255,255,255,0.08)",
@@ -203,12 +203,12 @@ export default function GlassSidebar({
           })}
         </nav>
 
-        {/* ── Collapse toggle (desktop only) ── */}
+        {/* â”€â”€ Collapse toggle (desktop only) â”€â”€ */}
         <div className="shrink-0 px-2 pb-4 pt-2 hidden md:block" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
           <button
             onClick={onToggleCollapse}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-white/30 hover:text-white/50 hover:bg-white/[0.03] transition-colors"
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-white/30 hover:text-white/50 hover:bg-white/[0.03] transition-colors"
           >
             <motion.svg
               width="20"

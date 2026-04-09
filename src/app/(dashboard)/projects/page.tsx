@@ -54,7 +54,7 @@ export default function ProjectsPage() {
             const data = await DashboardService.getStats(activeProject?.id);
             setStats(data);
         } catch {
-            // Stats are non-critical — fail silently
+            // Stats are non-critical â€” fail silently
         }
     }, [activeProject?.id]);
 
@@ -70,7 +70,7 @@ export default function ProjectsPage() {
 
     return (
         <div className="space-y-6">
-            {/* ────── Hero header ────── */}
+            {/* â”€â”€â”€â”€â”€â”€ Hero header â”€â”€â”€â”€â”€â”€ */}
             <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -82,7 +82,7 @@ export default function ProjectsPage() {
                             Dashboard
                         </h1>
                         <p className="mt-1 text-sm text-white/35">
-                            Your NexusForge command center — manage projects, models, plugins & more.
+                            Your NexusForge command center â€” manage projects, models, plugins & more.
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -106,9 +106,9 @@ export default function ProjectsPage() {
                 </div>
             </motion.div>
 
-            {/* ────── Stat strip ────── */}
+            {/* â”€â”€â”€â”€â”€â”€ Stat strip â”€â”€â”€â”€â”€â”€ */}
             <motion.div
-                className="flex divide-x divide-white/[0.06] border border-white/[0.06] rounded-xl overflow-hidden"
+                className="flex divide-x divide-white/[0.06] border border-white/[0.06] rounded-md overflow-hidden"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
@@ -125,7 +125,7 @@ export default function ProjectsPage() {
                 ))}
             </motion.div>
 
-            {/* ────── Wizard CTA ────── */}
+            {/* â”€â”€â”€â”€â”€â”€ Wizard CTA â”€â”€â”€â”€â”€â”€ */}
             <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -134,7 +134,7 @@ export default function ProjectsPage() {
                 <WizardCTA onOpenWizard={() => setCreateOpen(true)} />
             </motion.div>
 
-            {/* ────── Activity Feed + Model Explorer ────── */}
+            {/* â”€â”€â”€â”€â”€â”€ Activity Feed + Model Explorer â”€â”€â”€â”€â”€â”€ */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 <motion.div
                     initial={{ opacity: 0, x: -16 }}
@@ -152,7 +152,7 @@ export default function ProjectsPage() {
                 </motion.div>
             </div>
 
-            {/* ────── Project listing ────── */}
+            {/* â”€â”€â”€â”€â”€â”€ Project listing â”€â”€â”€â”€â”€â”€ */}
             <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -187,7 +187,7 @@ export default function ProjectsPage() {
                     {loading ? (
                         <div className="space-y-3 py-4">
                             {[1, 2, 3].map((n) => (
-                                <Skeleton key={n} className="h-10 w-full rounded-lg bg-white/[0.03]" />
+                                <Skeleton key={n} className="h-10 w-full rounded bg-white/[0.03]" />
                             ))}
                         </div>
                     ) : (
@@ -231,7 +231,7 @@ export default function ProjectsPage() {
                                                 <div className="md:hidden">
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <button className="p-1.5 rounded-lg text-white/25 hover:text-white/50 hover:bg-white/[0.04] transition-colors">
+                                                            <button className="p-1.5 rounded text-white/25 hover:text-white/50 hover:bg-white/[0.04] transition-colors">
                                                                 <MoreHorizontal className="size-4" />
                                                             </button>
                                                         </DropdownMenuTrigger>
@@ -268,7 +268,7 @@ export default function ProjectsPage() {
                                             <div className="ml-3 hidden md:block">
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
-                                                        <button className="p-1.5 rounded-lg text-white/25 hover:text-white/50 hover:bg-white/[0.04] transition-colors">
+                                                        <button className="p-1.5 rounded text-white/25 hover:text-white/50 hover:bg-white/[0.04] transition-colors">
                                                             <MoreHorizontal className="size-4" />
                                                         </button>
                                                     </DropdownMenuTrigger>
@@ -308,7 +308,7 @@ export default function ProjectsPage() {
                 </div>
             </motion.div>
 
-            {/* ────── Plugin Grid ────── */}
+            {/* â”€â”€â”€â”€â”€â”€ Plugin Grid â”€â”€â”€â”€â”€â”€ */}
             <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -319,7 +319,7 @@ export default function ProjectsPage() {
 
             {/* Non-core features hidden: Blockchain, X402, AI Assistant */}
 
-            {/* ────── Create project dialog ────── */}
+            {/* â”€â”€â”€â”€â”€â”€ Create project dialog â”€â”€â”€â”€â”€â”€ */}
             <CreateProjectDialog
                 open={createOpen}
                 onOpenChange={setCreateOpen}
@@ -341,7 +341,7 @@ function TabButton({
     return (
         <button
             onClick={onClick}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${active
+            className={`px-3 py-1.5 rounded text-xs font-medium transition-all duration-200 ${active
                     ? "text-white/80"
                     : "text-white/30 hover:text-white/50 hover:bg-white/[0.03]"
                 }`}

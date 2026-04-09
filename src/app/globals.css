@@ -73,7 +73,7 @@
 
 /* ─── Light Theme ─── */
 :root {
-  --radius: 0.625rem;
+  --radius: 0.3125rem;
 
   --background: hsl(240 6% 97%);
   --foreground: hsl(240 10% 6%);

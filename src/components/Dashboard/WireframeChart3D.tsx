@@ -6,7 +6,7 @@ import { OrbitControls, Text } from "@react-three/drei";
 import * as THREE from "three";
 import { motion } from "framer-motion";
 
-/* ── WebGL Error Boundary ─────────────────────── */
+/* â”€â”€ WebGL Error Boundary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 interface ErrorBoundaryState { hasError: boolean }
 
@@ -28,8 +28,8 @@ class WebGLErrorBoundary extends Component<{ fallback?: ReactNode; children: Rea
   }
 }
 
-/* ─────────────────────────────────────────────────────
-   WireframeChart3D — 3D wireframe bar chart (Three.js)
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   WireframeChart3D â€” 3D wireframe bar chart (Three.js)
    Bars render as wireframe boxes that smoothly fill
    when hovered. Framer Motion handles the outer layout.
 
@@ -40,7 +40,7 @@ class WebGLErrorBoundary extends Component<{ fallback?: ReactNode; children: Rea
    - Stable list keys based on labels when available
    - Value clamping to prevent NaN/Infinity heights
    - ARIA labeling for accessibility
-   ───────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 type Accent = "cyan" | "purple" | "magenta" | "emerald" | "amber";
 
@@ -52,10 +52,10 @@ const PALETTE: Record<Accent, { wire: string; fill: string; glow: string }> = {
   amber:   { wire: "#f59e0b", fill: "#f59e0b", glow: "#f59e0b" },
 };
 
-/* ── Individual Bar ─────────────────────────── */
+/* â”€â”€ Individual Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 interface BarProps {
-  value: number;        // 0–1
+  value: number;        // 0â€“1
   index: number;
   total: number;
   label?: string;
@@ -176,7 +176,7 @@ const Bar = memo(function Bar({ value, index, total, label, accent, hovered, onH
   );
 });
 
-/* ── Grid Floor ─────────────────────────────── */
+/* â”€â”€ Grid Floor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function GridFloor({ accent }: { accent: Accent }) {
   const { wire } = PALETTE[accent];
@@ -190,7 +190,7 @@ function GridFloor({ accent }: { accent: Accent }) {
   );
 }
 
-/* ── Scene ──────────────────────────────────── */
+/* â”€â”€ Scene â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 interface SceneProps {
   data: number[];
@@ -237,7 +237,7 @@ function Scene({ data, labels, accent }: SceneProps) {
   );
 }
 
-/* ── Exported Component ─────────────────────── */
+/* â”€â”€ Exported Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 interface WireframeChart3DProps {
   data: number[];
@@ -258,7 +258,7 @@ function WireframeChart3DInner({
 }: WireframeChart3DProps) {
   return (
     <motion.div
-      className={`relative rounded-xl overflow-hidden ${className}`}
+      className={`relative rounded-md overflow-hidden ${className}`}
       style={{
         height,
         background: "rgba(8,10,25,0.6)",
@@ -306,6 +306,6 @@ function WireframeChart3DInner({
   );
 }
 
-/** Memoized export — prevents Three.js scene re-mount on unrelated parent re-renders */
+/** Memoized export â€” prevents Three.js scene re-mount on unrelated parent re-renders */
 const WireframeChart3D = memo(WireframeChart3DInner);
 export default WireframeChart3D;

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion, useInView } from "framer-motion";
 import { useRef, useEffect, useState, useCallback } from "react";
@@ -9,10 +9,10 @@ import BlockchainService, {
 } from "@/services/BlockchainService";
 import { useProjectStore } from "@/store/projectStore";
 
-/* ──────────────────────────────────────
-   BlockchainStatus — Real chain metrics
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   BlockchainStatus â€” Real chain metrics
    Wired to BlockchainService endpoints
-   ────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 interface ChainMetric {
   label: string;
@@ -65,7 +65,7 @@ export default function BlockchainStatus() {
   const metrics: ChainMetric[] = [
     {
       label: "Networks",
-      value: uniqueChains.size > 0 ? Array.from(uniqueChains).join(", ") : "—",
+      value: uniqueChains.size > 0 ? Array.from(uniqueChains).join(", ") : "â€”",
     },
     { label: "Wallets", value: wallets.length.toLocaleString() },
     { label: "Confirmed Tx", value: confirmedTx.toLocaleString() },
@@ -80,7 +80,7 @@ export default function BlockchainStatus() {
             Blockchain
           </h3>
           {loading ? (
-            <span className="text-xs text-white/20">Loading…</span>
+            <span className="text-xs text-white/20">Loadingâ€¦</span>
           ) : error ? (
             <button
               onClick={fetchData}
@@ -102,7 +102,7 @@ export default function BlockchainStatus() {
           <div className="space-y-3 animate-pulse">
             <div className="grid grid-cols-2 gap-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="rounded-lg p-2.5" style={{ background: "rgba(255,255,255,0.02)" }}>
+                <div key={i} className="rounded p-2.5" style={{ background: "rgba(255,255,255,0.02)" }}>
                   <div className="h-2 w-1/2 rounded bg-white/[0.06] mb-2" />
                   <div className="h-4 w-3/4 rounded bg-white/[0.08]" />
                 </div>
@@ -120,7 +120,7 @@ export default function BlockchainStatus() {
               {metrics.map((m, i) => (
                 <motion.div
                   key={m.label}
-                  className="rounded-lg p-2.5"
+                  className="rounded p-2.5"
                   style={{ background: "rgba(255,255,255,0.02)" }}
                   initial={{ opacity: 0, y: 10 }}
                   animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -148,7 +148,7 @@ export default function BlockchainStatus() {
                 {wallets.slice(0, 4).map((w, i) => (
                   <motion.div
                     key={w.id}
-                    className="flex items-center justify-between rounded-lg px-3 py-2 border border-white/[0.04]"
+                    className="flex items-center justify-between rounded px-3 py-2 border border-white/[0.04]"
                     style={{ background: "rgba(255,255,255,0.015)" }}
                     initial={{ opacity: 0, x: -10 }}
                     animate={inView ? { opacity: 1, x: 0 } : {}}
@@ -162,11 +162,11 @@ export default function BlockchainStatus() {
                         )}
                       </p>
                       <p className="text-[11px] font-mono text-white/30">
-                        {w.address.slice(0, 6)}…{w.address.slice(-4)}
+                        {w.address.slice(0, 6)}â€¦{w.address.slice(-4)}
                       </p>
                     </div>
                     <span className="text-xs font-bold text-white/60">
-                      {w.balance || "—"}
+                      {w.balance || "â€”"}
                     </span>
                   </motion.div>
                 ))}

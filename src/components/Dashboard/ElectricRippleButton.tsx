@@ -3,10 +3,10 @@
 import { type ReactNode, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 
-/* ─────────────────────────────────────────────
-   ElectricRippleButton — Clean action button
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   ElectricRippleButton â€” Clean action button
    Spawns a subtle ripple ring on click.
-   ───────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 type Accent = "brand" | "white" | "warning" | "cyan" | "purple" | "magenta" | "emerald" | "amber";
 
@@ -97,7 +97,7 @@ export default function ElectricRippleButton({
       disabled={disabled}
       onClick={handleClick}
       title={title}
-      className={`relative overflow-hidden rounded-xl px-5 py-2.5 text-sm font-semibold text-white/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${className}`}
+      className={`relative overflow-hidden rounded-md px-5 py-2.5 text-sm font-semibold text-white/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${className}`}
       style={{
         background: bg,
         border: `1px solid ${border}`,

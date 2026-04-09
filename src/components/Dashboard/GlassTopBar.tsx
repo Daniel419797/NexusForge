@@ -4,11 +4,11 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useProjectStore } from "@/store/projectStore";
 
-/* ────────────────────────────────────────
-   GlassTopBar — Floating spatial header
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   GlassTopBar â€” Floating spatial header
    Solid glass bg, user avatar, actions
    Mobile-responsive with hamburger toggle
-   ──────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 interface GlassTopBarProps {
   userName?: string | null;
@@ -53,10 +53,10 @@ export default function GlassTopBar({
     >
       {/* Left: hamburger (mobile) + connected indicator */}
       <div className="flex items-center gap-3">
-        {/* Hamburger — mobile only */}
+        {/* Hamburger â€” mobile only */}
         <button
           onClick={onMenuToggle}
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-white/50 hover:text-white/70 transition-colors md:hidden"
+          className="flex h-9 w-9 items-center justify-center rounded text-white/50 hover:text-white/70 transition-colors md:hidden"
           style={{ background: "rgba(255,255,255,0.03)" }}
           aria-label="Open sidebar menu"
         >
@@ -73,9 +73,9 @@ export default function GlassTopBar({
 
       {/* Right: actions + user */}
       <div className="flex items-center gap-2 md:gap-3">
-        {/* Quick action buttons — hidden on mobile */}
+        {/* Quick action buttons â€” hidden on mobile */}
         <motion.button
-          className="hidden md:flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-white/50 hover:text-white/70 transition-colors"
+          className="hidden md:flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium text-white/50 hover:text-white/70 transition-colors"
           style={{
             background: "rgba(255,255,255,0.03)",
             border: "1px solid rgba(255,255,255,0.05)",
@@ -90,7 +90,7 @@ export default function GlassTopBar({
         </motion.button>
 
         <motion.button
-          className="hidden md:flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-white/50 hover:text-white/70 transition-colors"
+          className="hidden md:flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium text-white/50 hover:text-white/70 transition-colors"
           style={{
             background: "rgba(255,255,255,0.03)",
             border: "1px solid rgba(255,255,255,0.05)",
@@ -111,12 +111,12 @@ export default function GlassTopBar({
           Deploy
         </motion.button>
 
-        {/* Divider — hidden on mobile */}
+        {/* Divider â€” hidden on mobile */}
         <div className="hidden md:block h-6 w-px bg-white/[0.06]" />
 
         {/* Notification bell */}
         <motion.button
-          className="relative flex h-9 w-9 items-center justify-center rounded-lg text-white/40 hover:text-white/60 transition-colors"
+          className="relative flex h-9 w-9 items-center justify-center rounded text-white/40 hover:text-white/60 transition-colors"
           style={{ background: "rgba(255,255,255,0.02)" }}
           whileHover={{ y: -1 }}
           whileTap={{ scale: 0.95 }}
@@ -133,10 +133,10 @@ export default function GlassTopBar({
           onClick={onLogout}
           className="group flex items-center gap-2.5"
           whileHover={{ scale: 1.02 }}
-          title={`${userName} — Click to logout`}
+          title={`${userName} â€” Click to logout`}
         >
           <div
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold text-white/80 transition-all"
+            className="flex h-9 w-9 items-center justify-center rounded-md text-xs font-bold text-white/80 transition-all"
             style={{
               background: "rgba(129,236,255,0.10)",
               border: "1px solid rgba(129,236,255,0.15)",
