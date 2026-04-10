@@ -6,7 +6,7 @@ import { motion, useInView } from "framer-motion";
 const dbLogos = [
   { name: "POSTGRESQL", abbr: "PG" },
   { name: "MONGODB", abbr: "MDB" },
-  { name: "REDIS", abbr: "RD" },
+  { name: "SUPABASE", abbr: "SB" },
   { name: "MSSQL", abbr: "MS" },
 ];
 
