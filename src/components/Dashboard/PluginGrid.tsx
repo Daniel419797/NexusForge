@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { motion, useInView } from "framer-motion";
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback, type ReactNode } from "react";
 import PluginService, {
   type PluginMeta,
 } from "@/services/PluginService";
@@ -129,6 +129,58 @@ export default function PluginGrid() {
 
   const installedCount = plugins.filter((p) => p.installed).length;
 
+  let content: ReactNode;
+  if (error) {
+    content = (
+      <div className="py-8 text-center">
+        <p className="text-xs text-white/25">Failed to load plugins</p>
+        <button
+          onClick={fetchPlugins}
+          className="mt-2 text-xs text-emerald-400/60 hover:text-emerald-400/80 transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  } else if (plugins.length === 0) {
+    content = (
+      <div className="py-8 text-center">
+        <p className="text-xs text-white/25">
+          {activeProject ? "No plugins available" : "Select a project to view plugins"}
+        </p>
+      </div>
+    );
+  } else {
+    content = (
+      <div className="divide-y divide-white/[0.04]">
+        {plugins.map((plugin, i) => (
+          <motion.div
+            key={plugin.id}
+            className="group flex items-center gap-3 py-2.5 -mx-2 px-2 hover:bg-white/[0.02] rounded transition-colors cursor-pointer"
+            initial={{ opacity: 0, x: -8 }}
+            animate={inView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.3, delay: i * 0.04 }}
+          >
+            <span className="text-base shrink-0">{plugin.icon}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-white/75 truncate">{plugin.name}</span>
+                {plugin.installed && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
+                )}
+              </div>
+              <p className="text-[11px] text-white/30 line-clamp-1">{plugin.description}</p>
+            </div>
+            <span className="text-[10px] text-white/20 uppercase tracking-wider shrink-0 hidden sm:block">{plugin.category}</span>
+            <span className="text-[11px] text-white/20 group-hover:text-[#81ecff] transition-colors shrink-0">
+              {plugin.installed ? "Manage" : "Install"} &rarr;
+            </span>
+          </motion.div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div ref={ref}>
       <div>
@@ -143,8 +195,8 @@ export default function PluginGrid() {
 
         {loading ? (
           <div className="divide-y divide-white/[0.04]">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 py-2.5 animate-pulse">
+            {["sk-1","sk-2","sk-3","sk-4","sk-5","sk-6"].map((id) => (
+              <div key={id} className="flex items-center gap-3 py-2.5 animate-pulse">
                 <div className="h-5 w-5 rounded bg-white/[0.06]" />
                 <div className="flex-1 space-y-1.5">
                   <div className="h-3 w-1/3 rounded bg-white/[0.06]" />
@@ -154,49 +206,8 @@ export default function PluginGrid() {
               </div>
             ))}
           </div>
-        ) : error ? (
-          <div className="py-8 text-center">
-            <p className="text-xs text-white/25">Failed to load plugins</p>
-            <button
-              onClick={fetchPlugins}
-              className="mt-2 text-xs text-emerald-400/60 hover:text-emerald-400/80 transition-colors"
-            >
-              Retry
-            </button>
-          </div>
-        ) : plugins.length === 0 ? (
-          <div className="py-8 text-center">
-            <p className="text-xs text-white/25">
-              {activeProject ? "No plugins available" : "Select a project to view plugins"}
-            </p>
-          </div>
         ) : (
-          <div className="divide-y divide-white/[0.04]">
-            {plugins.map((plugin, i) => (
-              <motion.div
-                key={plugin.id}
-                className="group flex items-center gap-3 py-2.5 -mx-2 px-2 hover:bg-white/[0.02] rounded transition-colors cursor-pointer"
-                initial={{ opacity: 0, x: -8 }}
-                animate={inView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.3, delay: i * 0.04 }}
-              >
-                <span className="text-base shrink-0">{plugin.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-white/75 truncate">{plugin.name}</span>
-                    {plugin.installed && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
-                    )}
-                  </div>
-                  <p className="text-[11px] text-white/30 line-clamp-1">{plugin.description}</p>
-                </div>
-                <span className="text-[10px] text-white/20 uppercase tracking-wider shrink-0 hidden sm:block">{plugin.category}</span>
-                <span className="text-[11px] text-white/20 group-hover:text-[#81ecff] transition-colors shrink-0">
-                  {plugin.installed ? "Manage" : "Install"} &rarr;
-                </span>
-              </motion.div>
-            ))}
-          </div>
+          content
         )}
       </div>
     </div>
