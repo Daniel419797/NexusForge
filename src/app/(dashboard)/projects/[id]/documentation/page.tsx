@@ -2,9 +2,6 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useDeployStore } from "@/store/deployStore";
 import { useProjectStore } from "@/store/projectStore";
@@ -499,274 +496,218 @@ export default function DocumentationPage() {
     const generateTokenLabel = tokenLoading ? "Generating..." : tokenActionLabel;
 
     return (
-        <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="flex flex-col max-w-4xl mx-auto divide-y divide-white/[0.04]">
             {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-            >
-                <h1 className="text-2xl font-bold text-white tracking-tight">
-                    Documentation
-                </h1>
-                <p className="text-sm text-white/40 mt-1">
-                    Everything you need to integrate {project?.name || "your project"}&apos;s backend into your app.
-                </p>
-            </motion.div>
+            <div className="flex items-start gap-3 pb-6">
+                <div className="shrink-0 mt-1.5 w-[3px] self-stretch rounded-full" style={{ background: "rgba(129,236,255,0.45)" }} />
+                <div>
+                    <h1 className="text-2xl font-bold font-display tracking-tight text-white/90">Documentation</h1>
+                    <p className="text-sm text-white/35 mt-0.5">
+                        Everything you need to integrate {project?.name || "your project"}&apos;s backend into your app.
+                    </p>
+                </div>
+            </div>
 
             {/* Deployment status banner */}
             {!isLoadingCurrentDeployment && !isDeployed && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5"
-                >
-                    <div className="flex items-center gap-3">
-                        <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
+                <div className="py-4">
+                    <div className="flex items-start gap-3 p-3.5 rounded-md border border-amber-500/15 bg-amber-500/5">
+                        <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                         <div>
-                            <p className="text-sm font-medium text-amber-300">Project not deployed yet</p>
-                            <p className="text-xs text-amber-300/60 mt-0.5">
+                            <p className="text-sm font-medium text-amber-300/80">Project not deployed yet</p>
+                            <p className="text-xs text-amber-300/40 mt-0.5">
                                 Deploy your project first to enable the API gateway. Go to the Deploy page to get started.
                             </p>
                         </div>
                     </div>
-                </motion.div>
+                </div>
             )}
 
             {/* Step 1: API Base URL */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-            >
-                <Card className="border-white/[0.08] bg-white/[0.02]">
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-base flex items-center gap-2 text-white/90">
-                            <Zap className="w-4 h-4 text-cyan-400" />
-                            1. Your API Base URL
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-xs text-white/40 mb-3">
-                            All your project&apos;s API requests go through this gateway URL. Every module is accessible as a sub-path.
-                        </p>
-                        <div className="relative">
-                            <code className="block p-3 rounded-lg bg-black/30 border border-white/[0.08] text-sm font-mono text-cyan-400 break-all">
-                                {gatewayBase}
-                            </code>
-                            <CopyBtn text={gatewayBase} />
-                        </div>
-                        <p className="text-[11px] text-white/25 mt-2">
-                            Module endpoints: <code className="text-white/35">{gatewayBase}/auth</code>,{" "}
-                            <code className="text-white/35">{gatewayBase}/channels</code>,{" "}
-                            <code className="text-white/35">{gatewayBase}/ai</code>, etc.
-                        </p>
-                    </CardContent>
-                </Card>
-            </motion.div>
+            <div className="py-6">
+                <div className="flex items-center gap-2 mb-4">
+                    <Zap className="w-3.5 h-3.5 text-[#81ecff]/50" />
+                    <span className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Step 1 · API Base URL</span>
+                </div>
+                <p className="text-xs text-white/35 mb-3">
+                    All your project&apos;s API requests go through this gateway URL. Every module is accessible as a sub-path.
+                </p>
+                <div className="relative">
+                    <code className="block p-3 rounded-md bg-white/[0.02] border border-white/[0.04] text-sm font-mono text-[#81ecff]/70 break-all">
+                        {gatewayBase}
+                    </code>
+                    <CopyBtn text={gatewayBase} />
+                </div>
+                <p className="text-[11px] text-white/20 mt-2">
+                    Module endpoints:{" "}
+                    <code className="text-white/30">{gatewayBase}/auth</code>,{" "}
+                    <code className="text-white/30">{gatewayBase}/channels</code>,{" "}
+                    <code className="text-white/30">{gatewayBase}/ai</code>, etc.
+                </p>
+            </div>
 
             {/* Step 2: Authentication */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-            >
-                <Card className="border-white/[0.08] bg-white/[0.02]">
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-base flex items-center gap-2 text-white/90">
-                            <Shield className="w-4 h-4 text-white/50" />
-                            2. Authentication
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <p className="text-xs text-white/40">
-                            Your app authenticates to the gateway using either a <strong className="text-white/60">project-scoped JWT</strong> or an <strong className="text-white/60">API key</strong>.
-                        </p>
-
-                        {/* Two auth methods */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div className="p-3 rounded-xl border border-white/[0.06] bg-white/[0.01]">
-                                <h4 className="text-xs font-semibold text-white/70 mb-1 flex items-center gap-1.5">
-                                    <Key className="w-3.5 h-3.5" /> JWT Token
-                                </h4>
-                                <p className="text-[11px] text-white/35 mb-2">
-                                    Best for server-to-server. Pass in the Authorization header.
-                                </p>
-                                <div className="relative">
-                                    <code className="block p-2 rounded-lg bg-black/30 border border-white/[0.06] text-[10px] font-mono text-white/50 break-all">
-                                        Authorization: Bearer {tokenDisplay.length > 30 ? tokenDisplay.slice(0, 30) + "..." : tokenDisplay}
-                                    </code>
-                                </div>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="mt-2 text-[10px] h-7 border-white/10 text-white/50"
-                                    onClick={handleGetToken}
-                                    disabled={tokenLoading}
-                                >
-                                    {generateTokenLabel}
-                                </Button>
-                                {projectToken && (
-                                    <div className="mt-2 relative">
-                                        <code className="block p-2 rounded-lg bg-primary/5 border border-primary/20 text-[10px] font-mono text-primary break-all">
-                                            {projectToken}
-                                        </code>
-                                        <CopyBtn text={projectToken} />
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="p-3 rounded-xl border border-white/[0.06] bg-white/[0.01]">
-                                <h4 className="text-xs font-semibold text-white/70 mb-1 flex items-center gap-1.5">
-                                    <Key className="w-3.5 h-3.5" /> API Key
-                                </h4>
-                                <p className="text-[11px] text-white/35 mb-2">
-                                    Best for client-side apps. Create keys in the API Keys page.
-                                </p>
-                                <div className="relative">
-                                    <code className="block p-2 rounded-lg bg-black/30 border border-white/[0.06] text-[10px] font-mono text-white/50 break-all">
-                                        x-api-key: pk_xxxxxxxxxxxx
-                                    </code>
-                                </div>
-                                <p className="text-[10px] text-white/25 mt-2">
-                                    <strong className="text-white/40">pk_</strong> = publishable (read-only, safe for client-side) <br />
-                                    <strong className="text-white/40">sk_</strong> = secret (full access, server-side only)
-                                </p>
-                            </div>
+            <div className="py-6">
+                <div className="flex items-center gap-2 mb-4">
+                    <Shield className="w-3.5 h-3.5 text-white/30" />
+                    <span className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Step 2 · Authentication</span>
+                </div>
+                <p className="text-xs text-white/35 mb-4">
+                    Your app authenticates to the gateway using either a{" "}
+                    <strong className="text-white/55">project-scoped JWT</strong> or an{" "}
+                    <strong className="text-white/55">API key</strong>.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2 p-3.5 border border-white/[0.06] rounded-md bg-white/[0.01]">
+                        <div className="flex items-center gap-1.5">
+                            <Key className="w-3.5 h-3.5 text-white/30" />
+                            <span className="text-xs font-semibold text-white/60">JWT Token</span>
                         </div>
-                    </CardContent>
-                </Card>
-            </motion.div>
-
-            {/* Step 3: Available modules/endpoints */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-            >
-                <Card className="border-white/[0.08] bg-white/[0.02]">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-base flex items-center gap-2 text-white/90">
-                                <BookOpen className="w-4 h-4 text-emerald-400" />
-                                3. Your API Endpoints
-                            </CardTitle>
-                            {/* Language selector */}
-                            <div className="flex items-center gap-1">
-                                {(["curl", "js", "python"] as const).map((lang) => (
-                                    <button
-                                        key={lang}
-                                        onClick={() => setSelectedLang(lang)}
-                                        className={`px-2 py-1 rounded text-[10px] font-mono transition-all ${selectedLang === lang
-                                                ? "bg-primary/15 text-primary border border-primary/25"
-                                                : "text-white/30 hover:text-white/50 border border-transparent"
-                                            }`}
-                                    >
-                                        {lang}
-                                    </button>
-                                ))}
-                            </div>
+                        <p className="text-[11px] text-white/30">Best for server-to-server. Pass in the Authorization header.</p>
+                        <div className="relative">
+                            <code className="block p-2 rounded-md bg-black/30 border border-white/[0.06] text-[10px] font-mono text-white/40 break-all">
+                                Authorization: Bearer {tokenDisplay.length > 30 ? tokenDisplay.slice(0, 30) + "..." : tokenDisplay}
+                            </code>
                         </div>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                        <p className="text-xs text-white/40 mb-3">
-                            {isDeployed
-                                ? `${enabledModules.length} module(s) enabled. Click any module to see request examples.`
-                                : "Deploy your project to see which modules are enabled."
-                            }
-                        </p>
-
-                        {enabledModules.length === 0 && !isDeployed && (
-                            <div className="py-8 text-center text-white/20 text-sm">
-                                No active deployment found. Deploy your project first.
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="mt-1 text-[10px] h-7 border-white/10 text-white/40 hover:text-white/60 w-fit"
+                            onClick={handleGetToken}
+                            disabled={tokenLoading}
+                        >
+                            {generateTokenLabel}
+                        </Button>
+                        {projectToken && (
+                            <div className="relative">
+                                <code className="block p-2 rounded-md bg-[#81ecff]/5 border border-[#81ecff]/15 text-[10px] font-mono text-[#81ecff]/60 break-all">
+                                    {projectToken}
+                                </code>
+                                <CopyBtn text={projectToken} />
                             </div>
                         )}
-
-                        {(isDeployed ? enabledModules : publicModules).map((mod) => (
-                            <ModuleSection
-                                key={mod.moduleId}
-                                module={mod}
-                                apiBase={apiBase}
-                                gatewayBase={gatewayBase}
-                                token={tokenDisplay}
-                                selectedLang={selectedLang}
-                                isExpanded={expandedModule === mod.moduleId}
-                                onToggle={() =>
-                                    setExpandedModule(expandedModule === mod.moduleId ? null : mod.moduleId)
-                                }
-                                isEnabled={enabledModuleIds.has(mod.moduleId)}
-                            />
-                        ))}
-                    </CardContent>
-                </Card>
-            </motion.div>
-
-            {/* Step 4: Quick Start snippet */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25 }}
-            >
-                <Card className="border-white/[0.08] bg-white/[0.02]">
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-base flex items-center gap-2 text-white/90">
-                            <Rocket className="w-4 h-4 text-amber-400" />
-                            4. Quick Start
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-xs text-white/40 mb-3">
-                            Copy this complete example to register a user and make your first authenticated request.
+                    </div>
+                    <div className="flex flex-col gap-2 p-3.5 border border-white/[0.06] rounded-md bg-white/[0.01]">
+                        <div className="flex items-center gap-1.5">
+                            <Key className="w-3.5 h-3.5 text-white/30" />
+                            <span className="text-xs font-semibold text-white/60">API Key</span>
+                        </div>
+                        <p className="text-[11px] text-white/30">Best for client-side apps. Create keys in the API Keys page.</p>
+                        <div className="relative">
+                            <code className="block p-2 rounded-md bg-black/30 border border-white/[0.06] text-[10px] font-mono text-white/40 break-all">
+                                x-api-key: pk_xxxxxxxxxxxx
+                            </code>
+                        </div>
+                        <p className="text-[10px] text-white/20 mt-1">
+                            <strong className="text-white/35">pk_</strong> = publishable (read-only, safe for client-side)<br />
+                            <strong className="text-white/35">sk_</strong> = secret (full access, server-side only)
                         </p>
-                        <QuickStartSnippet
-                            projectId={projectId}
+                    </div>
+                </div>
+            </div>
+
+            {/* Step 3: Available modules/endpoints */}
+            <div className="py-6">
+                <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                        <BookOpen className="w-3.5 h-3.5 text-emerald-400/60" />
+                        <span className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Step 3 · API Endpoints</span>
+                    </div>
+                    {/* Language selector */}
+                    <div className="flex items-center gap-1">
+                        {(["curl", "js", "python"] as const).map((lang) => (
+                            <button
+                                key={lang}
+                                onClick={() => setSelectedLang(lang)}
+                                className={`px-2 py-1 rounded text-[10px] font-mono transition-all ${selectedLang === lang
+                                    ? "bg-[#81ecff]/10 text-[#81ecff]/70 border border-[#81ecff]/20"
+                                    : "text-white/25 hover:text-white/45 border border-transparent"
+                                }`}
+                            >
+                                {lang}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <p className="text-xs text-white/30 mb-4">
+                    {isDeployed
+                        ? `${enabledModules.length} module(s) enabled. Click any module to see request examples.`
+                        : "Deploy your project to see which modules are enabled."
+                    }
+                </p>
+
+                {enabledModules.length === 0 && !isDeployed && (
+                    <div className="py-8 text-center text-white/20 text-sm">
+                        No active deployment found. Deploy your project first.
+                    </div>
+                )}
+
+                <div className="divide-y divide-white/[0.04]">
+                    {(isDeployed ? enabledModules : publicModules).map((mod) => (
+                        <ModuleSection
+                            key={mod.moduleId}
+                            module={mod}
                             apiBase={apiBase}
                             gatewayBase={gatewayBase}
-                            lang={selectedLang}
+                            token={tokenDisplay}
+                            selectedLang={selectedLang}
+                            isExpanded={expandedModule === mod.moduleId}
+                            onToggle={() =>
+                                setExpandedModule(expandedModule === mod.moduleId ? null : mod.moduleId)
+                            }
+                            isEnabled={enabledModuleIds.has(mod.moduleId)}
                         />
-                    </CardContent>
-                </Card>
-            </motion.div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Step 4: Quick Start snippet */}
+            <div className="py-6">
+                <div className="flex items-center gap-2 mb-4">
+                    <Rocket className="w-3.5 h-3.5 text-amber-400/60" />
+                    <span className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Step 4 · Quick Start</span>
+                </div>
+                <p className="text-xs text-white/35 mb-3">
+                    Copy this complete example to register a user and make your first authenticated request.
+                </p>
+                <QuickStartSnippet
+                    projectId={projectId}
+                    apiBase={apiBase}
+                    gatewayBase={gatewayBase}
+                    lang={selectedLang}
+                />
+            </div>
 
             {/* Discovery endpoint */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-            >
-                <Card className="border-white/[0.08] bg-white/[0.02]">
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-base flex items-center gap-2 text-white/90">
-                            <Terminal className="w-4 h-4 text-white/50" />
-                            Discovery Endpoint
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-xs text-white/40 mb-3">
-                            Hit your gateway base URL to see all available modules and their base URLs dynamically:
-                        </p>
-                        <div className="relative">
-                            <pre className="p-3 rounded-lg bg-black/30 border border-white/[0.08] text-[11px] font-mono text-white/50 overflow-x-auto">
-                                {`curl ${gatewayBase}
+            <div className="py-6">
+                <div className="flex items-center gap-2 mb-4">
+                    <Terminal className="w-3.5 h-3.5 text-white/25" />
+                    <span className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Discovery Endpoint</span>
+                </div>
+                <p className="text-xs text-white/35 mb-3">
+                    Hit your gateway base URL to see all available modules and their base URLs dynamically:
+                </p>
+                <div className="relative">
+                    <pre className="p-3 rounded-md bg-white/[0.02] border border-white/[0.04] text-[11px] font-mono text-white/40 overflow-x-auto">
+                        {`curl ${gatewayBase}
 
 # Response:
 {
-"success": true,
-"data": {
+  "success": true,
+  "data": {
     "projectId": "${projectId}",
     "apiBase": "${gatewayBase}",
     "modules": [
-    { "module": "auth", "baseUrl": "${gatewayBase}/auth", ... },
-    { "module": "chat", "baseUrl": "${gatewayBase}/channels", ... },
-    ...
+      { "module": "auth", "baseUrl": "${gatewayBase}/auth", ... },
+      { "module": "chat", "baseUrl": "${gatewayBase}/channels", ... },
+      ...
     ]
-}
+  }
 }`}
-                            </pre>
-                            <CopyBtn text={`curl ${gatewayBase}`} />
-                        </div>
-                    </CardContent>
-                </Card>
-            </motion.div>
+                    </pre>
+                    <CopyBtn text={`curl ${gatewayBase}`} />
+                </div>
+            </div>
         </div>
     );
 }
@@ -802,16 +743,13 @@ function ModuleSection({
             >
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-white/80">{mod.label}</span>
-                    <Badge
-                        variant="outline"
-                        className="text-[9px] border-white/10 text-white/30"
-                    >
+                    <span className="text-[9px] font-mono text-white/25 border border-white/[0.06] px-1.5 py-0.5 rounded">
                         /{mod.segment}
-                    </Badge>
+                    </span>
                     {isEnabled ? null : (
-                        <Badge variant="outline" className="text-[9px] border-amber-500/20 text-amber-400/60">
+                        <span className="text-[9px] font-mono border border-amber-500/15 text-amber-400/50 px-1.5 py-0.5 rounded">
                             not enabled
-                        </Badge>
+                        </span>
                     )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -877,9 +815,9 @@ function EndpointCard({
                 onClick={() => setShowCode(!showCode)}
                 className="w-full flex items-center gap-2 p-2.5 text-left hover:bg-white/[0.02] transition-colors"
             >
-                <Badge className={`text-[9px] px-1.5 py-0 font-mono ${METHOD_COLORS[endpoint.method] || ""}`}>
+                <span className={`inline-flex items-center text-[9px] px-1.5 py-0.5 font-mono rounded border ${METHOD_COLORS[endpoint.method] || ""}`}>
                     {endpoint.method}
-                </Badge>
+                </span>
                 <code className="text-[11px] font-mono text-white/50 flex-1 truncate">
                     {resolveExampleUrl(endpoint, apiBase, gatewayBase)}
                 </code>
