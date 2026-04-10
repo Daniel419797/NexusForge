@@ -238,19 +238,19 @@ export default function ProjectsPage() {
                                                             <DropdownMenuItem onSelect={() => setActiveProject(project)}>Open</DropdownMenuItem>
                                                             <DropdownMenuItem onSelect={() => { }}>Settings</DropdownMenuItem>
                                                             <DropdownMenuItem
-                                                onSelect={async () => {
-                                                    if (confirm("Delete project? This cannot be undone.")) {
-                                                        try {
-                                                            await ProjectService.delete(project.id);
-                                                            fetchProjects();
-                                                        } catch {
-                                                            // ignore
-                                                        }
-                                                    }
-                                                }}
-                                            >
-                                                Delete
-                                            </DropdownMenuItem>
+                                                                onSelect={async () => {
+                                                                    if (confirm("Delete project? This cannot be undone.")) {
+                                                                        try {
+                                                                            await ProjectService.delete(project.id);
+                                                                            fetchProjects();
+                                                                        } catch {
+                                                                            // ignore
+                                                                        }
+                                                                    }
+                                                                }}
+                                                            >
+                                                                Delete
+                                                            </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </div>
