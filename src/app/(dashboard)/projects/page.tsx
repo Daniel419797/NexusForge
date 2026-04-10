@@ -21,7 +21,6 @@ import { useProjectStore } from "@/store/projectStore";
 import WizardCTA from "@/components/Dashboard/WizardCTA";
 import ActivityFeed from "@/components/Dashboard/ActivityFeed";
 import ModelExplorer from "@/components/Dashboard/ModelExplorer";
-import PluginGrid from "@/components/Dashboard/PluginGrid";
 // Non-core features hidden: BlockchainStatus, X402Panel, AIAssistantOrb
 
 
@@ -238,7 +237,20 @@ export default function ProjectsPage() {
                                                         <DropdownMenuContent>
                                                             <DropdownMenuItem onSelect={() => setActiveProject(project)}>Open</DropdownMenuItem>
                                                             <DropdownMenuItem onSelect={() => { }}>Settings</DropdownMenuItem>
-                                                            <DropdownMenuItem onSelect={async () => { if (!confirm("Delete project? This cannot be undone.")) return; try { await ProjectService.delete(project.id); fetchProjects(); } catch { } }}>Delete</DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                onSelect={async () => {
+                                                    if (confirm("Delete project? This cannot be undone.")) {
+                                                        try {
+                                                            await ProjectService.delete(project.id);
+                                                            fetchProjects();
+                                                        } catch {
+                                                            // ignore
+                                                        }
+                                                    }
+                                                }}
+                                            >
+                                                Delete
+                                            </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </div>
@@ -309,13 +321,13 @@ export default function ProjectsPage() {
             </motion.div>
 
             {/* â”€â”€â”€â”€â”€â”€ Plugin Grid â”€â”€â”€â”€â”€â”€ */}
-            <motion.div
+            {/* <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.55 }}
             >
                 <PluginGrid />
-            </motion.div>
+            </motion.div> */}
 
             {/* Non-core features hidden: Blockchain, X402, AI Assistant */}
 
@@ -333,11 +345,11 @@ function TabButton({
     label,
     active,
     onClick,
-}: {
+}: Readonly<{
     label: string;
     active?: boolean;
     onClick?: () => void;
-}) {
+}>) {
     return (
         <button
             onClick={onClick}
