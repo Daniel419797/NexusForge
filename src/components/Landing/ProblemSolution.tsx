@@ -8,7 +8,7 @@ const features = [
     number: "01.",
     title: "SECURITY",
     description:
-      "Zero-trust architecture. Native JWT, OAuth 2.0, and biometric MFA integration as standard primitives.",
+      "Zero-trust architecture. Native JWT, OAuth 2.0, and multi-factor email verification as standard primitives.",
     tag: "PROTOCOL://SECURE-AUTH",
     accent: "text-[#81ecff]",
     bar: "bg-[#81ecff]",
@@ -17,7 +17,7 @@ const features = [
     number: "02.",
     title: "WEB3 NATIVE",
     description:
-      "Direct EVM interaction, smart contract hooks, and IPFS bridging without external middleware.",
+      "Direct EVM interaction, smart contract hooks, and NFT minting without external middleware.",
     tag: "CHAINED://0X1_MAINNET",
     accent: "text-[#a68cff]",
     bar: "bg-[#a68cff]",
@@ -27,7 +27,7 @@ const features = [
     title: "AUTONOMOUS AI",
     description:
       "Embed LLM workflows directly into your data streams. Pluggable models via standardized SDK hooks.",
-    tag: "AGENT://LOCAL_OLLAMA",
+    tag: "AGENT://MULTI_PROVIDER",
     accent: "text-[#6e9bff]",
     bar: "bg-[#6e9bff]",
   },

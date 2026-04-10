@@ -32,8 +32,8 @@ export default function HowItWorks() {
               BINARY
             </h3>
             <p className="text-sm text-[#adaaaa] leading-relaxed mb-10">
-              Absolute data sovereignty. Run Nexus Forge as a single statically linked
-              binary on your own infrastructure.
+              Absolute data sovereignty. Run Nexus Forge on your own infrastructure
+              with full control over your stack and data.
             </p>
             <div className="space-y-3 mb-12">
               <div className="flex items-center gap-4 text-xs text-[#adaaaa]">

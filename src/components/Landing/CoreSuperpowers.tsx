@@ -7,7 +7,7 @@ const dbLogos = [
   { name: "POSTGRESQL", abbr: "PG" },
   { name: "MONGODB", abbr: "MDB" },
   { name: "REDIS", abbr: "RD" },
-  { name: "BUN.SQL", abbr: "SQL" },
+  { name: "MSSQL", abbr: "MS" },
 ];
 
 export default function CoreSuperpowers() {
@@ -43,7 +43,7 @@ export default function CoreSuperpowers() {
                   NATIVE INTROSPECTION
                 </div>
                 <p className="text-sm text-[#adaaaa] leading-relaxed">
-                  Automatic schema discovery for PostgreSQL, MongoDB, and Redis.
+                  Automatic schema discovery for PostgreSQL, MongoDB, and MSSQL.
                   No manual mapping required.
                 </p>
               </div>
@@ -53,7 +53,7 @@ export default function CoreSuperpowers() {
                   EDGE PERSISTENCE
                 </div>
                 <p className="text-sm text-[#adaaaa] leading-relaxed">
-                  Built for distributed runtimes. 1ms cold starts on Cloudflare Workers and Vercel Edge.
+                  Built for distributed runtimes. Deploy via Docker, Kubernetes, or managed cloud infrastructure.
                 </p>
               </div>
             </div>
