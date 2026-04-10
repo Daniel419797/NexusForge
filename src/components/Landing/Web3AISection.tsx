@@ -26,7 +26,7 @@ export default function Web3AISection() {
               EVM Native Protocol
             </h3>
             <p className="text-sm text-[#adaaaa] leading-relaxed mb-8">
-              Deploy smart contracts, bridge assets, and interact with any EVM chain
+              Deploy smart contracts, manage wallets, and interact with EVM chains
               without leaving your backend.
             </p>
             <span className="font-mono text-[10px] text-[#a68cff]">CHAIN://EVM_MAINNET</span>
@@ -47,9 +47,9 @@ export default function Web3AISection() {
             </h3>
             <p className="text-sm text-[#adaaaa] leading-relaxed mb-8">
               Embed any LLM provider via the standardized adapter interface.
-              Ollama, OpenAI, Anthropic — one SDK.
+              OpenAI, Anthropic, Grok, HuggingFace — one SDK.
             </p>
-            <span className="font-mono text-[10px] text-[#6e9bff]">AGENT://LOCAL_OLLAMA</span>
+            <span className="font-mono text-[10px] text-[#6e9bff]">AGENT://MULTI_PROVIDER</span>
           </motion.div>
         </div>
       </div>
