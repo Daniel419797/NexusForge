@@ -95,7 +95,7 @@ export default function ProjectsPage() {
                             onClick={() => setCreateOpen(true)}
                             className="shrink-0 text-sm font-semibold"
                             style={{
-                                background: "rgba(129,236,255,0.08)",
+                                background: "rgba(129, 236, 255, 0.94)",
                                 border: "1px solid rgba(129,236,255,0.20)",
                             }}
                         >
