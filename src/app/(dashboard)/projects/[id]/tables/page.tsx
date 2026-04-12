@@ -157,12 +157,28 @@ function FieldList({
 
 // -- CreateTableForm -----------------------------------------------------
 
+type CreateMode = "fields" | "json";
+
+const JSON_PLACEHOLDER = `{
+  "displayName": "Mood Logs",
+  "name": "mood_logs",
+  "fields": [
+    { "name": "user_id",      "type": "string",  "required": true,  "unique": false },
+    { "name": "mood_score",   "type": "number",  "required": true,  "unique": false },
+    { "name": "mood_label",   "type": "string",  "required": true,  "unique": false },
+    { "name": "notes",        "type": "string",  "required": false, "unique": false }
+  ]
+}`;
+
 function CreateTableForm({ projectId, onCreated }: Readonly<{ projectId: string; onCreated: (t: CustomTable) => void }>) {
     const [displayName, setDisplayName] = useState("");
     const [fields, setFields] = useState<DraftField[]>([newField()]);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [open, setOpen] = useState(false);
+    const [mode, setMode] = useState<CreateMode>("fields");
+    const [jsonRaw, setJsonRaw] = useState("");
+    const [jsonError, setJsonError] = useState<string | null>(null);
 
     const tableName = toSnakeCase(displayName);
 
@@ -171,6 +187,61 @@ function CreateTableForm({ projectId, onCreated }: Readonly<{ projectId: string;
     }
     function removeField(id: string) {
         setFields((prev) => prev.filter((f) => f.id !== id));
+    }
+
+    function parseAndImportJson() {
+        setJsonError(null);
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(jsonRaw);
+        } catch {
+            setJsonError("Invalid JSON — check your syntax.");
+            return;
+        }
+
+        const VALID_TYPES = new Set<string>(["string", "number", "boolean", "date", "array", "object"]);
+        let importedFields: unknown[] = [];
+        let importedDisplay = "";
+        let importedName = "";
+
+        if (Array.isArray(parsed)) {
+            importedFields = parsed;
+        } else if (typeof parsed === "object" && parsed !== null) {
+            const obj = parsed as Record<string, unknown>;
+            if (Array.isArray(obj.fields)) importedFields = obj.fields;
+            if (typeof obj.displayName === "string") importedDisplay = obj.displayName;
+            if (typeof obj.name === "string") importedName = obj.name;
+        } else {
+            setJsonError("Expected a JSON object with a `fields` array, or a bare array of fields.");
+            return;
+        }
+
+        const draftFields: DraftField[] = [];
+        for (const item of importedFields) {
+            if (typeof item !== "object" || item === null) continue;
+            const f = item as Record<string, unknown>;
+            const name = typeof f.name === "string" ? toSnakeCase(f.name) : "";
+            if (!name) continue;
+            const type: FieldType = VALID_TYPES.has(f.type as string) ? (f.type as FieldType) : "string";
+            draftFields.push({
+                id: crypto.randomUUID(),
+                name,
+                type,
+                required: f.required === true,
+                unique: f.unique === true,
+            });
+        }
+
+        if (draftFields.length === 0) {
+            setJsonError("No valid fields found. Each field needs at least a `name` property.");
+            return;
+        }
+
+        if (importedDisplay) setDisplayName(importedDisplay);
+        else if (importedName) setDisplayName(importedName);
+        setFields(draftFields);
+        setMode("fields");
+        setJsonRaw("");
     }
 
     async function handleSubmit(e: React.SyntheticEvent) {
@@ -191,6 +262,7 @@ function CreateTableForm({ projectId, onCreated }: Readonly<{ projectId: string;
             setDisplayName("");
             setFields([newField()]);
             setOpen(false);
+            setMode("fields");
         } catch (err: unknown) {
             const msg =
                 err && typeof err === "object" && "response" in err
@@ -202,18 +274,27 @@ function CreateTableForm({ projectId, onCreated }: Readonly<{ projectId: string;
         }
     }
 
+    function handleToggle() {
+        setOpen((v) => !v);
+        if (open) {
+            // reset on close
+            setMode("fields");
+            setJsonRaw("");
+            setJsonError(null);
+            setError(null);
+        }
+    }
+
     return (
         <div className="border-b border-white/[0.04] pb-6">
             <button
                 type="button"
-                onClick={() => setOpen((v) => !v)}
+                onClick={handleToggle}
                 className="w-full flex items-center justify-between group text-left"
             >
-                <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-white/70 group-hover:text-white/90 transition-colors">
-                        Define new table
-                    </span>
-                </div>
+                <span className="text-sm font-semibold text-white/70 group-hover:text-white/90 transition-colors">
+                    Define new table
+                </span>
                 <span className="text-[11px] text-[#81ecff]/60 group-hover:text-[#81ecff] transition-colors shrink-0">
                     {open ? "Cancel" : "+ New table"}
                 </span>
@@ -221,67 +302,120 @@ function CreateTableForm({ projectId, onCreated }: Readonly<{ projectId: string;
 
             <AnimatePresence>
                 {open && (
-                    <motion.form
+                    <motion.div
                         key="create-form"
-                        onSubmit={handleSubmit}
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                     >
-                        <div className="flex flex-col gap-5 pt-5">
-                            {/* Name row */}
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1">
-                                    <Label htmlFor="displayName" className="text-xs text-white/40 mb-1.5 block">Display name</Label>
-                                    <Input
-                                        id="displayName"
-                                        placeholder="Products"
-                                        value={displayName}
-                                        onChange={(e) => setDisplayName(e.target.value)}
-                                        className="bg-white/[0.03] border-white/[0.06] focus:border-[#81ecff]/40"
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <Label className="text-xs text-white/25 mb-1.5 block">Table name (auto)</Label>
-                                    <Input
-                                        value={tableName || ""}
-                                        readOnly
-                                        className="font-mono text-sm text-white/30 bg-white/[0.02] border-white/[0.04] cursor-default"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Fields */}
-                            <FieldList
-                                fields={fields}
-                                onUpdate={updateField}
-                                onRemove={removeField}
-                                onAdd={() => setFields((p) => [...p, newField()])}
-                            />
-
-                            {error && <p className="text-sm text-red-400/80">{error}</p>}
-
-                            <div className="flex gap-3">
-                                <Button
-                                    type="submit"
-                                    disabled={saving}
-                                    className="bg-[#81ecff]/10 text-[#81ecff] border border-[#81ecff]/20 hover:bg-[#81ecff]/15 hover:text-white transition-colors"
-                                >
-                                    {saving ? "Saving..." : "Save table"}
-                                </Button>
-                                <Button
+                        {/* Mode tabs */}
+                        <div className="flex gap-1 pt-5 pb-1">
+                            {(["fields", "json"] as CreateMode[]).map((m) => (
+                                <button
+                                    key={m}
                                     type="button"
-                                    variant="ghost"
-                                    onClick={() => setOpen(false)}
-                                    className="text-white/30 hover:text-white/60"
+                                    onClick={() => { setMode(m); setError(null); setJsonError(null); }}
+                                    className={`px-3 py-1 rounded text-[11px] font-mono transition-colors ${
+                                        mode === m
+                                            ? "bg-[#81ecff]/10 text-[#81ecff] border border-[#81ecff]/20"
+                                            : "text-white/30 hover:text-white/60 border border-transparent"
+                                    }`}
                                 >
-                                    Cancel
-                                </Button>
-                            </div>
+                                    {m === "fields" ? "Field builder" : "Paste JSON"}
+                                </button>
+                            ))}
                         </div>
-                    </motion.form>
+
+                        {/* JSON import mode */}
+                        {mode === "json" && (
+                            <div className="flex flex-col gap-3 pt-4">
+                                <p className="text-[11px] text-white/30">
+                                    Paste a JSON object with <code className="text-white/50">displayName</code>,{" "}
+                                    <code className="text-white/50">name</code>, and{" "}
+                                    <code className="text-white/50">fields</code> — or just a bare array of fields.
+                                    Valid field types: <code className="text-white/50">string · number · boolean · date · array · object</code>
+                                </p>
+                                <textarea
+                                    value={jsonRaw}
+                                    onChange={(e) => { setJsonRaw(e.target.value); setJsonError(null); }}
+                                    placeholder={JSON_PLACEHOLDER}
+                                    rows={14}
+                                    spellCheck={false}
+                                    className="w-full font-mono text-xs text-[#81ecff]/80 bg-white/[0.03] border border-white/[0.06] focus:border-[#81ecff]/30 rounded-md px-3 py-2.5 resize-y outline-none placeholder:text-white/15 focus:ring-0"
+                                />
+                                {jsonError && <p className="text-sm text-red-400/80">{jsonError}</p>}
+                                <div className="flex gap-3">
+                                    <Button
+                                        type="button"
+                                        onClick={parseAndImportJson}
+                                        disabled={!jsonRaw.trim()}
+                                        className="bg-[#81ecff]/10 text-[#81ecff] border border-[#81ecff]/20 hover:bg-[#81ecff]/15 hover:text-white transition-colors"
+                                    >
+                                        Import fields →
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Field builder mode */}
+                        {mode === "fields" && (
+                            <form onSubmit={handleSubmit}>
+                                <div className="flex flex-col gap-5 pt-4">
+                                    {/* Name row */}
+                                    <div className="flex flex-col sm:flex-row gap-4">
+                                        <div className="flex-1">
+                                            <Label htmlFor="displayName" className="text-xs text-white/40 mb-1.5 block">Display name</Label>
+                                            <Input
+                                                id="displayName"
+                                                placeholder="Products"
+                                                value={displayName}
+                                                onChange={(e) => setDisplayName(e.target.value)}
+                                                className="bg-white/[0.03] border-white/[0.06] focus:border-[#81ecff]/40"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <Label className="text-xs text-white/25 mb-1.5 block">Table name (auto)</Label>
+                                            <Input
+                                                value={tableName || ""}
+                                                readOnly
+                                                className="font-mono text-sm text-white/30 bg-white/[0.02] border-white/[0.04] cursor-default"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Fields */}
+                                    <FieldList
+                                        fields={fields}
+                                        onUpdate={updateField}
+                                        onRemove={removeField}
+                                        onAdd={() => setFields((p) => [...p, newField()])}
+                                    />
+
+                                    {error && <p className="text-sm text-red-400/80">{error}</p>}
+
+                                    <div className="flex gap-3">
+                                        <Button
+                                            type="submit"
+                                            disabled={saving}
+                                            className="bg-[#81ecff]/10 text-[#81ecff] border border-[#81ecff]/20 hover:bg-[#81ecff]/15 hover:text-white transition-colors"
+                                        >
+                                            {saving ? "Saving..." : "Save table"}
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            onClick={handleToggle}
+                                            className="text-white/30 hover:text-white/60"
+                                        >
+                                            Cancel
+                                        </Button>
+                                    </div>
+                                </div>
+                            </form>
+                        )}
+                    </motion.div>
                 )}
             </AnimatePresence>
         </div>
@@ -302,6 +436,9 @@ function TableRow({
     const [draftFields, setDraftFields] = useState<DraftField[]>([]);
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
+    const [migrating, setMigrating] = useState(false);
+    const [migrateError, setMigrateError] = useState<string | null>(null);
+    const [lastDdl, setLastDdl] = useState<string | null>(null);
 
     const fields = table.fields as FieldDefinition[];
 
@@ -350,6 +487,26 @@ function TableRow({
         }
     }
 
+    async function handleMigrate() {
+        setMigrating(true);
+        setMigrateError(null);
+        setLastDdl(null);
+        setExpanded(true);
+        try {
+            const result = await TableService.migrateTable(projectId, table.id);
+            setLastDdl(result.ddl);
+            onUpdated({ ...table, migratedAt: new Date().toISOString() });
+        } catch (err: unknown) {
+            const msg =
+                err && typeof err === "object" && "response" in err
+                    ? ((err as Record<string, Record<string, Record<string, string>>>).response?.data?.message ?? "Migration failed")
+                    : "Migration failed";
+            setMigrateError(msg);
+        } finally {
+            setMigrating(false);
+        }
+    }
+
     function updateDraftField(id: string, updated: DraftField) {
         setDraftFields((prev) => prev.map((x) => (x.id === id ? updated : x)));
     }
@@ -378,6 +535,21 @@ function TableRow({
                 </button>
 
                 <div className="flex items-center gap-2 shrink-0">
+                    {/* Migration status badge */}
+                    {table.migratedAt ? (
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hidden sm:inline">
+                            ✓ migrated
+                        </span>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={handleMigrate}
+                            disabled={migrating}
+                            className="text-[11px] px-2 py-0.5 rounded border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition-colors disabled:opacity-50"
+                        >
+                            {migrating ? "migrating…" : "Migrate →"}
+                        </button>
+                    )}
                     {!editing && (
                         <button
                             type="button"
@@ -438,10 +610,37 @@ function TableRow({
                                         </div>
                                     ))}
                                 </div>
+                                {/* Migration error */}
+                                {migrateError && (
+                                    <p className="text-sm text-red-400/80 mt-2 mb-1">{migrateError}</p>
+                                )}
+
+                                {/* DDL preview after successful migration */}
+                                {lastDdl && (
+                                    <div className="mt-3 mb-2">
+                                        <p className="text-[10px] uppercase tracking-wider text-white/20 font-mono mb-1.5">Generated DDL</p>
+                                        <pre className="overflow-x-auto rounded bg-white/[0.02] border border-white/[0.04] px-3 py-2.5 text-[11px] font-mono text-emerald-400/70 whitespace-pre leading-relaxed">
+                                            {lastDdl}
+                                        </pre>
+                                    </div>
+                                )}
+
+                                {/* Mobile: Migrate button (if not yet migrated) */}
+                                {!table.migratedAt && (
+                                    <button
+                                        type="button"
+                                        onClick={handleMigrate}
+                                        disabled={migrating}
+                                        className="mt-2 text-[11px] px-2 py-0.5 rounded border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition-colors disabled:opacity-50 sm:hidden"
+                                    >
+                                        {migrating ? "migrating…" : "Run migration →"}
+                                    </button>
+                                )}
+
                                 <button
                                     type="button"
                                     onClick={openEdit}
-                                    className="text-[11px] text-[#81ecff]/60 hover:text-[#81ecff] transition-colors sm:hidden"
+                                    className="text-[11px] text-[#81ecff]/60 hover:text-[#81ecff] transition-colors sm:hidden mt-2"
                                 >
                                     Edit columns
                                 </button>

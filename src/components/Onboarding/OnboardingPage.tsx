@@ -36,9 +36,10 @@ const AVAILABLE_MODULES = [
 
 /* ── DB type options ── */
 const DB_TYPES = [
-    { id: "postgres", label: "PostgreSQL", description: "Best for structured data, SQL, full ACID compliance" },
-    { id: "mysql", label: "MySQL", description: "Popular relational DB, great ecosystem support" },
-    { id: "sqlite", label: "SQLite", description: "Lightweight, zero-config, perfect for prototyping" },
+    { id: "postgresql", label: "PostgreSQL", description: "Best for structured data, SQL, full ACID compliance" },
+    { id: "supabase", label: "Supabase", description: "Managed PostgreSQL with Supabase platform tooling" },
+    { id: "mssql", label: "MSSQL", description: "Microsoft SQL Server for enterprise relational workloads" },
+    { id: "mongodb", label: "MongoDB", description: "Document database for flexible schemas and nested data" },
 ];
 
 /* ── Step indicators ── */

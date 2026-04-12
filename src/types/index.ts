@@ -21,7 +21,7 @@ export interface Project {
     enabledModules?: string[];
     // optional detailed config returned by project detail API
     config?: {
-        dbType: string;
+        dbType: "postgresql" | "supabase" | "mssql" | "mongodb";
         dbUrl?: string | null;
         dbConnected?: boolean;
         settings?: {
