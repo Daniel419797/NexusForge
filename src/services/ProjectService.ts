@@ -26,7 +26,7 @@ export interface UpdateProjectPayload {
 }
 
 export interface ProjectConfig {
-	dbType: string;
+	dbType: "postgresql" | "supabase" | "mssql" | "mongodb";
 	dbUrl?: string | null;
 	settings: Record<string, any>;
 }
@@ -107,8 +107,11 @@ const ProjectService = {
 		return data.data;
 	},
 
-	async rotateDbUrl(projectId: string): Promise<{ dbUrl: string }> {
-		const { data } = await api.post(`/projects/${projectId}/rotate-db-url`);
+	async rotateDbUrl(
+		projectId: string,
+		payload: { dbUrl: string; dbType?: "postgresql" | "supabase" | "mssql" | "mongodb" }
+	): Promise<{ dbUrl: string }> {
+		const { data } = await api.post(`/projects/${projectId}/rotate-db-url`, payload);
 		return data.data;
 	},
 

@@ -11,11 +11,21 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useProjectStore } from "@/store/projectStore";
 import ProjectService from "@/services/ProjectService";
+import ModuleService, { type ModuleInfo } from "@/services/ModuleService";
+
+type SupportedDbType = "postgresql" | "supabase" | "mssql" | "mongodb";
+
+function normalizeDbType(value: string | null | undefined): SupportedDbType {
+    const v = (value ?? "postgresql").toLowerCase();
+    if (v === "postgres") return "postgresql";
+    if (v === "postgresql" || v === "supabase" || v === "mssql" || v === "mongodb") return v;
+    return "postgresql";
+}
 
 export default function ProjectDatabaseSettingsPage() {
     const router = useRouter();
     const activeProject = useProjectStore((s) => s.activeProject);
-    const [dbType, setDbType] = useState<string>("postgresql");
+    const [dbType, setDbType] = useState<SupportedDbType>("postgresql");
     const [dbUrl, setDbUrl] = useState<string>("");
     const [sslMode, setSslMode] = useState<string>("disable");
     const [poolSize, setPoolSize] = useState<number>(10);
@@ -41,6 +51,9 @@ export default function ProjectDatabaseSettingsPage() {
     const [userMigrationStatus, setUserMigrationStatus] = useState<string | null>(null);
     const userMigrationPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+    // Enabled modules (for the "what will be created" preview)
+    const [enabledModules, setEnabledModules] = useState<ModuleInfo[]>([]);
+
     // Cleanup polling intervals on unmount
     useEffect(() => {
         return () => {
@@ -49,10 +62,10 @@ export default function ProjectDatabaseSettingsPage() {
         };
     }, []);
 
-    const dbPlaceholders: Record<string, string> = {
+    const dbPlaceholders: Record<SupportedDbType, string> = {
         postgresql: "postgres://user:pass@host:5432/db",
-        mysql: "mysql://user:pass@host:3306/db",
-        sqlite: "/path/to/database.sqlite",
+        supabase: "postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres",
+        mssql: "mssql://user:pass@host:1433/db",
         mongodb: "mongodb://user:pass@host:27017/db",
     };
 
@@ -66,7 +79,7 @@ export default function ProjectDatabaseSettingsPage() {
                 if (!mounted) return;
                 const cfg = res.config;
                 if (cfg) {
-                    setDbType(cfg.dbType || "postgresql");
+                    setDbType(normalizeDbType(cfg.dbType));
                     // Fetch DB URL via secure backend API (may be redacted or require permissions)
                     ProjectService.getDbUrl(activeProject.id).then((r) => {
                         if (!mounted) return;
@@ -81,6 +94,10 @@ export default function ProjectDatabaseSettingsPage() {
             .catch(() => {
                 if (mounted) setMessage("Failed to load database configuration.");
             });
+        // Load enabled modules for the schema preview
+        ModuleService.list(activeProject.id)
+            .then((mods) => { if (mounted) setEnabledModules(mods.filter((m) => m.enabled || m.alwaysEnabled)); })
+            .catch(() => {});
         return () => {
             mounted = false;
         };
@@ -159,14 +176,14 @@ export default function ProjectDatabaseSettingsPage() {
                     {message && <div role="status" aria-live="polite" className="p-2 rounded bg-primary/10 text-primary">{message}</div>}
                     <div>
                         <Label htmlFor="dbType">DB Type</Label>
-                        <Select value={dbType} onValueChange={(v) => setDbType(v)} name="dbType">
+                        <Select value={dbType} onValueChange={(v) => setDbType(normalizeDbType(v))} name="dbType">
                             <SelectTrigger className="w-full">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="postgresql">PostgreSQL</SelectItem>
-                                <SelectItem value="mysql">MySQL</SelectItem>
-                                <SelectItem value="sqlite">SQLite</SelectItem>
+                                <SelectItem value="supabase">Supabase</SelectItem>
+                                <SelectItem value="mssql">MSSQL</SelectItem>
                                 <SelectItem value="mongodb">MongoDB</SelectItem>
                             </SelectContent>
                         </Select>
@@ -279,15 +296,34 @@ export default function ProjectDatabaseSettingsPage() {
 
                             <div>
                                 <Label className="text-xs font-medium">What gets stored in your database</Label>
-                                <div className="mt-1.5 grid grid-cols-3 gap-2">
-                                    {["users", "refresh_tokens", "audit_logs"].map((table) => (
-                                        <div key={table} className="rounded-md bg-background/60 border px-2.5 py-1.5 text-center">
-                                            <code className="text-[11px] font-mono text-muted-foreground">{table}</code>
+                                {(() => {
+                                    const moduleTableMap: Record<string, string[]> = {
+                                        "auth":          ["users", "refresh_tokens", "audit_logs", "consent_logs"],
+                                        "api-keys":      ["api_keys"],
+                                        "compliance":    [],
+                                        "chat":          ["rooms", "messages"],
+                                        "notifications": ["notifications", "device_tokens"],
+                                        "blockchain":    ["wallets", "transactions", "nfts", "contract_events"],
+                                        "ai":            ["ai_usage_logs"],
+                                    };
+                                    // Always-created tables
+                                    const baseTables = ["users", "refresh_tokens", "audit_logs", "consent_logs", "api_keys"];
+                                    const extraTables = enabledModules
+                                        .flatMap((m) => moduleTableMap[m.moduleId] ?? [])
+                                        .filter((t) => !baseTables.includes(t));
+                                    const allTables = [...baseTables, ...extraTables];
+                                    return (
+                                        <div className="mt-1.5 grid grid-cols-3 gap-2">
+                                            {allTables.map((table) => (
+                                                <div key={table} className="rounded-md bg-background/60 border px-2.5 py-1.5 text-center">
+                                                    <code className="text-[11px] font-mono text-muted-foreground">{table}</code>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
+                                    );
+                                })()}
                                 <p className="text-[11px] text-muted-foreground mt-1.5">
-                                    These tables are auto-created on first auth request. Lockout keys are project-scoped in Redis.
+                                    Tables are created based on your enabled modules. Lockout keys are project-scoped in Redis.
                                 </p>
                             </div>
 
@@ -336,6 +372,11 @@ export default function ProjectDatabaseSettingsPage() {
             {/* Run Migrations */}
             <section>
                 <h2 className="text-sm font-semibold font-display tracking-tight mb-4">Run Migrations</h2>
+                <p className="text-xs text-muted-foreground mb-3">
+                    Creates only the tables your enabled modules need in your database.
+                    Always includes: <code className="font-mono">users</code>, <code className="font-mono">refresh_tokens</code>, <code className="font-mono">audit_logs</code>, <code className="font-mono">consent_logs</code>, <code className="font-mono">api_keys</code>.
+                    Additional tables are added per enabled module (chat → rooms/messages, blockchain → wallets/transactions/nfts, etc.).
+                </p>
                 <div className="space-y-4">
                     {migrationStatus && (
                         <div role="status" aria-live="polite" className={`p-2 rounded text-sm ${migrationStatusClass}`}>
@@ -396,7 +437,15 @@ export default function ProjectDatabaseSettingsPage() {
                                 setRotating(true);
                                 setRotateMessage(null);
                                 try {
-                                    const { dbUrl: newUrl } = await ProjectService.rotateDbUrl(activeProject.id);
+                                    if (!dbUrl.trim()) {
+                                        setRotateMessage("Error: provide a database URL first.");
+                                        setRotating(false);
+                                        return;
+                                    }
+                                    const { dbUrl: newUrl } = await ProjectService.rotateDbUrl(activeProject.id, {
+                                        dbUrl: dbUrl.trim(),
+                                        dbType,
+                                    });
                                     setDbUrl(newUrl);
                                     setRotateMessage("Database URL rotated successfully.");
                                 } catch {

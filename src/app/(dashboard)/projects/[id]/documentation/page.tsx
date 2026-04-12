@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useDeployStore } from "@/store/deployStore";
 import { useProjectStore } from "@/store/projectStore";
 import ProjectService from "@/services/ProjectService";
+import TableService, { type CustomTable } from "@/services/TableService";
 import {
     Copy,
     Check,
@@ -451,11 +452,23 @@ export default function DocumentationPage() {
     const [tokenLoading, setTokenLoading] = useState(false);
     const [selectedLang, setSelectedLang] = useState<LangOption>("curl");
     const [expandedModule, setExpandedModule] = useState<string | null>("auth");
+    const [customTables, setCustomTables] = useState<CustomTable[]>([]);
+    const [tablesLoading, setTablesLoading] = useState(false);
 
     // Fetch current deployment
     useEffect(() => {
         if (projectId) fetchCurrentDeployment(projectId);
     }, [projectId, fetchCurrentDeployment]);
+
+    // Fetch custom tables
+    useEffect(() => {
+        if (!projectId) return;
+        setTablesLoading(true);
+        TableService.listTables(projectId)
+            .then(setCustomTables)
+            .catch(() => {})
+            .finally(() => setTablesLoading(false));
+    }, [projectId]);
 
     // Build module docs — filter out internal modules
     const allModules = useMemo(() => buildModuleDocs(projectId), [projectId]);
@@ -708,6 +721,35 @@ export default function DocumentationPage() {
                     <CopyBtn text={`curl ${gatewayBase}`} />
                 </div>
             </div>
+
+            {/* Custom Tables */}
+            {(tablesLoading || customTables.length > 0) && (
+                <div className="py-6">
+                    <div className="flex items-center gap-2 mb-1">
+                        <BookOpen className="w-3.5 h-3.5 text-violet-400/60" />
+                        <span className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Custom Table APIs</span>
+                    </div>
+                    <p className="text-xs text-white/30 mb-4">
+                        Each custom table you defined gets full CRUD endpoints at{" "}
+                        <code className="text-white/45">{gatewayBase}/table/&#123;tableName&#125;</code>. Only migrated tables are active.
+                    </p>
+
+                    {tablesLoading ? (
+                        <div className="py-4 text-center text-white/20 text-xs">Loading tables…</div>
+                    ) : (
+                        <div className="divide-y divide-white/[0.04]">
+                            {customTables.map((table) => (
+                                <CustomTableSection
+                                    key={table.id}
+                                    table={table}
+                                    gatewayBase={gatewayBase}
+                                    lang={selectedLang}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
@@ -988,6 +1030,229 @@ print("Logged out")`,
                 {code}
             </pre>
             <CopyBtn text={code} />
+        </div>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Custom Table Section
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+type FieldValueExample = string | number | boolean | null;
+
+function fieldExample(type: string): FieldValueExample {
+    switch (type) {
+        case "number": return 0;
+        case "boolean": return true;
+        case "date": return new Date().toISOString();
+        case "array": return "[]" as unknown as null;
+        case "object": return "{}" as unknown as null;
+        default: return "string_value";
+    }
+}
+
+function buildBodyExample(fields: CustomTable["fields"]): Record<string, FieldValueExample> {
+    const obj: Record<string, FieldValueExample> = {};
+    for (const f of fields) {
+        obj[f.name] = fieldExample(f.type);
+    }
+    return obj;
+}
+
+function buildTableSnippets(
+    table: CustomTable,
+    gatewayBase: string,
+    lang: LangOption,
+): { list: string; create: string; update: string; remove: string } {
+    const base = `${gatewayBase}/table/${table.name}`;
+    const body = buildBodyExample(table.fields);
+    const bodyStr = JSON.stringify(body, null, 2);
+
+    if (lang === "curl") {
+        return {
+            list: `curl "${base}?limit=20&offset=0" \\\n  -H "Authorization: Bearer YOUR_TOKEN"`,
+            create: `curl -X POST "${base}" \\\n  -H "Authorization: Bearer YOUR_TOKEN" \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify(body)}'`,
+            update: `curl -X PATCH "${base}/ROW_ID" \\\n  -H "Authorization: Bearer YOUR_TOKEN" \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify(body)}'`,
+            remove: `curl -X DELETE "${base}/ROW_ID" \\\n  -H "Authorization: Bearer YOUR_TOKEN"`,
+        };
+    }
+
+    if (lang === "js") {
+        const headers = `{ "Authorization": "Bearer YOUR_TOKEN", "Content-Type": "application/json" }`;
+        return {
+            list: `const res = await fetch("${base}?limit=20&offset=0", {\n  headers: { "Authorization": "Bearer YOUR_TOKEN" },\n});\nconst { data } = await res.json();\n// data: { rows: [...], total: number }`,
+            create: `const res = await fetch("${base}", {\n  method: "POST",\n  headers: ${headers},\n  body: JSON.stringify(${bodyStr}),\n});\nconst { data } = await res.json();`,
+            update: `const res = await fetch(\`${base}/\${rowId}\`, {\n  method: "PATCH",\n  headers: ${headers},\n  body: JSON.stringify(${bodyStr}),\n});\nconst { data } = await res.json();`,
+            remove: `const res = await fetch(\`${base}/\${rowId}\`, {\n  method: "DELETE",\n  headers: { "Authorization": "Bearer YOUR_TOKEN" },\n});\nconst { data } = await res.json();`,
+        };
+    }
+
+    // python
+    const headersStr = `{"Authorization": "Bearer YOUR_TOKEN", "Content-Type": "application/json"}`;
+    return {
+        list: `import requests\nres = requests.get("${base}", params={"limit": 20, "offset": 0},\n    headers={"Authorization": "Bearer YOUR_TOKEN"})\nprint(res.json())`,
+        create: `import requests\nres = requests.post("${base}",\n    headers=${headersStr},\n    json=${JSON.stringify(body).replaceAll('"', "'")})\nprint(res.json())`,
+        update: `import requests\nres = requests.patch(f"${base}/ROW_ID",\n    headers=${headersStr},\n    json=${JSON.stringify(body).replaceAll('"', "'")})\nprint(res.json())`,
+        remove: `import requests\nres = requests.delete(f"${base}/ROW_ID",\n    headers={"Authorization": "Bearer YOUR_TOKEN"})\nprint(res.json())`,
+    };
+}
+
+const TABLE_ENDPOINT_META = [
+    { key: "list" as const, method: "GET", label: "List rows", pathSuffix: "" },
+    { key: "create" as const, method: "POST", label: "Insert row", pathSuffix: "" },
+    { key: "update" as const, method: "PATCH", label: "Update row", pathSuffix: "/:rowId" },
+    { key: "remove" as const, method: "DELETE", label: "Delete row", pathSuffix: "/:rowId" },
+];
+
+function CustomTableSection({
+    table,
+    gatewayBase,
+    lang,
+}: Readonly<{
+    table: CustomTable;
+    gatewayBase: string;
+    lang: LangOption;
+}>) {
+    const [expanded, setExpanded] = useState(false);
+    const [openEndpoint, setOpenEndpoint] = useState<string | null>(null);
+
+    const snippets = useMemo(
+        () => buildTableSnippets(table, gatewayBase, lang),
+        [table, gatewayBase, lang],
+    );
+
+    const base = `${gatewayBase}/table/${table.name}`;
+
+    return (
+        <div className={`rounded-xl border transition-all ${table.migratedAt ? "border-white/[0.08]" : "border-white/[0.04] opacity-50"}`}>
+            <button
+                onClick={() => setExpanded((x) => !x)}
+                className="w-full flex items-center justify-between p-3 text-left hover:bg-white/[0.02] transition-colors rounded-xl"
+            >
+                <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-white/80">{table.displayName}</span>
+                    <span className="text-[9px] font-mono text-white/25 border border-white/[0.06] px-1.5 py-0.5 rounded">
+                        /table/{table.name}
+                    </span>
+                    {!table.migratedAt && (
+                        <span className="text-[9px] font-mono border border-amber-500/15 text-amber-400/50 px-1.5 py-0.5 rounded">
+                            not migrated
+                        </span>
+                    )}
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-white/20">{table.fields.length} field{table.fields.length === 1 ? "" : "s"}</span>
+                    <svg aria-hidden="true" className={`w-4 h-4 text-white/20 transition-transform ${expanded ? "rotate-180" : ""}`}
+                        fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                    </svg>
+                </div>
+            </button>
+
+            {expanded && (
+                <div className="px-3 pb-3 space-y-4">
+                    {/* DTO field table */}
+                    <div>
+                        <p className="text-[10px] uppercase tracking-wider text-white/20 mb-2">Schema / DTO</p>
+                        <div className="rounded-lg border border-white/[0.05] overflow-hidden">
+                            <table className="w-full text-[10px] font-mono">
+                                <thead>
+                                    <tr className="border-b border-white/[0.05] bg-white/[0.01]">
+                                        <th className="text-left px-2.5 py-1.5 text-white/30 font-medium">Field</th>
+                                        <th className="text-left px-2.5 py-1.5 text-white/30 font-medium">Type</th>
+                                        <th className="text-left px-2.5 py-1.5 text-white/30 font-medium">Required</th>
+                                        <th className="text-left px-2.5 py-1.5 text-white/30 font-medium">Unique</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/[0.03]">
+                                    <tr className="bg-white/[0.005]">
+                                        <td className="px-2.5 py-1.5 text-[#81ecff]/60">id</td>
+                                        <td className="px-2.5 py-1.5 text-violet-400/60">uuid</td>
+                                        <td className="px-2.5 py-1.5 text-emerald-400/50">auto</td>
+                                        <td className="px-2.5 py-1.5 text-emerald-400/50">✓</td>
+                                    </tr>
+                                    {table.fields.map((f) => (
+                                        <tr key={f.name} className="bg-white/[0.005]">
+                                            <td className="px-2.5 py-1.5 text-white/60">{f.name}</td>
+                                            <td className="px-2.5 py-1.5 text-violet-400/60">{f.type}</td>
+                                            <td className="px-2.5 py-1.5">
+                                                {f.required
+                                                    ? <span className="text-amber-400/60">required</span>
+                                                    : <span className="text-white/20">optional</span>}
+                                            </td>
+                                            <td className="px-2.5 py-1.5">
+                                                {f.unique
+                                                    ? <span className="text-emerald-400/50">✓</span>
+                                                    : <span className="text-white/20">—</span>}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    <tr className="bg-white/[0.005]">
+                                        <td className="px-2.5 py-1.5 text-white/30">created_at</td>
+                                        <td className="px-2.5 py-1.5 text-violet-400/40">timestamp</td>
+                                        <td className="px-2.5 py-1.5 text-white/20">auto</td>
+                                        <td className="px-2.5 py-1.5 text-white/20">—</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Endpoints */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] uppercase tracking-wider text-white/20">Endpoints</p>
+                        {TABLE_ENDPOINT_META.map(({ key, method, label, pathSuffix }) => {
+                            const isOpen = openEndpoint === key;
+                            const snippet = snippets[key];
+                            const url = `${base}${pathSuffix}`;
+                            return (
+                                <div key={key} className="rounded-lg border border-white/[0.05] bg-black/10 overflow-hidden">
+                                    <button
+                                        onClick={() => setOpenEndpoint(isOpen ? null : key)}
+                                        className="w-full flex items-center gap-2 p-2.5 text-left hover:bg-white/[0.02] transition-colors"
+                                    >
+                                        <span className={`inline-flex items-center text-[9px] px-1.5 py-0.5 font-mono rounded border ${METHOD_COLORS[method] || ""}`}>
+                                            {method}
+                                        </span>
+                                        <code className="text-[11px] font-mono text-white/50 flex-1 truncate">{url}</code>
+                                        <span className="text-[10px] text-white/25 shrink-0">{label}</span>
+                                    </button>
+                                    {isOpen && (
+                                        <div className="border-t border-white/[0.04] p-2.5 space-y-2">
+                                            <div className="flex items-center gap-1.5">
+                                                <Shield className="w-3 h-3 text-white/20" />
+                                                <span className="text-[10px] text-white/25">Requires: Bearer Token or API Key</span>
+                                            </div>
+                                            <div className="relative">
+                                                <pre className="p-2.5 rounded-lg bg-black/30 border border-white/[0.06] text-[10px] font-mono text-white/50 overflow-x-auto whitespace-pre-wrap">
+                                                    {snippet}
+                                                </pre>
+                                                <CopyBtn text={snippet} />
+                                            </div>
+                                            {key === "list" && (
+                                                <div>
+                                                    <p className="text-[10px] text-white/25 mb-1">Response shape:</p>
+                                                    <pre className="p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/10 text-[10px] font-mono text-emerald-300/60 overflow-x-auto whitespace-pre-wrap">
+                                                        {JSON.stringify({ success: true, data: { rows: [{ id: "uuid", ...buildBodyExample(table.fields), created_at: new Date().toISOString() }], total: 1 } }, null, 2)}
+                                                    </pre>
+                                                </div>
+                                            )}
+                                            {(key === "create" || key === "update") && (
+                                                <div>
+                                                    <p className="text-[10px] text-white/25 mb-1">Request body:</p>
+                                                    <pre className="p-2 rounded-lg bg-blue-500/5 border border-blue-500/10 text-[10px] font-mono text-blue-300/60 overflow-x-auto whitespace-pre-wrap">
+                                                        {JSON.stringify(buildBodyExample(table.fields), null, 2)}
+                                                    </pre>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

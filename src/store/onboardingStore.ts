@@ -38,7 +38,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     projectName: "",
     category: "",
     enabledModules: [],
-    dbType: "postgres",
+        dbType: "postgresql",
     completed: typeof window !== "undefined"
         ? localStorage.getItem("onboardingComplete") === "true"
         : false,
@@ -79,7 +79,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
             projectName: "",
             category: "",
             enabledModules: [],
-            dbType: "postgres",
+                dbType: "postgresql",
             createdProjectId: null,
             projectToken: null,
         }),
