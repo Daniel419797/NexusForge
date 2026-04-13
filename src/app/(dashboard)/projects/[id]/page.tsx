@@ -7,6 +7,7 @@ import { useProjectStore } from "@/store/projectStore";
 import ProjectService from "@/services/ProjectService";
 import DashboardService from "@/services/DashboardService";
 import RealtimeStreamChart from "@/components/Dashboard/RealtimeStreamChart";
+import { useWebSocket } from "@/hooks/useWebSocket";
 
 // Three.js must be loaded client-only (no SSR)
 const WireframeChart3D = dynamic(
@@ -15,16 +16,7 @@ const WireframeChart3D = dynamic(
 );
 
 /* ── Constants ── */
-const POLL_INTERVAL_MS = 3_000;
 const MAX_POINTS = 80;
-const MAX_BACKOFF_MS = 30_000;
-const BASE_BACKOFF_MS = 3_000;
-
-/** Exponential backoff with jitter */
-function backoffMs(failures: number): number {
-    const delay = Math.min(MAX_BACKOFF_MS, BASE_BACKOFF_MS * 2 ** failures);
-    return delay + Math.random() * 1_000;
-}
 
 interface RecentActivity {
     title?: string;
@@ -42,11 +34,9 @@ export default function ProjectOverviewPage() {
     const [realtimeData, setRealtimeData] = useState<number[][] | undefined>(undefined);
     const [analyticsError, setAnalyticsError] = useState(false);
 
-    // Poll tracking refs (not state — avoid re-render on every tick)
+    // Realtime refs (not state — avoid re-render on every tick)
     const realtimePointsRef = useRef<number[][]>([[], [], []]);
     const runningMaxRef = useRef(1);
-    const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const pollFailuresRef = useRef(0);
     const isMountedRef = useRef(true);
 
     // Track mount status for all async ops
@@ -141,62 +131,19 @@ export default function ProjectOverviewPage() {
         [],
     );
 
-    // ── Poll realtime snapshot with visibility-awareness + exponential backoff ──
-    useEffect(() => {
-        if (!project) return;
-        const ac = new AbortController();
-
-        const schedulePoll = () => {
-            const delay = pollFailuresRef.current > 0
-                ? backoffMs(pollFailuresRef.current)
-                : POLL_INTERVAL_MS;
-
-            pollTimerRef.current = setTimeout(async () => {
-                // Skip polling when tab is hidden (save bandwidth)
-                if (document.hidden) {
-                    schedulePoll();
-                    return;
-                }
-                try {
-                    const snapshot = await DashboardService.getRealtimeSnapshot(
-                        project.id,
-                        ac.signal,
-                    );
-                    if (ac.signal.aborted) return;
-                    pollFailuresRef.current = 0;
-                    appendSnapshotPoint(snapshot);
-                } catch {
-                    if (ac.signal.aborted) return;
-                    pollFailuresRef.current = Math.min(pollFailuresRef.current + 1, 5);
-                }
-                if (!ac.signal.aborted) schedulePoll();
-            }, delay);
-        };
-
-        // Start polling
-        schedulePoll();
-
-        // Resume polling faster when tab regains visibility
-        const handleVisibilityChange = () => {
-            if (!document.hidden && pollFailuresRef.current === 0) {
-                // Clear pending timer and re-poll immediately
-                if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
-                DashboardService.getRealtimeSnapshot(project.id, ac.signal)
-                    .then((snap) => {
-                        if (!ac.signal.aborted) appendSnapshotPoint(snap);
-                    })
-                    .catch(() => { });
-                schedulePoll();
+    // ── Receive realtime snapshot over WebSocket ──
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:3001/ws";
+    const wsToken = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    useWebSocket({
+        url: wsUrl,
+        token: wsToken,
+        onMessage: (data: unknown) => {
+            const msg = data as { event?: string; data?: { requestsLastMinute: number; wsConnectionsActive: number; dbConnectionsActive: number } };
+            if (msg?.event === "realtime:snapshot" && msg.data) {
+                appendSnapshotPoint(msg.data);
             }
-        };
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-
-        return () => {
-            ac.abort();
-            if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
-        };
-    }, [project, appendSnapshotPoint]);
+        },
+    });
 
     if (!project) return null;
 
