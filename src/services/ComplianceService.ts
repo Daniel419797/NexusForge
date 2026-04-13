@@ -1,5 +1,9 @@
 import api from "./api";
 
+function projectHeaders(projectId?: string) {
+    return projectId ? { headers: { "x-project-id": projectId } } : undefined;
+}
+
 export type ConsentType =
     | "data_processing"
     | "marketing_emails"
@@ -72,50 +76,50 @@ export interface HipaaStatus {
 
 const ComplianceService = {
     // Data Export
-    async exportData(): Promise<DataExport> {
-        const { data } = await api.get("/compliance/export");
+    async exportData(projectId?: string): Promise<DataExport> {
+        const { data } = await api.get("/compliance/export", projectHeaders(projectId));
         return data.data;
     },
 
     // Account Deletion
-    async deleteAccount(): Promise<DeletionResult> {
+    async deleteAccount(projectId?: string): Promise<DeletionResult> {
         const { data } = await api.post("/compliance/delete-account", {
             confirmation: "DELETE_MY_ACCOUNT",
-        });
+        }, projectHeaders(projectId));
         return data.data;
     },
 
     // Consent Management
-    async getConsentStatus(): Promise<ConsentStatus[]> {
-        const { data } = await api.get("/compliance/consent");
+    async getConsentStatus(projectId?: string): Promise<ConsentStatus[]> {
+        const { data } = await api.get("/compliance/consent", projectHeaders(projectId));
         return data.data;
     },
 
-    async recordConsent(consentType: ConsentType, granted: boolean): Promise<ConsentRecord> {
-        const { data } = await api.post("/compliance/consent", { consentType, granted });
+    async recordConsent(consentType: ConsentType, granted: boolean, projectId?: string): Promise<ConsentRecord> {
+        const { data } = await api.post("/compliance/consent", { consentType, granted }, projectHeaders(projectId));
         return data.data;
     },
 
-    async getConsentHistory(): Promise<ConsentRecord[]> {
-        const { data } = await api.get("/compliance/consent/history");
+    async getConsentHistory(projectId?: string): Promise<ConsentRecord[]> {
+        const { data } = await api.get("/compliance/consent/history", projectHeaders(projectId));
         return data.data;
     },
 
     // Audit Logs
-    async getAuditLogs(limit = 100): Promise<AuditLogEntry[]> {
-        const { data } = await api.get(`/compliance/audit-logs?limit=${limit}`);
+    async getAuditLogs(limit = 100, projectId?: string): Promise<AuditLogEntry[]> {
+        const { data } = await api.get(`/compliance/audit-logs?limit=${limit}`, projectHeaders(projectId));
         return data.data;
     },
 
     // HIPAA Status
-    async getHipaaStatus(): Promise<HipaaStatus> {
-        const { data } = await api.get("/compliance/hipaa-status");
+    async getHipaaStatus(projectId?: string): Promise<HipaaStatus> {
+        const { data } = await api.get("/compliance/hipaa-status", projectHeaders(projectId));
         return data.data;
     },
 
     // HIPAA Toggle (per-project)
-    async toggleHipaaMode(enabled: boolean): Promise<{ hipaaMode: boolean; projectId: string }> {
-        const { data } = await api.post("/compliance/hipaa-toggle", { enabled });
+    async toggleHipaaMode(enabled: boolean, projectId?: string): Promise<{ hipaaMode: boolean; projectId: string }> {
+        const { data } = await api.post("/compliance/hipaa-toggle", { enabled }, projectHeaders(projectId));
         return data.data;
     },
 };

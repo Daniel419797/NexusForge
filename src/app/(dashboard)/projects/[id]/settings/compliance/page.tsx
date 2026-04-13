@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -24,6 +25,8 @@ const CONSENT_TYPES: { type: ConsentType; label: string; description: string }[]
 ];
 
 export default function CompliancePage() {
+    const params = useParams();
+    const projectId = params.id as string | undefined;
     const [consents, setConsents] = useState<ConsentStatus[]>([]);
     const [history, setHistory] = useState<ConsentRecord[]>([]);
     const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
@@ -39,10 +42,10 @@ export default function CompliancePage() {
     const loadData = useCallback(async () => {
         try {
             const [consentStatus, consentHistory, logs, hipaa] = await Promise.all([
-                ComplianceService.getConsentStatus(),
-                ComplianceService.getConsentHistory(),
-                ComplianceService.getAuditLogs(50),
-                ComplianceService.getHipaaStatus().catch(() => null),
+                ComplianceService.getConsentStatus(projectId),
+                ComplianceService.getConsentHistory(projectId),
+                ComplianceService.getAuditLogs(50, projectId),
+                ComplianceService.getHipaaStatus(projectId).catch(() => null),
             ]);
             setConsents(consentStatus);
             setHistory(consentHistory);
@@ -53,7 +56,7 @@ export default function CompliancePage() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [projectId]);
 
     useEffect(() => { loadData(); }, [loadData]);
 
@@ -62,7 +65,7 @@ export default function CompliancePage() {
         setTogglingHipaa(true);
         try {
             const newMode = !hipaaStatus.hipaaMode;
-            await ComplianceService.toggleHipaaMode(newMode);
+            await ComplianceService.toggleHipaaMode(newMode, projectId);
             await loadData();
             setMessage(`HIPAA mode ${newMode ? "enabled" : "disabled"} for this project`);
         } catch {
@@ -75,7 +78,7 @@ export default function CompliancePage() {
     const handleToggleConsent = async (type: ConsentType, currentlyGranted: boolean) => {
         setTogglingConsent(type);
         try {
-            await ComplianceService.recordConsent(type, !currentlyGranted);
+            await ComplianceService.recordConsent(type, !currentlyGranted, projectId);
             await loadData();
             setMessage(`Consent ${currentlyGranted ? "revoked" : "granted"} for ${type.replaceAll("_", " ")}`);
         } catch {
@@ -88,7 +91,7 @@ export default function CompliancePage() {
     const handleExport = async () => {
         setExporting(true);
         try {
-            const data = await ComplianceService.exportData();
+            const data = await ComplianceService.exportData(projectId);
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
@@ -107,7 +110,7 @@ export default function CompliancePage() {
     const handleDelete = async () => {
         setDeleting(true);
         try {
-            await ComplianceService.deleteAccount();
+            await ComplianceService.deleteAccount(projectId);
             // Clear tokens and redirect
             if (globalThis.window !== undefined) {
                 localStorage.removeItem("accessToken");
