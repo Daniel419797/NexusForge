@@ -2,7 +2,7 @@
 
 import { useRef, useState, useMemo, useCallback, memo, Suspense, useEffect, Component, type ReactNode } from "react";
 import { Canvas, useFrame, ThreeEvent } from "@react-three/fiber";
-import { OrbitControls, Text } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { motion } from "framer-motion";
 
@@ -58,14 +58,13 @@ interface BarProps {
   value: number;        // 0â€“1
   index: number;
   total: number;
-  label?: string;
   accent: Accent;
   hovered: boolean;
   onHover: (idx: number) => void;
   onUnhover: () => void;
 }
 
-const Bar = memo(function Bar({ value, index, total, label, accent, hovered, onHover, onUnhover }: BarProps) {
+const Bar = memo(function Bar({ value, index, total, accent, hovered, onHover, onUnhover }: BarProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const fillRef = useRef(0);
   const edgesRef = useRef<THREE.LineSegments>(null);
@@ -143,35 +142,6 @@ const Bar = memo(function Bar({ value, index, total, label, accent, hovered, onH
         <lineBasicMaterial color={wire} transparent opacity={0.35} />
       </lineSegments>
 
-      {/* Value label on top */}
-      {hovered && (
-        <Text
-          position={[0, barHeight / 2 + 0.25, 0]}
-          fontSize={0.2}
-          color="white"
-          anchorX="center"
-          anchorY="bottom"
-          font="/fonts/JetBrainsMono-Regular.woff"
-          fillOpacity={0.9}
-        >
-          {Math.round(clampedValue * 100)}%
-        </Text>
-      )}
-
-      {/* Bottom label */}
-      {label && (
-        <Text
-          position={[0, -barHeight / 2 - 0.2, 0]}
-          fontSize={0.16}
-          color="white"
-          anchorX="center"
-          anchorY="top"
-          fillOpacity={0.3}
-          font="/fonts/JetBrainsMono-Regular.woff"
-        >
-          {label}
-        </Text>
-      )}
     </group>
   );
 });
@@ -217,7 +187,6 @@ function Scene({ data, labels, accent }: SceneProps) {
           value={v}
           index={i}
           total={data.length}
-          label={labels?.[i]}
           accent={accent}
           hovered={hoveredIdx === i}
           onHover={handleHover}
