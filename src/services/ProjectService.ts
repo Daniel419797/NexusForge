@@ -119,6 +119,16 @@ const ProjectService = {
 		const { data } = await api.post(`/projects/${projectId}/migrate-users`);
 		return data.data;
 	},
+
+	async getOAuth(projectId: string): Promise<{ googleClientId: string | null; googleClientSecret: string | null; githubClientId: string | null; githubClientSecret: string | null }> {
+		const { data } = await api.get(`/projects/${projectId}/oauth`);
+		return data.data;
+	},
+
+	async updateOAuth(projectId: string, payload: { googleClientId?: string | null; googleClientSecret?: string | null; githubClientId?: string | null; githubClientSecret?: string | null }): Promise<{ updated: boolean }> {
+		const { data } = await api.patch(`/projects/${projectId}/oauth`, payload);
+		return data.data;
+	},
 };
 
 export default ProjectService;

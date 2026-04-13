@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Database, ShieldCheck, ArrowRight, Users, Blocks } from "lucide-react";
+import { Database, ShieldCheck, ArrowRight, Users, Blocks, KeyRound } from "lucide-react";
+import { Database, ShieldCheck, ArrowRight, Users, Blocks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +31,15 @@ export default function ProjectSettingsPage() {
     const [corsMessage, setCorsMessage] = useState<string | null>(null);
 
     // x402 config state
+        // OAuth credentials state
+        const [googleClientId, setGoogleClientId] = useState("");
+        const [googleClientSecret, setGoogleClientSecret] = useState("");
+        const [githubClientId, setGithubClientId] = useState("");
+        const [githubClientSecret, setGithubClientSecret] = useState("");
+        const [savingOAuth, setSavingOAuth] = useState(false);
+        const [oauthMessage, setOAuthMessage] = useState<string | null>(null);
+
+        // x402 config state
     const [x402Config, setX402Config] = useState<X402Config | null>(null);
     const [x402Enabled, setX402Enabled] = useState(false);
     const [x402WalletAddress, setX402WalletAddress] = useState("");
@@ -45,6 +56,11 @@ export default function ProjectSettingsPage() {
                 setOrigins(res.config.settings.allowedOrigins);
             }
         });
+        ProjectService.getOAuth(activeProject.id).then((cfg) => {
+            setGoogleClientId(cfg.googleClientId ?? "");
+            setGithubClientId(cfg.githubClientId ?? "");
+            // secrets are redacted server-side; leave fields blank so user re-enters only when updating
+        }).catch(() => { });
         // Fetch x402 config
         X402Service.getConfig(activeProject.id).then((cfg) => {
             if (cfg) {
@@ -179,6 +195,89 @@ export default function ProjectSettingsPage() {
 
                     <Button className="mt-4" onClick={handleSaveCors} disabled={savingCors}>
                         {savingCors ? "Saving..." : "Save CORS Settings"}
+                    </Button>
+                </div>
+            </section>
+
+            <Separator />
+
+            {/* x402 Payment Config */}
+            {/* OAuth Credentials */}
+            <section className="animate-in-up stagger-3">
+                <h2 className="text-sm font-semibold font-display tracking-tight mb-1">OAuth Credentials</h2>
+                <p className="text-xs text-muted-foreground mb-4">
+                    Provide your own Google / GitHub OAuth app credentials so the login consent screen shows your project&apos;s branding.
+                    Leave a secret field blank to keep the existing secret.
+                </p>
+                <div className="space-y-4">
+                    {oauthMessage && (
+                        <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm">
+                            {oauthMessage}
+                        </div>
+                    )}
+                    <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="googleClientId">Google Client ID</Label>
+                            <Input
+                                id="googleClientId"
+                                placeholder="xxxxxx.apps.googleusercontent.com"
+                                value={googleClientId}
+                                onChange={(e) => setGoogleClientId(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="googleClientSecret">Google Client Secret</Label>
+                            <Input
+                                id="googleClientSecret"
+                                type="password"
+                                placeholder={googleClientId ? "Leave blank to keep existing" : "GOCSPX-…"}
+                                value={googleClientSecret}
+                                onChange={(e) => setGoogleClientSecret(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="githubClientId">GitHub Client ID</Label>
+                            <Input
+                                id="githubClientId"
+                                placeholder="Iv1.…"
+                                value={githubClientId}
+                                onChange={(e) => setGithubClientId(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="githubClientSecret">GitHub Client Secret</Label>
+                            <Input
+                                id="githubClientSecret"
+                                type="password"
+                                placeholder={githubClientId ? "Leave blank to keep existing" : "ghp_…"}
+                                value={githubClientSecret}
+                                onChange={(e) => setGithubClientSecret(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <Button
+                        onClick={async () => {
+                            setSavingOAuth(true);
+                            setOAuthMessage(null);
+                            try {
+                                const payload: Record<string, string | null> = {};
+                                if (googleClientId !== undefined) payload.googleClientId = googleClientId || null;
+                                if (googleClientSecret) payload.googleClientSecret = googleClientSecret;
+                                if (githubClientId !== undefined) payload.githubClientId = githubClientId || null;
+                                if (githubClientSecret) payload.githubClientSecret = githubClientSecret;
+                                await ProjectService.updateOAuth(activeProject.id, payload);
+                                setGoogleClientSecret("");
+                                setGithubClientSecret("");
+                                setOAuthMessage("OAuth credentials saved.");
+                            } catch {
+                                setOAuthMessage("Failed to save OAuth credentials.");
+                            } finally {
+                                setSavingOAuth(false);
+                            }
+                        }}
+                        disabled={savingOAuth}
+                    >
+                        {savingOAuth ? "Saving..." : "Save OAuth Credentials"}
                     </Button>
                 </div>
             </section>
