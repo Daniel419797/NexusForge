@@ -17,12 +17,26 @@ export default function OAuthButtons({ mode }: OAuthButtonsProps) {
         ''
     ).replace(/\/+$/, '');
 
-    const googleUrl = backendBase
-        ? `${backendBase}/api/v1/auth/oauth/google`
-        : '/api/v1/auth/oauth/google';
-    const githubUrl = backendBase
-        ? `${backendBase}/api/v1/auth/oauth/github`
-        : '/api/v1/auth/oauth/github';
+    const buildOAuthUrl = (provider: 'google' | 'github') => {
+        if (!backendBase) return `/api/v1/auth/oauth/${provider}`;
+
+        // If API base is already project-scoped (e.g. /api/v1/p/:projectId),
+        // append module-relative auth path.
+        const projectScoped = /\/api\/v1\/p\/[0-9a-fA-F-]+$/.test(backendBase);
+        if (projectScoped) {
+            return `${backendBase}/auth/oauth/${provider}`;
+        }
+
+        // Platform base: allow optional projectId passthrough for scoped OAuth.
+        const projectId = typeof window !== 'undefined'
+            ? new URLSearchParams(window.location.search).get('projectId')
+            : null;
+        const q = projectId ? `?projectId=${encodeURIComponent(projectId)}` : '';
+        return `${backendBase}/api/v1/auth/oauth/${provider}${q}`;
+    };
+
+    const googleUrl = buildOAuthUrl('google');
+    const githubUrl = buildOAuthUrl('github');
 
     // Use window.location.href to force a full browser navigation.
     // Next.js App Router intercepts same-origin <a> clicks and makes RSC
