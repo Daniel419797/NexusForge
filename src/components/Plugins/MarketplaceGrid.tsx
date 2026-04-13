@@ -23,22 +23,24 @@ export default function MarketplaceGrid({
     loadingItems,
 }: MarketplaceGridProps) {
     const [selectedCategory, setSelectedCategory] = useState<string>("all");
+    const safeAvailable = Array.isArray(available) ? available : [];
+    const safeInstalled = Array.isArray(installed) ? installed : [];
 
     // Extract unique categories from available plugins
     const categories = useMemo(() => {
         const cats = new Set<string>();
-        available.forEach(p => {
+        safeAvailable.forEach(p => {
             if (p.category) cats.add(p.category);
         });
         return Array.from(cats).sort();
-    }, [available]);
+    }, [safeAvailable]);
 
     const filteredPlugins = useMemo(() => {
-        if (selectedCategory === "all") return available;
-        return available.filter(p => p.category === selectedCategory);
-    }, [available, selectedCategory]);
+        if (selectedCategory === "all") return safeAvailable;
+        return safeAvailable.filter(p => p.category === selectedCategory);
+    }, [safeAvailable, selectedCategory]);
 
-    if (available.length === 0) {
+    if (safeAvailable.length === 0) {
         return (
             <div className="text-center py-12 text-muted-foreground border border-dashed border-border rounded-xl">
                 No plugins available in the marketplace currently.
@@ -80,7 +82,7 @@ export default function MarketplaceGrid({
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredPlugins.map((meta) => {
-                        const installedInstance = installed.find((p) => p.name === meta.name);
+                        const installedInstance = safeInstalled.find((p) => p.name === meta.name);
                         return (
                             <PluginCard
                                 key={meta.name}
