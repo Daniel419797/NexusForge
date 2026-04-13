@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Database, ShieldCheck, ArrowRight, Users, Blocks } from "lucide-react";
-import { Database, ShieldCheck, ArrowRight, Users, Blocks, KeyRound } from "lucide-react";
-import { Database, ShieldCheck, ArrowRight, Users, Blocks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
