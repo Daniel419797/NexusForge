@@ -20,19 +20,23 @@ export default function OAuthButtons({ mode }: OAuthButtonsProps) {
     const buildOAuthUrl = (provider: 'google' | 'github') => {
         if (!backendBase) return `/api/v1/auth/oauth/${provider}`;
 
-        // If API base is already project-scoped (e.g. /api/v1/p/:projectId),
-        // append module-relative auth path.
-        const projectScoped = /\/api\/v1\/p\/[0-9a-fA-F-]+$/.test(backendBase);
-        if (projectScoped) {
-            return `${backendBase}/auth/oauth/${provider}`;
-        }
+        // Handle project-scoped API bases (e.g. /api/v1/p/:projectId) by
+        // stripping the /p/:projectId segment, then passing projectId via query.
+        const projectScopedMatch = backendBase.match(/\/api\/v1\/p\/([0-9a-fA-F-]+)$/);
+        const projectIdFromBase = projectScopedMatch?.[1] ?? null;
+        const authBase = projectScopedMatch ? backendBase.replace(/\/p\/[0-9a-fA-F-]+$/, '') : backendBase;
 
-        // Platform base: allow optional projectId passthrough for scoped OAuth.
-        const projectId = typeof window !== 'undefined'
+        const projectIdFromQuery = typeof window !== 'undefined'
             ? new URLSearchParams(window.location.search).get('projectId')
             : null;
+        const projectId = projectIdFromBase ?? projectIdFromQuery;
         const q = projectId ? `?projectId=${encodeURIComponent(projectId)}` : '';
-        return `${backendBase}/api/v1/auth/oauth/${provider}${q}`;
+
+        if (authBase.endsWith('/api/v1')) {
+            return `${authBase}/auth/oauth/${provider}${q}`;
+        }
+
+        return `${authBase}/api/v1/auth/oauth/${provider}${q}`;
     };
 
     const googleUrl = buildOAuthUrl('google');
