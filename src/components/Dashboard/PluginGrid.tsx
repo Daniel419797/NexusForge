@@ -83,10 +83,12 @@ export default function PluginGrid() {
 
     try {
       setError(false);
-      const [available, installed] = await Promise.all([
+      const [availableResponse, installedResponse] = await Promise.all([
         PluginService.getAvailable(activeProject.id),
         PluginService.getInstalled(activeProject.id),
       ]);
+      const available = Array.isArray(availableResponse) ? availableResponse : [];
+      const installed = Array.isArray(installedResponse) ? installedResponse : [];
 
       const installedSet = new Set(installed.map((p) => p.name.toLowerCase()));
 

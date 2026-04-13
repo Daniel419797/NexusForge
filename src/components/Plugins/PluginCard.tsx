@@ -23,6 +23,8 @@ export default function PluginCard({
     loading,
 }: PluginCardProps) {
     const isInstalled = !!installed;
+    const pluginTitle = meta.displayName || meta.name;
+    const pluginAuthor = meta.author || "Built-in";
 
     return (
         <Card className={`flex flex-col h-full ${isInstalled ? "border-primary/50 bg-primary/5" : ""}`}>
@@ -33,8 +35,8 @@ export default function PluginCard({
                             {meta.icon || "🧩"}
                         </div>
                         <div>
-                            <CardTitle className="text-base">{meta.name}</CardTitle>
-                            <CardDescription className="text-xs mt-0.5">by {meta.author} · v{meta.version}</CardDescription>
+                            <CardTitle className="text-base">{pluginTitle}</CardTitle>
+                            <CardDescription className="text-xs mt-0.5">by {pluginAuthor} · v{meta.version}</CardDescription>
                         </div>
                     </div>
                     {isInstalled && (
