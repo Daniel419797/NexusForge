@@ -672,6 +672,35 @@ export default function DocumentationPage() {
                         />
                     ))}
                 </div>
+
+                {/* Custom Tables are part of Step 3 */}
+                {(tablesLoading || customTables.length > 0) && (
+                    <div className="mt-6 pt-6 border-t border-white/[0.04]">
+                        <div className="flex items-center gap-2 mb-1">
+                            <BookOpen className="w-3.5 h-3.5 text-violet-400/60" />
+                            <span className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Custom Table APIs</span>
+                        </div>
+                        <p className="text-xs text-white/30 mb-4">
+                            Each custom table you defined gets full CRUD endpoints at{" "}
+                            <code className="text-white/45">{gatewayBase}/table/&#123;tableName&#125;</code>. Only migrated tables are active.
+                        </p>
+
+                        {tablesLoading ? (
+                            <div className="py-4 text-center text-white/20 text-xs">Loading tables…</div>
+                        ) : (
+                            <div className="divide-y divide-white/[0.04]">
+                                {customTables.map((table) => (
+                                    <CustomTableSection
+                                        key={table.id}
+                                        table={table}
+                                        gatewayBase={gatewayBase}
+                                        lang={selectedLang}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Step 4: Quick Start snippet */}
@@ -820,34 +849,6 @@ export default function DocumentationPage() {
                 </div>
             </div>
 
-            {/* Custom Tables */}
-            {(tablesLoading || customTables.length > 0) && (
-                <div className="py-6">
-                    <div className="flex items-center gap-2 mb-1">
-                        <BookOpen className="w-3.5 h-3.5 text-violet-400/60" />
-                        <span className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Custom Table APIs</span>
-                    </div>
-                    <p className="text-xs text-white/30 mb-4">
-                        Each custom table you defined gets full CRUD endpoints at{" "}
-                        <code className="text-white/45">{gatewayBase}/table/&#123;tableName&#125;</code>. Only migrated tables are active.
-                    </p>
-
-                    {tablesLoading ? (
-                        <div className="py-4 text-center text-white/20 text-xs">Loading tables…</div>
-                    ) : (
-                        <div className="divide-y divide-white/[0.04]">
-                            {customTables.map((table) => (
-                                <CustomTableSection
-                                    key={table.id}
-                                    table={table}
-                                    gatewayBase={gatewayBase}
-                                    lang={selectedLang}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
         </div>
     );
 }
