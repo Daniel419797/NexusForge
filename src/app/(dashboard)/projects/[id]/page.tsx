@@ -213,7 +213,7 @@ export default function ProjectOverviewPage() {
                         externalData={realtimeData}
                         maxPoints={MAX_POINTS}
                         height={280}
-                        title={`real-time · poll ${POLL_INTERVAL_MS / 1000}s`}
+                        title="real-time · websocket push"
                     />
                 </div>
             </div>
