@@ -65,16 +65,6 @@ export function getProjectNavItems(projectId: string): NavItem[] {
             ),
         },
         {
-            label: "API",
-            href: `/projects/${projectId}/api`,
-            icon: (
-                <svg aria-hidden="true" className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7l4-4 4 4M8 17l4 4 4-4" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v18" />
-                </svg>
-            ),
-        },
-        {
             label: "API Keys",
             href: `/projects/${projectId}/api-keys`,
             icon: (
