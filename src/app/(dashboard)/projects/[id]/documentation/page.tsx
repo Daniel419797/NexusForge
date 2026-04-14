@@ -684,11 +684,109 @@ export default function DocumentationPage() {
                     Copy this complete example to register a user and make your first authenticated request.
                 </p>
                 <QuickStartSnippet
-                    projectId={projectId}
-                    apiBase={apiBase}
                     gatewayBase={gatewayBase}
                     lang={selectedLang}
                 />
+            </div>
+
+            {/* Step 5: Real-world integration */}
+            <div className="py-6 space-y-4">
+                <div className="flex items-center gap-2">
+                    <BookOpen className="w-3.5 h-3.5 text-[#81ecff]/60" />
+                    <span className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Step 5 · Real-World Example App</span>
+                </div>
+                <p className="text-xs text-white/35 max-w-3xl">
+                    The mood-tracker app in this workspace is a full NexusForge client. Use the patterns below if you want a practical setup that handles project-scoped auth, custom tables, Render cold starts, and per-user data without guessing.
+                </p>
+
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
+                        <div>
+                            <p className="text-[10px] uppercase tracking-wider text-white/20 mb-1">1. Environment</p>
+                            <p className="text-xs text-white/30">
+                                Put the project gateway URL and a publishable key in your frontend env file. The gateway URL should stay project-scoped.
+                            </p>
+                        </div>
+                        <div className="relative">
+                            <pre className="p-3 rounded-lg bg-black/30 border border-white/[0.06] text-[10px] font-mono text-white/50 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                                {buildRealWorldEnvSnippet(gatewayBase)}
+                            </pre>
+                            <CopyBtn text={buildRealWorldEnvSnippet(gatewayBase)} />
+                        </div>
+                        <div className="space-y-1 text-[11px] text-white/25">
+                            <p>Use <span className="text-white/45 font-mono">pk_</span> keys in client apps.</p>
+                            <p>Never strip <span className="text-white/45 font-mono">/api/v1/p/&lt;projectId&gt;</span> from your main API client. Only auth helpers need the unscoped base.</p>
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
+                        <div>
+                            <p className="text-[10px] uppercase tracking-wider text-white/20 mb-1">2. API client</p>
+                            <p className="text-xs text-white/30">
+                                This mirrors the mood-tracker <span className="font-mono text-white/45">api.ts</span>: attach JWT + API key, wake Render once, retry transient failures, and only force logout when the current-session probe fails.
+                            </p>
+                        </div>
+                        <div className="relative">
+                            <pre className="p-3 rounded-lg bg-black/30 border border-white/[0.06] text-[10px] font-mono text-white/50 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-[30rem] overflow-y-auto">
+                                {buildRealWorldApiSnippet()}
+                            </pre>
+                            <CopyBtn text={buildRealWorldApiSnippet()} />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
+                        <div>
+                            <p className="text-[10px] uppercase tracking-wider text-white/20 mb-1">3. Auth service</p>
+                            <p className="text-xs text-white/30">
+                                NexusForge auth endpoints sit outside the table namespace. In the example app, auth strips the project segment, forwards <span className="font-mono text-white/45">projectId</span>, maps <span className="font-mono text-white/45">displayName</span> to <span className="font-mono text-white/45">name</span>, and accepts either <span className="font-mono text-white/45">token</span> or <span className="font-mono text-white/45">accessToken</span>.
+                            </p>
+                        </div>
+                        <div className="relative">
+                            <pre className="p-3 rounded-lg bg-black/30 border border-white/[0.06] text-[10px] font-mono text-white/50 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-[30rem] overflow-y-auto">
+                                {buildRealWorldAuthSnippet()}
+                            </pre>
+                            <CopyBtn text={buildRealWorldAuthSnippet()} />
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
+                        <div>
+                            <p className="text-[10px] uppercase tracking-wider text-white/20 mb-1">4. Custom tables</p>
+                            <p className="text-xs text-white/30">
+                                The example app stores mood and eating logs in custom tables. The backend stores snake_case columns, while the app exposes camelCase fields. The service layer is where you translate between those shapes and attach the current user.
+                            </p>
+                        </div>
+                        <div className="relative">
+                            <pre className="p-3 rounded-lg bg-black/30 border border-white/[0.06] text-[10px] font-mono text-white/50 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-[30rem] overflow-y-auto">
+                                {buildRealWorldTableSnippet(gatewayBase)}
+                            </pre>
+                            <CopyBtn text={buildRealWorldTableSnippet(gatewayBase)} />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="rounded-xl border border-emerald-500/10 bg-emerald-500/5 p-4 space-y-3">
+                    <div>
+                        <p className="text-[10px] uppercase tracking-wider text-emerald-300/50 mb-1">Implementation notes</p>
+                        <p className="text-xs text-emerald-200/60">
+                            These are the details that usually trip people up when they wire a real app to the gateway for the first time.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px] text-emerald-100/60">
+                        <div className="rounded-lg border border-emerald-500/10 bg-black/10 p-3 space-y-1.5">
+                            <p><span className="text-emerald-300/70 font-medium">Project-scoped URL:</span> use the gateway URL for your main client so table and module calls resolve correctly.</p>
+                            <p><span className="text-emerald-300/70 font-medium">Auth base:</span> when a helper needs the canonical auth endpoint, strip the trailing <span className="font-mono">/p/&lt;projectId&gt;</span> and re-append the <span className="font-mono">projectId</span> as a query param.</p>
+                            <p><span className="text-emerald-300/70 font-medium">Cold starts:</span> Render deployments can take a moment to wake up, so probe <span className="font-mono">/health</span> once and retry 502/503/network failures with backoff.</p>
+                        </div>
+                        <div className="rounded-lg border border-emerald-500/10 bg-black/10 p-3 space-y-1.5">
+                            <p><span className="text-emerald-300/70 font-medium">Per-user rows:</span> decode the JWT client-side, attach <span className="font-mono">user_id</span> when creating rows, and filter list responses to the current user if your screen is user-specific.</p>
+                            <p><span className="text-emerald-300/70 font-medium">Field naming:</span> backend auth expects <span className="font-mono">name</span>; your UI can still use <span className="font-mono">displayName</span> if the service maps it.</p>
+                            <p><span className="text-emerald-300/70 font-medium">Response handling:</span> normalize both <span className="font-mono">data.token</span> and <span className="font-mono">data.accessToken</span> so older and newer payloads both work.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Discovery endpoint */}
@@ -849,7 +947,7 @@ function EndpointCard({
             case "python":
                 return pythonExample(endpoint, apiBase, token, gatewayBase);
         }
-    }, [endpoint, apiBase, token, lang]);
+    }, [endpoint, apiBase, token, gatewayBase, lang]);
 
     return (
         <div className="rounded-lg border border-white/[0.05] bg-black/10 overflow-hidden">
@@ -902,13 +1000,9 @@ function EndpointCard({
    ═══════════════════════════════════════════════════════════════════════════ */
 
 function QuickStartSnippet({
-    projectId,
-    apiBase,
     gatewayBase,
     lang,
 }: Readonly<{
-    projectId: string;
-    apiBase: string;
     gatewayBase: string;
     lang: LangOption;
 }>) {
@@ -1032,6 +1126,251 @@ print("Logged out")`,
             <CopyBtn text={code} />
         </div>
     );
+}
+
+function buildRealWorldEnvSnippet(gatewayBase: string): string {
+        return `# .env.local
+NEXT_PUBLIC_API_URL=${gatewayBase || "https://your-deployment-domain/api/v1/p/your-project-id"}
+NEXT_PUBLIC_API_KEY=pk_your_publishable_key
+`;
+}
+
+function buildRealWorldApiSnippet(): string {
+        return `import axios from "axios";
+
+const api = axios.create({
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
+    headers: {
+        "Content-Type": "application/json",
+    },
+});
+
+let hasWokenBackend = false;
+
+async function wakeBackendOnce() {
+    if (hasWokenBackend || typeof window === "undefined") return;
+    hasWokenBackend = true;
+
+    try {
+        const origin = new URL(process.env.NEXT_PUBLIC_API_URL!).origin;
+        await fetch(origin + "/health", {
+            method: "GET",
+            mode: "no-cors",
+            cache: "no-store",
+        });
+    } catch {
+        // Ignore wake-up failures. The real request will still run.
+    }
+}
+
+api.interceptors.request.use(async (config) => {
+    await wakeBackendOnce();
+
+    const token = typeof window !== "undefined"
+        ? localStorage.getItem("auth_token")
+        : null;
+
+    const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+
+    if (token) {
+        config.headers.Authorization = "Bearer " + token;
+    }
+
+    if (apiKey) {
+        config.headers["x-api-key"] = apiKey;
+    }
+
+    return config;
+});
+
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const config = error.config;
+        const status = error.response?.status;
+        const isRetriable = !status || status === 502 || status === 503;
+
+        if (config && isRetriable) {
+            config.__retryCount = config.__retryCount || 0;
+
+            if (config.__retryCount < 3) {
+                config.__retryCount += 1;
+                const delays = [400, 1000, 2000];
+                await new Promise((resolve) => setTimeout(resolve, delays[config.__retryCount - 1]));
+                return api(config);
+            }
+        }
+
+        if (status === 401 && typeof window !== "undefined") {
+            const requestUrl = String(config?.url || "");
+            if (requestUrl.includes("/auth/me")) {
+                localStorage.removeItem("auth_token");
+                window.location.href = "/login";
+            }
+        }
+
+        return Promise.reject(error);
+    },
+);
+
+export default api;
+`;
+}
+
+function buildRealWorldAuthSnippet(): string {
+        return `const PROJECT_API = process.env.NEXT_PUBLIC_API_URL!;
+
+function getProjectId() {
+    return PROJECT_API.split("/").pop() || "";
+}
+
+function getAuthApiBase() {
+    return PROJECT_API.replace(/\/p\/[0-9a-f-]{36}$/i, "");
+}
+
+function withProjectId(path: string) {
+    const projectId = getProjectId();
+    const separator = path.includes("?") ? "&" : "?";
+    return path + separator + "projectId=" + projectId;
+}
+
+export async function register(input: {
+    email: string;
+    password: string;
+    displayName: string;
+}) {
+    const response = await fetch(withProjectId(getAuthApiBase() + "/auth/register"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            email: input.email,
+            password: input.password,
+            name: input.displayName,
+        }),
+    });
+
+    return response.json();
+}
+
+export async function login(email: string, password: string) {
+    const response = await fetch(withProjectId(getAuthApiBase() + "/auth/login"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+    });
+
+    const payload = await response.json();
+    const token = payload?.data?.accessToken || payload?.data?.token;
+
+    if (token && typeof window !== "undefined") {
+        localStorage.setItem("auth_token", token);
+    }
+
+    return payload;
+}
+
+export function getOAuthStartUrl(provider: "google" | "github") {
+    const base = getAuthApiBase();
+    const projectId = getProjectId();
+    const redirect = encodeURIComponent(window.location.origin + "/oauth/callback");
+    return base + "/auth/oauth/" + provider + "/start?redirect=" + redirect + "&projectId=" + projectId;
+}
+`;
+}
+
+function buildRealWorldTableSnippet(gatewayBase: string): string {
+        return `import api from "@/lib/api";
+
+type EatingLog = {
+    id: string;
+    mealType: string;
+    foodCategory: string;
+    portionRating: string;
+    hungerBefore: number;
+    hungerAfter?: number;
+    notes?: string;
+    timeOfDay?: string;
+    loggedAt: string;
+};
+
+function getCurrentUserId() {
+    const token = localStorage.getItem("auth_token");
+    if (!token) return null;
+
+    try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        return payload.sub || payload.userId || payload.id || null;
+    } catch {
+        return null;
+    }
+}
+
+function mapEatingRow(row: Record<string, unknown>): EatingLog {
+    return {
+        id: String(row.id),
+        mealType: String(row.meal_type || ""),
+        foodCategory: String(row.food_category || ""),
+        portionRating: String(row.portion_rating || ""),
+        hungerBefore: Number(row.hunger_before || 0),
+        hungerAfter: row.hunger_after ? Number(row.hunger_after) : undefined,
+        notes: row.notes ? String(row.notes) : undefined,
+        timeOfDay: row.time_of_day ? String(row.time_of_day) : undefined,
+        loggedAt: String(row.logged_at || row.created_at || ""),
+    };
+}
+
+export const eatingApi = {
+    async list() {
+        const response = await api.get("/table/eating_logs?limit=500&offset=0");
+        const rows = response.data?.data?.rows || [];
+        const userId = getCurrentUserId();
+
+        return rows
+            .filter((row: Record<string, unknown>) => !userId || row.user_id === userId)
+            .map(mapEatingRow);
+    },
+
+    async create(input: Omit<EatingLog, "id" | "loggedAt">) {
+        const userId = getCurrentUserId();
+
+        const payload = {
+            meal_type: input.mealType,
+            food_category: input.foodCategory,
+            portion_rating: input.portionRating,
+            hunger_before: input.hungerBefore,
+            hunger_after: input.hungerAfter,
+            notes: input.notes,
+            time_of_day: input.timeOfDay,
+            user_id: userId,
+            logged_at: new Date().toISOString(),
+        };
+
+        const response = await api.post("/table/eating_logs", payload);
+        return mapEatingRow(response.data.data.row);
+    },
+
+    async update(id: string, updates: Partial<EatingLog>) {
+        const response = await api.patch("/table/eating_logs/" + id, {
+            meal_type: updates.mealType,
+            food_category: updates.foodCategory,
+            portion_rating: updates.portionRating,
+            hunger_before: updates.hungerBefore,
+            hunger_after: updates.hungerAfter,
+            notes: updates.notes,
+            time_of_day: updates.timeOfDay,
+        });
+
+        return mapEatingRow(response.data.data.row);
+    },
+
+    async remove(id: string) {
+        await api.delete("/table/eating_logs/" + id);
+    },
+};
+
+// Equivalent production URL shape:
+// ${gatewayBase || "https://your-deployment-domain/api/v1/p/your-project-id"}/table/eating_logs
+`;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
