@@ -28,7 +28,9 @@ export function useWebSocket({
     const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
     const connect = useCallback(() => {
-        const wsUrl = token ? `${url}?token=${token}` : url;
+        const wsUrl = token
+            ? `${url}${url.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}`
+            : url;
         const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
