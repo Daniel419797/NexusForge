@@ -649,33 +649,9 @@ export default function DocumentationPage() {
                     }
                 </p>
 
-                {enabledModules.length === 0 && !isDeployed && (
-                    <div className="py-8 text-center text-white/20 text-sm">
-                        No active deployment found. Deploy your project first.
-                    </div>
-                )}
-
-                <div className="divide-y divide-white/[0.04]">
-                    {(isDeployed ? enabledModules : publicModules).map((mod) => (
-                        <ModuleSection
-                            key={mod.moduleId}
-                            module={mod}
-                            apiBase={apiBase}
-                            gatewayBase={gatewayBase}
-                            token={tokenDisplay}
-                            selectedLang={selectedLang}
-                            isExpanded={expandedModule === mod.moduleId}
-                            onToggle={() =>
-                                setExpandedModule(expandedModule === mod.moduleId ? null : mod.moduleId)
-                            }
-                            isEnabled={enabledModuleIds.has(mod.moduleId)}
-                        />
-                    ))}
-                </div>
-
                 {/* Custom Tables are part of Step 3 */}
                 {(tablesLoading || customTables.length > 0) && (
-                    <div className="mt-6 pt-6 border-t border-white/[0.04]">
+                    <div className="mb-6 pb-6 border-b border-white/[0.04]">
                         <div className="flex items-center gap-2 mb-1">
                             <BookOpen className="w-3.5 h-3.5 text-violet-400/60" />
                             <span className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Custom Table APIs</span>
@@ -701,6 +677,31 @@ export default function DocumentationPage() {
                         )}
                     </div>
                 )}
+
+                {enabledModules.length === 0 && !isDeployed && (
+                    <div className="py-8 text-center text-white/20 text-sm">
+                        No active deployment found. Deploy your project first.
+                    </div>
+                )}
+
+                <div className="divide-y divide-white/[0.04]">
+                    {(isDeployed ? enabledModules : publicModules).map((mod) => (
+                        <ModuleSection
+                            key={mod.moduleId}
+                            module={mod}
+                            apiBase={apiBase}
+                            gatewayBase={gatewayBase}
+                            token={tokenDisplay}
+                            selectedLang={selectedLang}
+                            isExpanded={expandedModule === mod.moduleId}
+                            onToggle={() =>
+                                setExpandedModule(expandedModule === mod.moduleId ? null : mod.moduleId)
+                            }
+                            isEnabled={enabledModuleIds.has(mod.moduleId)}
+                        />
+                    ))}
+                </div>
+
             </div>
 
             {/* Step 4: Quick Start snippet */}
