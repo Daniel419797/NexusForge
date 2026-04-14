@@ -116,6 +116,12 @@ export function getProjectNavItems(projectId: string): NavItem[] {
         {
             label: "Settings",
             href: `/projects/${projectId}/settings`,
+            children: [
+                { label: "Database", href: `/projects/${projectId}/settings/database` },
+                { label: "Compliance", href: `/projects/${projectId}/settings/compliance` },
+                { label: "Members", href: `/projects/${projectId}/settings/members` },
+                { label: "Modules", href: `/projects/${projectId}/settings/modules` },
+            ],
             icon: (
                 <svg aria-hidden="true" className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87" />
