@@ -537,7 +537,7 @@ export default function DocumentationPage() {
             )}
 
             {/* Step 1: API Base URL */}
-            <div className="py-6">
+            <div id="step-1" className="py-6 scroll-mt-24">
                 <div className="flex items-center gap-2 mb-4">
                     <Zap className="w-3.5 h-3.5 text-[#81ecff]/50" />
                     <span className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Step 1 · API Base URL</span>
@@ -560,7 +560,7 @@ export default function DocumentationPage() {
             </div>
 
             {/* Step 2: Authentication */}
-            <div className="py-6">
+            <div id="step-2" className="py-6 scroll-mt-24">
                 <div className="flex items-center gap-2 mb-4">
                     <Shield className="w-3.5 h-3.5 text-white/30" />
                     <span className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Step 2 · Authentication</span>
@@ -620,7 +620,7 @@ export default function DocumentationPage() {
             </div>
 
             {/* Step 3: Available modules/endpoints */}
-            <div className="py-6">
+            <div id="step-3" className="py-6 scroll-mt-24">
                 <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                         <BookOpen className="w-3.5 h-3.5 text-emerald-400/60" />
@@ -705,7 +705,7 @@ export default function DocumentationPage() {
             </div>
 
             {/* Step 4: Quick Start snippet */}
-            <div className="py-6">
+            <div id="step-4" className="py-6 scroll-mt-24">
                 <div className="flex items-center gap-2 mb-4">
                     <Rocket className="w-3.5 h-3.5 text-amber-400/60" />
                     <span className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Step 4 · Quick Start</span>
@@ -720,7 +720,7 @@ export default function DocumentationPage() {
             </div>
 
             {/* Step 5: Real-world integration */}
-            <div className="py-6 space-y-4">
+            <div id="step-5" className="py-6 space-y-4 scroll-mt-24">
                 <div className="flex items-center gap-2">
                     <BookOpen className="w-3.5 h-3.5 text-[#81ecff]/60" />
                     <span className="text-[11px] uppercase tracking-wider text-white/25 font-mono">Step 5 · Real-World Example App</span>

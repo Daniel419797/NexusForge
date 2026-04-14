@@ -8,6 +8,10 @@ export interface NavItem {
     icon: React.ReactNode;
     /** When true, only an exact pathname match marks this item active. */
     exact?: boolean;
+    children?: Array<{
+        label: string;
+        href: string;
+    }>;
 }
 
 export const globalNavItems: NavItem[] = [
@@ -37,6 +41,13 @@ export function getProjectNavItems(projectId: string): NavItem[] {
         {
             label: "Documentation",
             href: `/projects/${projectId}/documentation`,
+            children: [
+                { label: "Step 1 · API Base URL", href: `/projects/${projectId}/documentation#step-1` },
+                { label: "Step 2 · Authentication", href: `/projects/${projectId}/documentation#step-2` },
+                { label: "Step 3 · API Endpoints", href: `/projects/${projectId}/documentation#step-3` },
+                { label: "Step 4 · Quick Start", href: `/projects/${projectId}/documentation#step-4` },
+                { label: "Step 5 · Real-World Example App", href: `/projects/${projectId}/documentation#step-5` },
+            ],
             icon: (
                 <svg aria-hidden="true" className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.58-5.84a14.927 14.927 0 00-2.58 5.84" />
