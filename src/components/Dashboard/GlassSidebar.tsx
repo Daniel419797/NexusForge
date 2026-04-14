@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import type { NavItem } from "@/components/layout/nav-items";
+
+const SIDEBAR_EXPANDED_ITEMS_STORAGE_KEY = "nexusforge.sidebar.expanded-items";
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    GlassSidebar â€” Spatial glass navigation
@@ -31,6 +34,27 @@ export default function GlassSidebar({
   mobileOpen = false,
   onMobileClose,
 }: GlassSidebarProps) {
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(() => {
+    if (typeof window === "undefined") return {};
+
+    try {
+      const stored = window.localStorage.getItem(SIDEBAR_EXPANDED_ITEMS_STORAGE_KEY);
+      if (!stored) return {};
+
+      const parsed = JSON.parse(stored);
+      return typeof parsed === "object" && parsed !== null ? parsed as Record<string, boolean> : {};
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      SIDEBAR_EXPANDED_ITEMS_STORAGE_KEY,
+      JSON.stringify(expandedItems),
+    );
+  }, [expandedItems]);
+
   return (
     <>
       {/* â”€â”€ Mobile backdrop â”€â”€ */}
@@ -135,70 +159,127 @@ export default function GlassSidebar({
           {items.map((item) => {
             const isActive = pathname === item.href ||
               (!item.exact && item.href !== "/" && pathname?.startsWith(item.href + "/"));
+            const hasChildren = Boolean(item.children?.length);
+            const isExpanded = expandedItems[item.href] ?? isActive;
+            const showChildren = hasChildren && isExpanded && (!collapsed || mobileOpen);
 
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onMobileClose}
-                className={`group relative flex items-center gap-3 rounded-md px-3 py-2.5 transition-colors ${
-                  isActive
-                    ? "text-white/95"
-                    : "text-white/40 hover:text-white/65 hover:bg-white/[0.03]"
-                }`}
-              >
-                {/* Active indicator bar */}
-                {isActive && (
-                  <motion.div
-                    layoutId="sidebar-active"
-                    className="absolute inset-0 rounded-md"
-                    style={{
-                      background: "rgba(129,236,255,0.06)",
-                      border: "1px solid rgba(129,236,255,0.12)",
-                    }}
-                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                  />
-                )}
+              <div key={item.href} className="space-y-1">
+                <Link
+                  href={item.href}
+                  onClick={onMobileClose}
+                  className={`group relative flex items-center gap-3 rounded-md px-3 py-2.5 transition-colors ${
+                    isActive
+                      ? "text-white/95"
+                      : "text-white/40 hover:text-white/65 hover:bg-white/[0.03]"
+                  }`}
+                >
+                  {/* Active indicator bar */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="sidebar-active"
+                      className="absolute inset-0 rounded-md"
+                      style={{
+                        background: "rgba(129,236,255,0.06)",
+                        border: "1px solid rgba(129,236,255,0.12)",
+                      }}
+                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                    />
+                  )}
 
-                {/* Left accent line */}
-                {isActive && (
-                  <motion.span
-                    className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-full"
-                    style={{ background: "rgba(129,236,255,0.80)" }}
-                    layoutId="sidebar-bar"
-                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                  />
-                )}
-
-                <span className="relative z-10 shrink-0">{item.icon}</span>
-
-                <AnimatePresence>
-                  {(!collapsed || mobileOpen) && (
+                  {/* Left accent line */}
+                  {isActive && (
                     <motion.span
-                      className="relative z-10 text-sm font-medium whitespace-nowrap overflow-hidden"
-                      initial={{ opacity: 0, width: 0 }}
-                      animate={{ opacity: 1, width: "auto" }}
-                      exit={{ opacity: 0, width: 0 }}
-                      transition={{ duration: 0.2 }}
+                      className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-full"
+                      style={{ background: "rgba(129,236,255,0.80)" }}
+                      layoutId="sidebar-bar"
+                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                    />
+                  )}
+
+                  <span className="relative z-10 shrink-0">{item.icon}</span>
+
+                  <AnimatePresence>
+                    {(!collapsed || mobileOpen) && (
+                      <motion.span
+                        className="relative z-10 text-sm font-medium whitespace-nowrap overflow-hidden flex-1"
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: "auto" }}
+                        exit={{ opacity: 0, width: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {item.label}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+
+                  {hasChildren && (!collapsed || mobileOpen) && (
+                    <button
+                      type="button"
+                      aria-label={isExpanded ? `Collapse ${item.label}` : `Expand ${item.label}`}
+                      aria-expanded={isExpanded}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setExpandedItems((current) => ({
+                          ...current,
+                          [item.href]: !current[item.href],
+                        }));
+                      }}
+                      className="relative z-10 rounded p-1 text-white/30 hover:text-white/60 hover:bg-white/[0.03] transition-colors"
+                    >
+                      <motion.svg
+                        aria-hidden="true"
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        animate={{ rotate: isExpanded ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                      </motion.svg>
+                    </button>
+                  )}
+
+                  {/* Tooltip when collapsed (desktop only) */}
+                  {collapsed && !mobileOpen && (
+                    <div className="pointer-events-none absolute left-full ml-2 rounded px-2.5 py-1.5 text-xs font-medium text-white/80 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block"
+                      style={{
+                      background: "rgba(10,10,12,0.97)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+                      }}
                     >
                       {item.label}
-                    </motion.span>
+                    </div>
+                  )}
+                </Link>
+
+                <AnimatePresence>
+                  {showChildren && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="ml-6 pl-3 border-l border-white/[0.06] space-y-1 overflow-hidden"
+                    >
+                      {item.children?.map((child) => (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          onClick={onMobileClose}
+                          className="block rounded-md px-3 py-1.5 text-[11px] text-white/35 hover:text-white/65 hover:bg-white/[0.03] transition-colors"
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </motion.div>
                   )}
                 </AnimatePresence>
-
-                {/* Tooltip when collapsed (desktop only) */}
-                {collapsed && !mobileOpen && (
-                  <div className="pointer-events-none absolute left-full ml-2 rounded px-2.5 py-1.5 text-xs font-medium text-white/80 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block"
-                    style={{
-                    background: "rgba(10,10,12,0.97)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
-                    }}
-                  >
-                    {item.label}
-                  </div>
-                )}
-              </Link>
+              </div>
             );
           })}
         </nav>
