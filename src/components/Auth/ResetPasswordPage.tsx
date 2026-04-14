@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getPasswordPolicyError, PASSWORD_POLICY_HINT } from "@/lib/passwordPolicy";
 import AuthService from "@/services/AuthService";
 
 export default function ResetPasswordPage() {
@@ -82,8 +83,9 @@ function ResetPasswordContent() {
             return;
         }
 
-        if (password.length < 12) {
-            setError("Password must be at least 12 characters.");
+        const passwordError = getPasswordPolicyError(password);
+        if (passwordError) {
+            setError(passwordError);
             return;
         }
 
@@ -120,12 +122,13 @@ function ResetPasswordContent() {
                     <Input
                         id="password"
                         type="password"
-                        placeholder="At least 12 characters"
+                        placeholder="Strong password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         autoComplete="new-password"
                     />
+                    <p className="text-xs text-muted-foreground">{PASSWORD_POLICY_HINT}</p>
                 </div>
 
                 <div className="space-y-2">

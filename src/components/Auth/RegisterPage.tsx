@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import OAuthButtons from "@/components/Auth/OAuthButtons";
+import { getPasswordPolicyError, PASSWORD_POLICY_HINT } from "@/lib/passwordPolicy";
 import AuthService from "@/services/AuthService";
 import { useAuthStore } from "@/store/authStore";
 
@@ -30,8 +31,9 @@ export default function RegisterPage() {
             return;
         }
 
-        if (password.length < 8) {
-            setError("Password must be at least 8 characters.");
+        const passwordError = getPasswordPolicyError(password);
+        if (passwordError) {
+            setError(passwordError);
             return;
         }
 
@@ -110,12 +112,13 @@ export default function RegisterPage() {
                     <Input
                         id="password"
                         type="password"
-                        placeholder="At least 8 characters"
+                        placeholder="Strong password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         autoComplete="new-password"
                     />
+                    <p className="text-xs text-muted-foreground">{PASSWORD_POLICY_HINT}</p>
                 </div>
 
                 <div className="space-y-2">
