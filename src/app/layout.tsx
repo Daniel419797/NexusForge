@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { connection } from "next/server";
 import { DM_Sans, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
@@ -43,11 +44,14 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Nonce-based CSP is injected per request in proxy.ts, so the app shell must render dynamically.
+  await connection();
+
   return (
     <html lang="en" className="dark">
       <body className={`${dmSans.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable} antialiased grain relative`}>

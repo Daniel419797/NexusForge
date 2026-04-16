@@ -478,7 +478,7 @@ export default function ProjectDatabaseSettingsPage() {
                                 setMigratingUsers(true);
                                 setUserMigrationStatus("starting...");
                                 try {
-                                    const { jobId } = await ProjectService.migrateUsers(activeProject.id);
+                                    const { jobId } = await ProjectService.migrateUsers(activeProject.id, { selector: "all" });
                                     setUserMigrationStatus(`running (job ${jobId})`);
                                     userMigrationPollRef.current = setInterval(async () => {
                                         try {

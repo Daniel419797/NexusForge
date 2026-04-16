@@ -52,9 +52,7 @@ describe('authStore', () => {
     });
 
     describe('logout', () => {
-        it('clears user, auth state, and tokens', () => {
-            localStorage.setItem('accessToken', 'tok');
-            localStorage.setItem('refreshToken', 'ref');
+        it('clears user and auth state', () => {
             useAuthStore.getState().setUser({ id: 'u1', email: 'a@b.com', name: 'A' });
 
             useAuthStore.getState().logout();
@@ -63,8 +61,6 @@ describe('authStore', () => {
             expect(state.user).toBeNull();
             expect(state.isAuthenticated).toBe(false);
             expect(state.isLoading).toBe(false);
-            expect(localStorage.getItem('accessToken')).toBeNull();
-            expect(localStorage.getItem('refreshToken')).toBeNull();
         });
     });
 });

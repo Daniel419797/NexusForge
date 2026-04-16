@@ -24,7 +24,7 @@ export default function NFTGallery({ nfts, loading }: NFTGalleryProps) {
                 <Card key={nft.id} className="overflow-hidden">
                     <div className="aspect-square bg-muted flex items-center justify-center relative">
                         {nft.metadata?.image ? (
-                            <img src={nft.metadata.image} alt={nft.metadata?.name || "NFT"} className="object-cover w-full h-full" />
+                            <img src={nft.metadata.image as string} alt={(nft.metadata?.name as string) || "NFT"} className="object-cover w-full h-full" />
                         ) : (
                             <span className="text-4xl text-muted-foreground/30">🎨</span>
                         )}
@@ -33,7 +33,7 @@ export default function NFTGallery({ nfts, loading }: NFTGalleryProps) {
                         </Badge>
                     </div>
                     <CardContent className="p-3">
-                        <h4 className="font-semibold text-sm truncate">{nft.metadata?.name || "Unknown NFT"}</h4>
+                        <h4 className="font-semibold text-sm truncate">{(nft.metadata?.name as string) || "Unknown NFT"}</h4>
                         <p className="text-xs text-muted-foreground mt-1 truncate">
                             {nft.contractAddress.slice(0, 6)}...{nft.contractAddress.slice(-4)}
                         </p>

@@ -41,8 +41,6 @@ export default function RegisterPage() {
 
         try {
             const result = await AuthService.register({ email, password, name: name || undefined });
-            localStorage.setItem("accessToken", result.accessToken);
-            localStorage.setItem("refreshToken", result.refreshToken);
             setUser(result.user);
             router.push("/onboarding");
         } catch (err: unknown) {

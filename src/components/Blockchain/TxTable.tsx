@@ -31,22 +31,22 @@ export default function TxTable({ transactions, loading }: TxTableProps) {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Type</TableHead>
+                        <TableHead>Chain</TableHead>
                         <TableHead>Tx Hash</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead className="text-right">Value</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {transactions.map((tx) => (
                         <TableRow key={tx.id}>
-                            <TableCell className="font-medium capitalize">{tx.type.replace(/_/g, " ")}</TableCell>
+                            <TableCell className="font-medium capitalize">{tx.chain}</TableCell>
                             <TableCell>
                                 <code className="text-xs font-mono">{tx.txHash.slice(0, 8)}...{tx.txHash.slice(-6)}</code>
                             </TableCell>
                             <TableCell className="text-muted-foreground text-xs">
-                                {format(new Date(tx.createdAt), "MMM d, yyyy HH:mm")}
+                                {format(new Date(tx.timestamp), "MMM d, yyyy HH:mm")}
                             </TableCell>
                             <TableCell>
                                 <Badge
@@ -57,7 +57,7 @@ export default function TxTable({ transactions, loading }: TxTableProps) {
                                 </Badge>
                             </TableCell>
                             <TableCell className="text-right font-medium">
-                                {tx.amount} {tx.currency.toUpperCase()}
+                                {tx.value ?? "--"}
                             </TableCell>
                         </TableRow>
                     ))}

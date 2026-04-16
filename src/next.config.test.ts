@@ -164,50 +164,8 @@ describe('next.config headers()', () => {
         expect(value).toContain('preload');
     });
 
-    it('sets frame-ancestors to none in CSP', async () => {
+    it('does not set CSP in next.config because request-scoped CSP is handled in proxy.ts', async () => {
         const headers = await getHeaders();
-        const csp = findHeader(headers, 'Content-Security-Policy')?.value ?? '';
-        expect(csp).toContain("frame-ancestors 'none'");
-    });
-
-    it('includes self in CSP default-src', async () => {
-        const headers = await getHeaders();
-        const csp = findHeader(headers, 'Content-Security-Policy')?.value ?? '';
-        expect(csp).toContain("default-src 'self'");
-    });
-
-    it('includes wss: ws: in CSP connect-src for WebSocket support', async () => {
-        const headers = await getHeaders();
-        const csp = findHeader(headers, 'Content-Security-Policy')?.value ?? '';
-        expect(csp).toContain('wss: ws:');
-    });
-
-    it('defaults connect-src to localhost:3001 when NEXT_PUBLIC_BASE_URL is not set', async () => {
-        vi.stubEnv('NEXT_PUBLIC_BASE_URL', '');
-        vi.stubEnv('NEXT_PUBLIC_API_URL', '');
-        vi.stubEnv('NEXT_PUBLIC_BACKEND_URL', '');
-
-        const headers = await getHeaders();
-        const csp = findHeader(headers, 'Content-Security-Policy')?.value ?? '';
-        expect(csp).toContain('http://localhost:3001');
-    });
-
-    it('includes NEXT_PUBLIC_BACKEND_URL in CSP connect-src when set', async () => {
-        vi.stubEnv('NEXT_PUBLIC_BACKEND_URL', 'https://api.example.com');
-
-        const headers = await getHeaders();
-        const csp = findHeader(headers, 'Content-Security-Policy')?.value ?? '';
-        expect(csp).toContain('https://api.example.com');
-    });
-
-    it('includes NEXT_PUBLIC_BASE_URL in CSP connect-src instead of localhost when set', async () => {
-        vi.stubEnv('NEXT_PUBLIC_BASE_URL', 'https://myapp.example.com');
-        vi.stubEnv('NEXT_PUBLIC_API_URL', '');
-        vi.stubEnv('NEXT_PUBLIC_BACKEND_URL', '');
-
-        const headers = await getHeaders();
-        const csp = findHeader(headers, 'Content-Security-Policy')?.value ?? '';
-        expect(csp).toContain('https://myapp.example.com');
-        expect(csp).not.toContain('http://localhost:3001');
+        expect(findHeader(headers, 'Content-Security-Policy')).toBeUndefined();
     });
 });

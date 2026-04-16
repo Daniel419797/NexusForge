@@ -74,6 +74,31 @@ export interface HipaaStatus {
     };
 }
 
+export interface UnsubscribeTokenResult {
+    token: string;
+}
+
+export interface BreachReportPayload {
+    date?: string;
+    description: string;
+    dataAffected: string;
+    actionsTaken?: string;
+    recommendedActions?: string;
+    severity: "low" | "medium" | "high" | "critical";
+    affectedUserIds?: string[];
+}
+
+export interface BreachRecord {
+    id: string;
+    date: string;
+    description: string;
+    dataAffected: string;
+    actionsTaken: string;
+    recommendedActions: string;
+    severity: "low" | "medium" | "high" | "critical";
+    createdAt?: string;
+}
+
 const ComplianceService = {
     // Data Export
     async exportData(projectId?: string): Promise<DataExport> {
@@ -120,6 +145,26 @@ const ComplianceService = {
     // HIPAA Toggle (per-project)
     async toggleHipaaMode(enabled: boolean, projectId?: string): Promise<{ hipaaMode: boolean; projectId: string }> {
         const { data } = await api.post("/compliance/hipaa-toggle", { enabled }, projectHeaders(projectId));
+        return data.data;
+    },
+
+    async getUnsubscribeToken(projectId?: string): Promise<UnsubscribeTokenResult> {
+        const { data } = await api.get("/compliance/unsubscribe-token", projectHeaders(projectId));
+        return data.data;
+    },
+
+    async unsubscribeWithToken(token: string): Promise<{ unsubscribed: boolean }> {
+        const { data } = await api.post("/compliance/unsubscribe", { token });
+        return data.data;
+    },
+
+    async reportBreach(payload: BreachReportPayload): Promise<BreachRecord> {
+        const { data } = await api.post("/compliance/breach", payload);
+        return data.data;
+    },
+
+    async listBreaches(limit = 50): Promise<BreachRecord[]> {
+        const { data } = await api.get(`/compliance/breach?limit=${limit}`);
         return data.data;
     },
 };

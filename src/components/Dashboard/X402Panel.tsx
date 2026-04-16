@@ -58,7 +58,7 @@ export default function X402Panel() {
 
   // Derive stats from real data
   const confirmedTxns = transactions.filter((t) => t.status === "confirmed");
-  const totalVolume = confirmedTxns.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+  const totalVolume = confirmedTxns.reduce((sum, t) => sum + (parseFloat(t.value ?? '0') || 0), 0);
   const avgPayment = confirmedTxns.length > 0 ? totalVolume / confirmedTxns.length : 0;
 
   const stats: PaymentStat[] = [
@@ -185,12 +185,12 @@ export default function X402Panel() {
                           {t.txHash.slice(0, 10)}â€¦{t.txHash.slice(-6)}
                         </p>
                         <p className="text-[10px] text-white/20">
-                          {new Date(t.createdAt).toLocaleTimeString()}
+                          {new Date(t.timestamp).toLocaleTimeString()}
                         </p>
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-xs font-bold text-white/80">
-                          {t.amount} {t.currency || ""}
+                          {t.value || "0"} {t.chain}
                         </p>
                         <p
                           className={`text-[10px] ${

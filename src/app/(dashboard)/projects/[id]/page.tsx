@@ -136,10 +136,8 @@ export default function ProjectOverviewPage() {
     const wsUrl = project?.id
         ? `${wsBaseUrl}${wsBaseUrl.includes("?") ? "&" : "?"}projectId=${encodeURIComponent(project.id)}`
         : wsBaseUrl;
-    const wsToken = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
     useWebSocket({
         url: wsUrl,
-        token: wsToken,
         onMessage: (data: unknown) => {
             const msg = data as { event?: string; data?: { requestsLastMinute: number; wsConnectionsActive: number; dbConnectionsActive: number } };
             if (msg?.event === "realtime:snapshot" && msg.data) {

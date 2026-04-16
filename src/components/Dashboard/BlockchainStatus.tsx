@@ -60,7 +60,7 @@ export default function BlockchainStatus() {
   // Derive metrics from real data
   const confirmedTx = transactions.filter((t) => t.status === "confirmed").length;
   const pendingTx = transactions.filter((t) => t.status === "pending").length;
-  const uniqueChains = new Set(wallets.map((w) => w.network));
+  const uniqueChains = new Set(wallets.map((w) => w.chain));
 
   const metrics: ChainMetric[] = [
     {
@@ -156,17 +156,14 @@ export default function BlockchainStatus() {
                   >
                     <div>
                       <p className="text-xs font-semibold text-white/70">
-                        {w.network}
-                        {w.isPrimary && (
-                          <span className="ml-1.5 text-[10px] text-emerald-400/60">Primary</span>
-                        )}
+                        {w.chain}
                       </p>
                       <p className="text-[11px] font-mono text-white/30">
                         {w.address.slice(0, 6)}â€¦{w.address.slice(-4)}
                       </p>
                     </div>
                     <span className="text-xs font-bold text-white/60">
-                      {w.balance || "â€”"}
+                      {w.balanceCache || "â€“"}
                     </span>
                   </motion.div>
                 ))}

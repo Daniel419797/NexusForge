@@ -24,33 +24,25 @@ const api = axios.create({
     withCredentials: true,
 });
 
-// ── Request Interceptor: Attach JWT ──
+// ── Request Interceptor: No-op — auth tokens are sent via httpOnly cookies ──
 api.interceptors.request.use(
-    (config) => {
-        if (typeof window !== "undefined") {
-            const token = localStorage.getItem("accessToken");
-            if (token && config.headers) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
-        }
-        return config;
-    },
+    (config) => config,
     (error) => Promise.reject(error)
 );
 
 // ── Response Interceptor: Handle 401 + Token Refresh ──
 let isRefreshing = false;
 let failedQueue: Array<{
-    resolve: (token: string) => void;
+    resolve: (value?: unknown) => void;
     reject: (error: unknown) => void;
 }> = [];
 
-const processQueue = (error: unknown, token: string | null = null) => {
+const processQueue = (error: unknown) => {
     failedQueue.forEach((prom) => {
         if (error) {
             prom.reject(error);
         } else {
-            prom.resolve(token!);
+            prom.resolve();
         }
     });
     failedQueue = [];
@@ -66,10 +58,7 @@ api.interceptors.response.use(
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
                 })
-                    .then((token) => {
-                        originalRequest.headers.Authorization = `Bearer ${token}`;
-                        return api(originalRequest);
-                    })
+                    .then(() => api(originalRequest))
                     .catch((err) => Promise.reject(err));
             }
 
@@ -77,26 +66,12 @@ api.interceptors.response.use(
             isRefreshing = true;
 
             try {
-                const refreshToken = localStorage.getItem("refreshToken");
-                if (!refreshToken) throw new Error("No refresh token");
+                await axios.post('/api/v1/auth/refresh', {}, { withCredentials: true });
 
-                const { data } = await axios.post('/api/v1/auth/refresh', {
-                    refreshToken,
-                });
-
-                const newToken = data.data.accessToken;
-                localStorage.setItem("accessToken", newToken);
-                if (data.data.refreshToken) {
-                    localStorage.setItem("refreshToken", data.data.refreshToken);
-                }
-
-                processQueue(null, newToken);
-                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                processQueue(null);
                 return api(originalRequest);
             } catch (refreshError) {
-                processQueue(refreshError, null);
-                localStorage.removeItem("accessToken");
-                localStorage.removeItem("refreshToken");
+                processQueue(refreshError);
                 if (typeof window !== "undefined") {
                     window.location.href = "/login";
                 }

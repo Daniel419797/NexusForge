@@ -58,14 +58,10 @@ describe('AuthService', () => {
     });
 
     describe('logout', () => {
-        it('calls logout endpoint and clears tokens', async () => {
-            localStorage.setItem('accessToken', 'tok');
-            localStorage.setItem('refreshToken', 'ref');
+        it('calls logout endpoint', async () => {
             mockPost.mockResolvedValue({ data: {} });
             await AuthService.logout();
             expect(mockPost).toHaveBeenCalledWith('/auth/logout');
-            expect(localStorage.getItem('accessToken')).toBeNull();
-            expect(localStorage.getItem('refreshToken')).toBeNull();
         });
     });
 

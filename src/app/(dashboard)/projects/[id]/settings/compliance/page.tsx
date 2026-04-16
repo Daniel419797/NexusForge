@@ -38,6 +38,14 @@ export default function CompliancePage() {
     const [message, setMessage] = useState<string | null>(null);
     const [togglingConsent, setTogglingConsent] = useState<string | null>(null);
     const [togglingHipaa, setTogglingHipaa] = useState(false);
+    const [unsubscribeToken, setUnsubscribeToken] = useState<string | null>(null);
+    const [unsubscribeInput, setUnsubscribeInput] = useState("");
+    const [breachDescription, setBreachDescription] = useState("");
+    const [breachDataAffected, setBreachDataAffected] = useState("");
+    const [breachSeverity, setBreachSeverity] = useState<"low" | "medium" | "high" | "critical">("medium");
+    const [breaches, setBreaches] = useState<any[]>([]);
+    const [loadingBreaches, setLoadingBreaches] = useState(false);
+    const [submittingBreach, setSubmittingBreach] = useState(false);
 
     const loadData = useCallback(async () => {
         try {
@@ -121,6 +129,61 @@ export default function CompliancePage() {
             setMessage("Failed to delete account");
             setDeleting(false);
             setDeleteConfirm(false);
+        }
+    };
+
+    const handleGenerateUnsubscribeToken = async () => {
+        try {
+            const res = await ComplianceService.getUnsubscribeToken(projectId);
+            setUnsubscribeToken(res.token);
+            setMessage("Generated unsubscribe token");
+        } catch {
+            setMessage("Failed to generate unsubscribe token");
+        }
+    };
+
+    const handleUnsubscribeWithToken = async () => {
+        if (!unsubscribeInput.trim()) return;
+        try {
+            await ComplianceService.unsubscribeWithToken(unsubscribeInput.trim());
+            setMessage("Unsubscribed successfully");
+            setUnsubscribeInput("");
+        } catch {
+            setMessage("Failed to unsubscribe with token");
+        }
+    };
+
+    const loadBreaches = useCallback(async () => {
+        setLoadingBreaches(true);
+        try {
+            const rows = await ComplianceService.listBreaches(20);
+            setBreaches(rows);
+        } catch {
+            setBreaches([]);
+        } finally {
+            setLoadingBreaches(false);
+        }
+    }, []);
+
+    useEffect(() => { void loadBreaches(); }, [loadBreaches]);
+
+    const handleReportBreach = async () => {
+        if (!breachDescription.trim() || !breachDataAffected.trim()) return;
+        setSubmittingBreach(true);
+        try {
+            await ComplianceService.reportBreach({
+                description: breachDescription.trim(),
+                dataAffected: breachDataAffected.trim(),
+                severity: breachSeverity,
+            });
+            setBreachDescription("");
+            setBreachDataAffected("");
+            setMessage("Breach report submitted");
+            await loadBreaches();
+        } catch {
+            setMessage("Failed to submit breach report");
+        } finally {
+            setSubmittingBreach(false);
         }
     };
 
@@ -294,6 +357,83 @@ export default function CompliancePage() {
                             ))}
                         </div>
                     )}
+            </section>
+
+            {/* ── Email Unsubscribe ── */}
+            <section>
+                <div className="flex items-center gap-2 mb-4">
+                    <h2 className="text-sm font-semibold font-display tracking-tight">Email Unsubscribe</h2>
+                    <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">GDPR Art. 21</Badge>
+                </div>
+                <div className="space-y-3">
+                    <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" onClick={handleGenerateUnsubscribeToken}>Generate Token</Button>
+                        {unsubscribeToken && (
+                            <code className="text-xs p-2 rounded bg-muted/10 border border-border/40 break-all">{unsubscribeToken}</code>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <input
+                            className="h-9 min-w-[280px] rounded border border-border/40 bg-transparent px-3 text-sm"
+                            placeholder="Paste unsubscribe token"
+                            value={unsubscribeInput}
+                            onChange={(e) => setUnsubscribeInput(e.target.value)}
+                        />
+                        <Button variant="outline" onClick={handleUnsubscribeWithToken}>Apply Token</Button>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Breach Reporting ── */}
+            <section>
+                <div className="flex items-center gap-2 mb-4">
+                    <h2 className="text-sm font-semibold font-display tracking-tight">Incident Reporting</h2>
+                    <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-400">GDPR Art. 33</Badge>
+                </div>
+                <div className="space-y-3">
+                    <textarea
+                        className="w-full min-h-[84px] rounded border border-border/40 bg-transparent p-3 text-sm"
+                        placeholder="Describe the breach"
+                        value={breachDescription}
+                        onChange={(e) => setBreachDescription(e.target.value)}
+                    />
+                    <input
+                        className="h-9 w-full rounded border border-border/40 bg-transparent px-3 text-sm"
+                        placeholder="What data was affected?"
+                        value={breachDataAffected}
+                        onChange={(e) => setBreachDataAffected(e.target.value)}
+                    />
+                    <div className="flex items-center gap-2">
+                        <select
+                            className="h-9 rounded border border-border/40 bg-transparent px-3 text-sm"
+                            value={breachSeverity}
+                            onChange={(e) => setBreachSeverity(e.target.value as "low" | "medium" | "high" | "critical")}
+                        >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                        <Button onClick={handleReportBreach} disabled={submittingBreach}>
+                            {submittingBreach ? "Submitting..." : "Submit Breach Report"}
+                        </Button>
+                    </div>
+                    <div className="space-y-1 pt-2">
+                        <p className="text-xs text-muted-foreground">Recent incidents</p>
+                        {loadingBreaches ? (
+                            <p className="text-xs text-muted-foreground">Loading...</p>
+                        ) : breaches.length === 0 ? (
+                            <p className="text-xs text-muted-foreground">No incidents reported.</p>
+                        ) : (
+                            breaches.map((item) => (
+                                <div key={item.id} className="flex items-center justify-between text-xs rounded px-2 py-1 hover:bg-muted/5">
+                                    <span>{item.description}</span>
+                                    <span className="text-muted-foreground">{item.severity}</span>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
             </section>
 
             {/* ── Consent History ── */}

@@ -21,14 +21,13 @@ export default function ChatPage() {
     const [loadingRooms, setLoadingRooms] = useState(false);
     const [loadingMessages, setLoadingMessages] = useState(false);
     const [newMessage, setNewMessage] = useState("");
+    const [chatMessage, setChatMessage] = useState<string | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001/ws";
-    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
     useWebSocket({
         url: wsUrl,
-        token,
         onMessage: (data: any) => {
             if (data?.type === "CHAT_MESSAGE" && data.payload?.roomId === activeRoomId) {
                 setMessages((prev) => [...prev, data.payload]);
@@ -87,6 +86,35 @@ export default function ChatPage() {
         } catch { /* ignore */ }
     };
 
+    const handleDeleteRoom = async () => {
+        if (!activeProject || !activeRoomId) return;
+        if (!confirm("Delete this room and all messages?")) return;
+        try {
+            await ChatService.deleteRoom(activeRoomId, activeProject.id);
+            setRooms((prev) => prev.filter((room) => room.id !== activeRoomId));
+            setMessages([]);
+            const nextRoom = rooms.find((room) => room.id !== activeRoomId);
+            setActiveRoomId(nextRoom?.id ?? null);
+            setChatMessage("Room deleted.");
+        } catch {
+            setChatMessage("Failed to delete room.");
+        }
+    };
+
+    const handleEditMessage = async (messageId: string, currentContent: string) => {
+        if (!activeProject || !activeRoomId) return;
+        const nextContent = prompt("Edit message", currentContent);
+        if (!nextContent || nextContent.trim() === currentContent) return;
+
+        try {
+            const updated = await ChatService.editMessage(activeRoomId, messageId, activeProject.id, { content: nextContent.trim() });
+            setMessages((prev) => prev.map((msg) => (msg.id === messageId ? { ...msg, ...updated } : msg)));
+            setChatMessage("Message updated.");
+        } catch {
+            setChatMessage("Failed to update message.");
+        }
+    };
+
     if (!activeProject) {
         return <div className="p-8 text-center text-white/50">Please select a project first.</div>;
     }
@@ -114,7 +142,19 @@ export default function ChatPage() {
                 <div className="flex-1 flex flex-col">
                     {/* Chat Header */}
                     <div className="p-4 border-b border-white/[0.06]" style={{ background: "rgba(10,12,28,0.6)" }}>
-                        <h2 className="font-semibold text-white">{rooms.find((r) => r.id === activeRoomId)?.name || "Select a channel"}</h2>
+                        <div className="flex items-center justify-between gap-2">
+                            <h2 className="font-semibold text-white">{rooms.find((r) => r.id === activeRoomId)?.name || "Select a channel"}</h2>
+                            <div className="flex items-center gap-2">
+                                <ElectricRippleButton
+                                    accent="amber"
+                                    className="px-3 py-1.5 text-xs rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                                    onClick={handleDeleteRoom}
+                                >
+                                    Delete Room
+                                </ElectricRippleButton>
+                            </div>
+                        </div>
+                        {chatMessage && <p className="text-xs text-white/50 mt-2">{chatMessage}</p>}
                     </div>
 
                     {/* Messages */}
@@ -132,11 +172,37 @@ export default function ChatPage() {
                                     </div>
                                 )}
                                 {messages.map((msg) => (
-                                    <MessageBubble
-                                        key={msg.id}
-                                        message={msg}
-                                        isMine={msg.senderId === user?.id}
-                                    />
+                                    <div key={msg.id} className="space-y-1">
+                                        <MessageBubble
+                                            message={msg}
+                                            isMine={msg.senderId === user?.id}
+                                        />
+                                        {msg.senderId === user?.id && (
+                                            <div className="flex justify-end gap-2">
+                                                <button
+                                                    className="text-[10px] text-white/40 hover:text-white/70"
+                                                    onClick={() => handleEditMessage(msg.id, msg.content)}
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    className="text-[10px] text-red-300/70 hover:text-red-200"
+                                                    onClick={async () => {
+                                                        if (!activeProject || !activeRoomId) return;
+                                                        try {
+                                                            await ChatService.deleteMessage(activeRoomId, msg.id, activeProject.id);
+                                                            setMessages((prev) => prev.filter((m) => m.id !== msg.id));
+                                                            setChatMessage("Message deleted.");
+                                                        } catch {
+                                                            setChatMessage("Failed to delete message.");
+                                                        }
+                                                    }}
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 ))}
                             </div>
                         )}
