@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Wallet } from "@/services/BlockchainService";
@@ -10,18 +10,20 @@ interface WalletCardProps {
 }
 
 export default function WalletCard({ wallet }: WalletCardProps) {
+    const balance = wallet.balanceCache || "--";
+
     return (
         <Card>
             <CardContent className="py-6">
                 <div className="flex items-center justify-between mb-4">
-                    <Badge variant={wallet.isPrimary ? "default" : "secondary"}>
-                        {wallet.network}
+                    <Badge variant="secondary">
+                        {wallet.chain}
                     </Badge>
-                    {wallet.isPrimary && <Badge variant="outline" className="text-xs">Primary</Badge>}
+                    {wallet.label && <Badge variant="outline" className="text-xs">{wallet.label}</Badge>}
                 </div>
                 <div className="space-y-1">
                     <p className="text-2xl font-bold tracking-tight text-primary">
-                        {wallet.balance} <span className="text-sm font-normal text-muted-foreground">ETH</span>
+                        {balance} <span className="text-sm font-normal text-muted-foreground">{wallet.chain.toUpperCase()}</span>
                     </p>
                     <div className="flex items-center justify-between">
                         <code className="text-xs text-muted-foreground font-mono bg-muted px-2 py-1 rounded">

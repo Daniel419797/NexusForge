@@ -28,7 +28,16 @@ async function callApi(method: "get" | "post", url: string, body: unknown, onLog
 export default function BlockchainTest({ onLog }: BlockchainTestProps) {
   const [response, setResponse] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [network, setNetwork] = useState("ethereum");
+  const [chain, setChain] = useState("ethereum");
+
+  const buildFakeAddress = () => {
+    const alphabet = "0123456789abcdef";
+    let value = "0x";
+    for (let i = 0; i < 40; i += 1) {
+      value += alphabet[Math.floor(Math.random() * alphabet.length)];
+    }
+    return value;
+  };
 
   const run = async (method: "get" | "post", url: string, body: unknown = null) => {
     setLoading(true);
@@ -48,13 +57,23 @@ export default function BlockchainTest({ onLog }: BlockchainTestProps) {
         <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">
           <div className="flex items-center gap-2 text-sm font-medium text-slate-200"><Plus className="w-4 h-4 text-emerald-400" /> Create Wallet</div>
           <div className="text-xs text-slate-500 font-mono">POST /blockchain/wallets</div>
-          <select value={network} onChange={(e) => setNetwork(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-violet-500">
+          <select value={chain} onChange={(e) => setChain(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-violet-500">
             <option value="ethereum">Ethereum</option>
             <option value="base">Base</option>
             <option value="polygon">Polygon</option>
             <option value="solana">Solana</option>
           </select>
-          <button onClick={() => run("post", "/blockchain/wallets", { network })} disabled={loading} className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white py-1.5 rounded text-xs font-medium transition-colors">Create</button>
+          <button
+            onClick={() => run("post", "/blockchain/wallets", {
+              address: buildFakeAddress(),
+              chain,
+              label: "Test Wallet",
+            })}
+            disabled={loading}
+            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white py-1.5 rounded text-xs font-medium transition-colors"
+          >
+            Create
+          </button>
         </div>
 
         <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">

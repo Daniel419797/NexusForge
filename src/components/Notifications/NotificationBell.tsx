@@ -20,11 +20,9 @@ export default function NotificationBell() {
 
     // Initialize WS connection for live notifications
     const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001/ws";
-    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
     useWebSocket({
         url: wsUrl,
-        token,
         onMessage: (data: any) => {
             // If we receive a live notification event:
             if (data?.type === "NOTIFICATION_NEW") {

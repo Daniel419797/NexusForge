@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useDeployStore } from "@/store/deployStore";
 import { useProjectStore } from "@/store/projectStore";
-import ProjectService from "@/services/ProjectService";
+import ProjectService, { type ProjectApiDocs } from "@/services/ProjectService";
 import TableService, { type CustomTable } from "@/services/TableService";
 import {
     Copy,
@@ -39,9 +39,51 @@ interface EndpointExample {
     path: string;
     title: string;
     description: string;
-    auth: "bearer" | "api-key" | "none";
+    auth: "bearer" | "api-key" | "none" | "bearer-or-api-key";
     body?: Record<string, unknown>;
     responsePreview?: Record<string, unknown>;
+}
+
+const MODULE_SEGMENT_BY_ID: Record<string, string> = {
+    auth: "auth",
+    chat: "channels",
+    notifications: "notifications",
+    ai: "ai",
+    webhooks: "webhooks",
+    plugins: "plugins",
+    "api-keys": "keys",
+    blockchain: "blockchain",
+    compliance: "compliance",
+};
+
+function normalizeModuleSegment(moduleId: string, firstPath?: string): string {
+    if (MODULE_SEGMENT_BY_ID[moduleId]) {
+        return MODULE_SEGMENT_BY_ID[moduleId];
+    }
+    if (!firstPath) return moduleId;
+    const stripped = firstPath.replace(/^\/api\/v1\/p\/[0-9a-f-]{36}\//i, "").replace(/^\//, "");
+    return stripped.split("/")[0] || moduleId;
+}
+
+function mapDynamicDocsToModules(docs: ProjectApiDocs): ModuleDef[] {
+    return (docs.modules || []).map((mod) => {
+        const firstPath = mod.endpoints?.[0]?.path;
+        return {
+            moduleId: mod.moduleId,
+            label: mod.label,
+            segment: normalizeModuleSegment(mod.moduleId, firstPath),
+            description: mod.description,
+            endpoints: (mod.endpoints || []).map((ep) => ({
+                method: ep.method,
+                path: ep.path,
+                title: ep.summary || `${ep.method} ${ep.path}`,
+                description: ep.description || ep.summary || "",
+                auth: ep.auth || "none",
+                body: ep.requestBody,
+                responsePreview: ep.responseExample,
+            })),
+        } satisfies ModuleDef;
+    });
 }
 
 const METHOD_COLORS: Record<string, string> = {
@@ -261,8 +303,15 @@ function buildModuleDocs(projectId: string): ModuleDef[] {
             moduleId: "blockchain",
             label: "Blockchain",
             segment: "blockchain",
-            description: "Wallets, transactions, NFTs",
+            description: "Wallets, transactions, NFTs, indexed contract events (data-indexing mode)",
             endpoints: [
+                {
+                    method: "GET",
+                    path: `/api/v1/p/${projectId}/blockchain/capabilities`,
+                    title: "Capabilities",
+                    description: "Discover blockchain module mode and supported capabilities",
+                    auth: "bearer",
+                },
                 {
                     method: "POST",
                     path: `/api/v1/p/${projectId}/blockchain/wallets`,
@@ -284,7 +333,28 @@ function buildModuleDocs(projectId: string): ModuleDef[] {
                     title: "Record Transaction",
                     description: "Record a blockchain transaction",
                     auth: "bearer",
-                    body: { txHash: "0x...", chain: "ethereum", amount: "1.5" },
+                    body: { txHash: "0x...", chain: "ethereum", value: "1.5" },
+                },
+                {
+                    method: "GET",
+                    path: `/api/v1/p/${projectId}/blockchain/transactions`,
+                    title: "List Transactions",
+                    description: "List recorded blockchain transactions",
+                    auth: "bearer",
+                },
+                {
+                    method: "GET",
+                    path: `/api/v1/p/${projectId}/blockchain/nfts`,
+                    title: "List NFTs",
+                    description: "List indexed NFTs",
+                    auth: "bearer",
+                },
+                {
+                    method: "GET",
+                    path: `/api/v1/p/${projectId}/blockchain/events`,
+                    title: "List Contract Events",
+                    description: "Read indexed contract events for UI timelines and analytics",
+                    auth: "bearer",
                 },
             ],
         },
@@ -370,7 +440,7 @@ function curlExample(endpoint: EndpointExample, apiBase: string, token: string, 
     const url = resolveExampleUrl(endpoint, apiBase, gatewayBase);
     let cmd = `curl -X ${endpoint.method} "${url}"`;
 
-    if (endpoint.auth === "bearer") {
+    if (endpoint.auth === "bearer" || endpoint.auth === "bearer-or-api-key") {
         cmd += ` \\\n  -H "Authorization: Bearer ${token}"`;
     } else if (endpoint.auth === "api-key") {
         cmd += ` \\\n  -H "x-api-key: sk_your_secret_key"`;
@@ -388,7 +458,7 @@ function jsExample(endpoint: EndpointExample, apiBase: string, token: string, ga
     const url = resolveExampleUrl(endpoint, apiBase, gatewayBase);
     const headers: Record<string, string> = { "Content-Type": "application/json" };
 
-    if (endpoint.auth === "bearer") headers["Authorization"] = `Bearer ${token}`;
+    if (endpoint.auth === "bearer" || endpoint.auth === "bearer-or-api-key") headers["Authorization"] = `Bearer ${token}`;
     if (endpoint.auth === "api-key") headers["x-api-key"] = "sk_your_secret_key";
 
     let code = `const response = await fetch("${url}", {\n  method: "${endpoint.method}",\n  headers: ${JSON.stringify(headers, null, 4)},`;
@@ -405,7 +475,7 @@ function pythonExample(endpoint: EndpointExample, apiBase: string, token: string
     const url = resolveExampleUrl(endpoint, apiBase, gatewayBase);
     const headers: Record<string, string> = { "Content-Type": "application/json" };
 
-    if (endpoint.auth === "bearer") headers["Authorization"] = `Bearer ${token}`;
+    if (endpoint.auth === "bearer" || endpoint.auth === "bearer-or-api-key") headers["Authorization"] = `Bearer ${token}`;
     if (endpoint.auth === "api-key") headers["x-api-key"] = "sk_your_secret_key";
 
     let code = `import requests\n\nresponse = requests.${endpoint.method.toLowerCase()}(\n    "${url}",\n    headers=${JSON.stringify(headers).replaceAll('"', "'")},`;
@@ -454,6 +524,7 @@ export default function DocumentationPage() {
     const [expandedModule, setExpandedModule] = useState<string | null>("auth");
     const [customTables, setCustomTables] = useState<CustomTable[]>([]);
     const [tablesLoading, setTablesLoading] = useState(false);
+    const [dynamicDocs, setDynamicDocs] = useState<ProjectApiDocs | null>(null);
 
     // Fetch current deployment
     useEffect(() => {
@@ -470,18 +541,35 @@ export default function DocumentationPage() {
             .finally(() => setTablesLoading(false));
     }, [projectId]);
 
+    // Fetch backend-generated docs payload and use as source-of-truth when available
+    useEffect(() => {
+        if (!projectId) return;
+        ProjectService.getApiDocs(projectId)
+            .then((docs) => setDynamicDocs(docs))
+            .catch(() => setDynamicDocs(null));
+    }, [projectId]);
+
     // Build module docs — filter out internal modules
-    const allModules = useMemo(() => buildModuleDocs(projectId), [projectId]);
+    const allModules = useMemo(() => {
+        if (dynamicDocs?.modules?.length) {
+            return mapDynamicDocsToModules(dynamicDocs);
+        }
+        return buildModuleDocs(projectId);
+    }, [dynamicDocs, projectId]);
     const publicModules = useMemo(() => allModules.filter((m) => !m.internal), [allModules]);
 
     const enabledModuleIds = useMemo(() => {
         const dep = currentDeployment?.deployment;
-        if (!dep) return new Set<string>();
+        if (!dep) {
+            const fallback = new Set<string>((dynamicDocs?.modules || []).map((m) => m.moduleId));
+            fallback.add("auth");
+            return fallback;
+        }
         const modules = new Set(dep.enabledModules || []);
         // Always show auth
         modules.add("auth");
         return modules;
-    }, [currentDeployment]);
+    }, [currentDeployment, dynamicDocs]);
 
     const enabledModules = useMemo(
         () => publicModules.filter((m) => enabledModuleIds.has(m.moduleId)),
@@ -489,7 +577,7 @@ export default function DocumentationPage() {
     );
 
     const apiBase = API_BASE;
-    const gatewayBase = currentDeployment?.deployment?.apiUrl || ``;
+    const gatewayBase = currentDeployment?.deployment?.apiUrl || dynamicDocs?.gatewayBase || ``;
     const tokenDisplay = projectToken || "YOUR_PROJECT_TOKEN";
 
     const handleGetToken = useCallback(async () => {
@@ -504,7 +592,7 @@ export default function DocumentationPage() {
         }
     }, [projectId]);
 
-    const isDeployed = currentDeployment?.deployment?.status === "live";
+    const isDeployed = currentDeployment?.deployment?.status === "live" || Boolean(dynamicDocs?.modules?.length);
     const tokenActionLabel = projectToken ? "Regenerate Token" : "Generate Project Token";
     const generateTokenLabel = tokenLoading ? "Generating..." : tokenActionLabel;
 
@@ -973,7 +1061,7 @@ function EndpointCard({
                         <div className="flex items-center gap-1.5">
                             <Shield className="w-3 h-3 text-white/20" />
                             <span className="text-[10px] text-white/25">
-                                Requires: {endpoint.auth === "bearer" ? "Bearer Token or API Key" : "API Key"}
+                                Requires: {endpoint.auth === "bearer" ? "Bearer Token" : endpoint.auth === "api-key" ? "API Key" : "Bearer Token or API Key"}
                             </span>
                         </div>
                     )}

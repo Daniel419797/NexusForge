@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { Separator } from "@/components/ui/separator";
-import ProjectService from "@/services/ProjectService";
+import ProjectService, { type IntegrationConfig } from "@/services/ProjectService";
 import X402Service, { type X402Config } from "@/services/X402Service";
 import { useProjectStore } from "@/store/projectStore";
 
@@ -46,6 +46,10 @@ export default function ProjectSettingsPage() {
     const [savingX402, setSavingX402] = useState(false);
     const [x402Message, setX402Message] = useState<string | null>(null);
 
+    // Integration config state
+    const [integrationConfig, setIntegrationConfig] = useState<IntegrationConfig | null>(null);
+    const [integrationLoading, setIntegrationLoading] = useState(false);
+
     // Fetch existing CORS settings on load
     useEffect(() => {
         if (!activeProject) return;
@@ -69,6 +73,11 @@ export default function ProjectSettingsPage() {
                 setX402Chain(cfg.chain || "ethereum");
             }
         }).catch(() => { });
+        setIntegrationLoading(true);
+        ProjectService.getIntegrationConfig(activeProject.id)
+            .then(setIntegrationConfig)
+            .catch(() => { })
+            .finally(() => setIntegrationLoading(false));
     }, [activeProject]);
 
     if (!activeProject) return null;
@@ -363,6 +372,61 @@ export default function ProjectSettingsPage() {
                         {savingX402 ? "Saving..." : "Save x402 Config"}
                     </Button>
                 </div>
+            </section>
+
+            <Separator />
+
+            {/* Integration & SDK */}
+            <section className="animate-in-up stagger-5">
+                <h2 className="text-sm font-semibold font-display tracking-tight mb-1">Integration &amp; SDK</h2>
+                <p className="text-xs text-muted-foreground mb-4">
+                    Use these details to initialise the <code className="text-xs bg-muted px-1 rounded">@nexusforge/auth</code> SDK in your application.
+                </p>
+                {integrationLoading ? (
+                    <p className="text-sm text-muted-foreground">Loading…</p>
+                ) : integrationConfig ? (
+                    <div className="space-y-3">
+                        <div className="grid sm:grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <Label className="text-xs">Base URL</Label>
+                                <div className="flex items-center gap-2">
+                                    <Input readOnly value={integrationConfig.sdkConfig.baseUrl} className="font-mono text-xs" />
+                                    <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(integrationConfig.sdkConfig.baseUrl)}>Copy</Button>
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-xs">Project ID</Label>
+                                <div className="flex items-center gap-2">
+                                    <Input readOnly value={integrationConfig.sdkConfig.projectId} className="font-mono text-xs" />
+                                    <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(integrationConfig.sdkConfig.projectId)}>Copy</Button>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="space-y-1">
+                            <Label className="text-xs">Initialisation Snippet</Label>
+                            <div className="relative">
+                                <pre className="p-3 rounded-lg bg-muted text-xs font-mono overflow-x-auto whitespace-pre">{`import { NexusForgeAuth } from '@nexusforge/auth';
+
+const auth = new NexusForgeAuth({
+  baseUrl: '${integrationConfig.sdkConfig.baseUrl}',
+  projectId: '${integrationConfig.sdkConfig.projectId}',
+});`}</pre>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="absolute top-2 right-2 text-xs"
+                                    onClick={() => navigator.clipboard.writeText(
+                                        `import { NexusForgeAuth } from '@nexusforge/auth';\n\nconst auth = new NexusForgeAuth({\n  baseUrl: '${integrationConfig.sdkConfig.baseUrl}',\n  projectId: '${integrationConfig.sdkConfig.projectId}',\n});`
+                                    )}
+                                >
+                                    Copy
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <p className="text-sm text-muted-foreground">Could not load integration config.</p>
+                )}
             </section>
 
             <Separator />

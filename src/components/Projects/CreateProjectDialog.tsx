@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useProjectStore } from "@/store/projectStore";
 import { useEffect } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
+import type { SdkConfig } from "@/services/ProjectService";
 
 interface CreateProjectDialogProps {
     open: boolean;
@@ -34,6 +35,7 @@ export default function CreateProjectDialog({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [projectToken, setProjectToken] = useState<string | null>(null);
+    const [sdkConfig, setSdkConfig] = useState<SdkConfig | null>(null);
 
     // Fetch templates when dialog opens
     useEffect(() => {
@@ -57,10 +59,8 @@ export default function CreateProjectDialog({
                 "@/services/ProjectService"
             );
             const result = await ProjectService.create({ name: name.trim(), category });
-            // Show the project-scoped token for immediate SDK/testing use
-            if (result?.projectToken) {
-                setProjectToken(result.projectToken);
-            }
+            if (result?.projectToken) setProjectToken(result.projectToken);
+            if (result?.integration?.sdkConfig) setSdkConfig(result.integration.sdkConfig);
             setName("");
             setCategory("");
             onOpenChange(false);
@@ -189,6 +189,32 @@ export default function CreateProjectDialog({
                                 </Button>
                             </CardContent>
                         </Card>
+
+                        {sdkConfig && (
+                            <Card className="border-border bg-card mt-3">
+                                <CardContent className="pt-4">
+                                    <p className="text-sm font-medium mb-2">SDK Quickstart</p>
+                                    <pre className="p-2.5 rounded-lg bg-muted text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all">
+{`import { NexusForgeAuth } from '@nexusforge/auth';
+
+const auth = new NexusForgeAuth({
+  baseUrl: '${sdkConfig.baseUrl}',
+  projectId: '${sdkConfig.projectId}',
+});`}
+                                    </pre>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="mt-2 text-xs"
+                                        onClick={() => navigator.clipboard.writeText(
+                                            `import { NexusForgeAuth } from '@nexusforge/auth';\n\nconst auth = new NexusForgeAuth({\n  baseUrl: '${sdkConfig.baseUrl}',\n  projectId: '${sdkConfig.projectId}',\n});`
+                                        )}
+                                    >
+                                        Copy Snippet
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        )}
                     </div>
                 )}
             </DialogContent>

@@ -45,6 +45,13 @@ const ChatService = {
         return data.data;
     },
 
+    async deleteRoom(roomId: string, projectId: string) {
+        const { data } = await api.delete(`/channels/${roomId}`, {
+            headers: { "x-project-id": projectId },
+        });
+        return data.data;
+    },
+
     // Messages
     async getMessages(roomId: string, projectId: string, params?: { cursor?: string; limit?: number }) {
         const { data } = await api.get(`/channels/${roomId}/messages`, {
@@ -56,6 +63,13 @@ const ChatService = {
 
     async sendMessage(roomId: string, projectId: string, payload: { content: string }) {
         const { data } = await api.post(`/channels/${roomId}/messages`, payload, {
+            headers: { "x-project-id": projectId },
+        });
+        return data.data;
+    },
+
+    async editMessage(roomId: string, messageId: string, projectId: string, payload: { content: string }) {
+        const { data } = await api.patch(`/channels/${roomId}/messages/${messageId}`, payload, {
             headers: { "x-project-id": projectId },
         });
         return data.data;

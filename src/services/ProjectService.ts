@@ -25,6 +25,11 @@ export interface UpdateProjectPayload {
 	enabledModules?: string[];
 }
 
+export interface MigrateUsersPayload {
+	selector: "members" | "all" | "specific";
+	userIds?: string[];
+}
+
 export interface ProjectConfig {
 	dbType: "postgresql" | "supabase" | "mssql" | "mongodb";
 	dbUrl?: string | null;
@@ -37,11 +42,56 @@ export interface ProjectDetail {
 	membership: { role: string; joinedAt: string };
 }
 
+export interface SdkConfig {
+	baseUrl: string;
+	projectId: string;
+}
+
+export interface IntegrationConfig {
+	project: Project;
+	sdkConfig: SdkConfig;
+	auth: { basePath: string; baseUrl: string };
+	gatewayUrl: string;
+}
+
+export interface ApiDocsEndpoint {
+	method: string;
+	path: string;
+	summary: string;
+	description?: string;
+	auth?: "none" | "api-key" | "bearer" | "bearer-or-api-key";
+	requestBody?: Record<string, unknown>;
+	query?: Record<string, unknown>;
+	responseExample?: Record<string, unknown>;
+}
+
+export interface ApiDocsModule {
+	moduleId: string;
+	label: string;
+	description: string;
+	endpoints: ApiDocsEndpoint[];
+}
+
+export interface ProjectApiDocs {
+	project: { id: string; name: string };
+	gatewayBase: string;
+	modules: ApiDocsModule[];
+	quickStart?: {
+		sdk?: string;
+		curlExample?: string;
+	};
+}
+
 export interface CreateProjectResult {
 	project: Project;
 	config: ProjectConfig;
 	template: CategoryTemplate;
 	projectToken: string;
+	integration?: {
+		sdkConfig: SdkConfig;
+		authBasePath: string;
+		authBaseUrl: string;
+	};
 }
 
 const ProjectService = {
@@ -115,8 +165,8 @@ const ProjectService = {
 		return data.data;
 	},
 
-	async migrateUsers(projectId: string): Promise<{ jobId: string }> {
-		const { data } = await api.post(`/projects/${projectId}/migrate-users`);
+	async migrateUsers(projectId: string, payload: MigrateUsersPayload): Promise<{ jobId: string }> {
+		const { data } = await api.post(`/projects/${projectId}/migrate-users`, payload);
 		return data.data;
 	},
 
@@ -127,6 +177,16 @@ const ProjectService = {
 
 	async updateOAuth(projectId: string, payload: { googleClientId?: string | null; googleClientSecret?: string | null; githubClientId?: string | null; githubClientSecret?: string | null }): Promise<{ updated: boolean }> {
 		const { data } = await api.patch(`/projects/${projectId}/oauth`, payload);
+		return data.data;
+	},
+
+	async getIntegrationConfig(projectId: string): Promise<IntegrationConfig> {
+		const { data } = await api.get(`/projects/${projectId}/integration-config`);
+		return data.data;
+	},
+
+	async getApiDocs(projectId: string): Promise<ProjectApiDocs> {
+		const { data } = await api.get(`/projects/${projectId}/api-docs`);
 		return data.data;
 	},
 };

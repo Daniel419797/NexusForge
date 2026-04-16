@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizeCss: true,
+    sri: {
+      algorithm: "sha256",
+    },
   },
   async rewrites() {
     const backendUrl = (
@@ -58,28 +61,6 @@ const nextConfig: NextConfig = {
           {
             key: "Strict-Transport-Security",
             value: "max-age=63072000; includeSubDomains; preload",
-          },
-          {
-            key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https:",
-              "font-src 'self' data:",
-              [
-                "connect-src 'self'",
-                process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3001",
-                process.env.NEXT_PUBLIC_API_URL || "",
-                process.env.NEXT_PUBLIC_BACKEND_URL || "",
-                process.env.NEXT_PUBLIC_REUSE_TEST_API_URL || "",
-                "wss: ws:",
-              ].filter(Boolean).join(" "),
-              "worker-src blob:",
-              "frame-ancestors 'none'",
-              "base-uri 'self'",
-              "form-action 'self'",
-            ].join("; "),
           },
         ],
       },

@@ -39,8 +39,6 @@ const AuthService = {
 
     async logout() {
         await api.post("/auth/logout");
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
     },
 
     async getProfile() {
