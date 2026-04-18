@@ -53,7 +53,7 @@ export default async function RootLayout({
   await connection();
 
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${dmSans.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable} antialiased grain relative`}>
         <AuthInitializer />
         <ToastProvider>
