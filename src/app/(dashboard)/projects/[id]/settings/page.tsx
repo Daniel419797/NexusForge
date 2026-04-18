@@ -380,7 +380,7 @@ export default function ProjectSettingsPage() {
             <section className="animate-in-up stagger-5">
                 <h2 className="text-sm font-semibold font-display tracking-tight mb-1">Integration &amp; SDK</h2>
                 <p className="text-xs text-muted-foreground mb-4">
-                    Use these details to initialise the <code className="text-xs bg-muted px-1 rounded">@nexusforge/auth</code> SDK in your application.
+                    Use these details to initialise the <code className="text-xs bg-muted px-1 rounded">@nexus-forge-sdk/auth</code> SDK in your application.
                 </p>
                 {integrationLoading ? (
                     <p className="text-sm text-muted-foreground">Loading…</p>
@@ -405,7 +405,7 @@ export default function ProjectSettingsPage() {
                         <div className="space-y-1">
                             <Label className="text-xs">Initialisation Snippet</Label>
                             <div className="relative">
-                                <pre className="p-3 rounded-lg bg-muted text-xs font-mono overflow-x-auto whitespace-pre">{`import { NexusForgeAuth } from '@nexusforge/auth';
+                                <pre className="p-3 rounded-lg bg-muted text-xs font-mono overflow-x-auto whitespace-pre">{`import { NexusForgeAuth } from '@nexus-forge-sdk/auth';
 
 const auth = new NexusForgeAuth({
   baseUrl: '${integrationConfig.sdkConfig.baseUrl}',
@@ -416,7 +416,7 @@ const auth = new NexusForgeAuth({
                                     size="sm"
                                     className="absolute top-2 right-2 text-xs"
                                     onClick={() => navigator.clipboard.writeText(
-                                        `import { NexusForgeAuth } from '@nexusforge/auth';\n\nconst auth = new NexusForgeAuth({\n  baseUrl: '${integrationConfig.sdkConfig.baseUrl}',\n  projectId: '${integrationConfig.sdkConfig.projectId}',\n});`
+                                        `import { NexusForgeAuth } from '@nexus-forge-sdk/auth';\n\nconst auth = new NexusForgeAuth({\n  baseUrl: '${integrationConfig.sdkConfig.baseUrl}',\n  projectId: '${integrationConfig.sdkConfig.projectId}',\n});`
                                     )}
                                 >
                                     Copy
