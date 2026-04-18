@@ -26,6 +26,8 @@ export default function LoginPage() {
 
         try {
             const result = await AuthService.login({ email, password });
+            localStorage.setItem("accessToken", result.accessToken);
+            localStorage.setItem("refreshToken", result.refreshToken);
             setUser(result.user);
             router.push("/projects");
         } catch (err: unknown) {

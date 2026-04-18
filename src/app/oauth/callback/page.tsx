@@ -36,6 +36,8 @@ function OAuthCallbackInner() {
             .then((result) => {
                 // Stale-response guard: bail if the URL code changed while in-flight.
                 if (searchParams.get("code") !== code) return;
+                localStorage.setItem("accessToken", result.accessToken);
+                localStorage.setItem("refreshToken", result.refreshToken);
                 setUser(result.user);
                 router.replace("/projects");
             })
