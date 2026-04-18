@@ -1,37 +1,40 @@
-export interface SdkCatalogItem {
+export interface SdkVariant {
     slug: string;
     name: string;
     packageName: string;
     language: string;
-    category: "core" | "frontend" | "backend";
+    runtime: string;
     status: "stable" | "beta";
     summary: string;
-    longDescription: string;
-    documentationSections: string[];
     quickStartSnippet: string;
+    documentationSections: string[];
 }
 
-export const sdkCatalog: SdkCatalogItem[] = [
+export interface SdkFamily {
+    slug: string;
+    name: string;
+    tagline: string;
+    summary: string;
+    variants: SdkVariant[];
+}
+
+export const sdkCatalog: SdkFamily[] = [
     {
-        slug: "nexusforge-auth",
-        name: "NexusForge Auth SDK",
-        packageName: "@nexus-forge-sdk/auth",
-        language: "TypeScript / JavaScript",
-        category: "core",
-        status: "stable",
-        summary: "Type-safe auth client for login, token refresh, profile access, and OAuth redirects.",
-        longDescription:
-            "NexusForge Auth SDK provides a typed client for authentication flows. It manages access and refresh tokens, automatically refreshes near expiry, and exposes typed errors for robust handling in frontend and backend Node.js apps.",
-        documentationSections: [
-            "Installation",
-            "Client initialization",
-            "Login and registration",
-            "Token refresh and session handling",
-            "Profile and account operations",
-            "OAuth redirect flow",
-            "Error handling",
-        ],
-        quickStartSnippet: `import { NexusForgeAuth } from '@nexus-forge-sdk/auth';
+        slug: "authentication",
+        name: "Authentication SDK",
+        tagline: "Identity flows for every app surface",
+        summary:
+            "Everything needed to sign users in, rotate sessions, handle OAuth redirects, and keep authentication logic consistent across web apps, React products, and automation workflows.",
+        variants: [
+            {
+                slug: "javascript",
+                name: "JavaScript Auth",
+                packageName: "@nexus-forge-sdk/auth",
+                language: "TypeScript / JavaScript",
+                runtime: "Browser + Node.js",
+                status: "stable",
+                summary: "Type-safe auth client for login, token refresh, profile access, and OAuth redirects.",
+                quickStartSnippet: `import { NexusForgeAuth } from '@nexus-forge-sdk/auth';
 
 const auth = new NexusForgeAuth({
   baseUrl: 'https://api.your-app.com',
@@ -40,26 +43,83 @@ const auth = new NexusForgeAuth({
 
 await auth.login({ email: 'user@example.com', password: 'StrongPassword123!' });
 const me = await auth.getMe();`,
+                documentationSections: [
+                    "Installation",
+                    "Client initialization",
+                    "Login and registration",
+                    "Token refresh and session handling",
+                    "Profile and account operations",
+                    "OAuth redirect flow",
+                    "Error handling",
+                ],
+            },
+            {
+                slug: "react",
+                name: "React Auth",
+                packageName: "@nexus-forge-sdk/react-auth",
+                language: "React",
+                runtime: "Next.js / SPA",
+                status: "beta",
+                summary: "Provider and hooks layer for auth-aware React interfaces.",
+                quickStartSnippet: `import { NexusForgeAuthProvider } from '@nexus-forge-sdk/react-auth';
+
+export function AppShell() {
+  return (
+    <NexusForgeAuthProvider baseUrl="https://api.your-app.com">
+      <App />
+    </NexusForgeAuthProvider>
+  );
+}`,
+                documentationSections: [
+                    "Installation",
+                    "Provider setup",
+                    "Session hooks",
+                    "Route guards",
+                    "Token-aware fetch flows",
+                ],
+            },
+            {
+                slug: "python",
+                name: "Python Auth",
+                packageName: "nexusforge-auth",
+                language: "Python",
+                runtime: "Workers / Scripts",
+                status: "beta",
+                summary: "Authentication primitives for backend scripts and operational tooling.",
+                quickStartSnippet: `from nexusforge_auth import NexusForgeAuthClient
+
+client = NexusForgeAuthClient(
+    base_url="https://api.your-app.com",
+    project_id="your-project-id"
+)
+
+session = client.login(email="user@example.com", password="StrongPassword123!")`,
+                documentationSections: [
+                    "Installation",
+                    "Client initialization",
+                    "Credential exchange",
+                    "Refresh workflow",
+                    "Operational scripting",
+                ],
+            },
+        ],
     },
     {
-        slug: "nexusforge-js-client",
-        name: "NexusForge JS Client",
-        packageName: "@nexus-forge-sdk/js-client",
-        language: "TypeScript / JavaScript",
-        category: "backend",
-        status: "beta",
-        summary: "Generated API client for project endpoints with typed request and response models.",
-        longDescription:
-            "NexusForge JS Client gives you a typed interface for CRUD resources, filters, pagination, and generated endpoint methods for your project APIs.",
-        documentationSections: [
-            "Installation",
-            "Client setup",
-            "Querying resources",
-            "Mutations and validation",
-            "Pagination and filtering",
-            "Error handling",
-        ],
-        quickStartSnippet: `import { createNexusClient } from '@nexus-forge-sdk/js-client';
+        slug: "data-client",
+        name: "Data Client SDK",
+        tagline: "Typed data access across app tiers",
+        summary:
+            "Generated clients and UI bindings for querying resources, mutating data, and integrating NexusForge projects into frontend dashboards and backend pipelines.",
+        variants: [
+            {
+                slug: "javascript",
+                name: "JavaScript Client",
+                packageName: "@nexus-forge-sdk/js-client",
+                language: "TypeScript / JavaScript",
+                runtime: "Browser + Node.js",
+                status: "beta",
+                summary: "Generated API client for project endpoints with typed request and response models.",
+                quickStartSnippet: `import { createNexusClient } from '@nexus-forge-sdk/js-client';
 
 const client = createNexusClient({
   baseUrl: 'https://api.your-app.com',
@@ -67,54 +127,46 @@ const client = createNexusClient({
 });
 
 const users = await client.users.list({ limit: 20 });`,
-    },
-    {
-        slug: "nexusforge-react",
-        name: "NexusForge React SDK",
-        packageName: "@nexus-forge-sdk/react",
-        language: "React",
-        category: "frontend",
-        status: "beta",
-        summary: "React hooks and providers for auth, data fetching, and realtime project state.",
-        longDescription:
-            "NexusForge React SDK wraps core clients in React context and hooks so teams can build quickly with composable primitives.",
-        documentationSections: [
-            "Installation",
-            "Provider setup",
-            "Authentication hooks",
-            "Data hooks",
-            "Optimistic updates",
-            "Caching strategy",
-        ],
-        quickStartSnippet: `import { NexusForgeProvider, useNexusProject } from '@nexus-forge-sdk/react';
+                documentationSections: [
+                    "Installation",
+                    "Client setup",
+                    "Querying resources",
+                    "Mutations and validation",
+                    "Pagination and filtering",
+                    "Error handling",
+                ],
+            },
+            {
+                slug: "react",
+                name: "React Client",
+                packageName: "@nexus-forge-sdk/react",
+                language: "React",
+                runtime: "Next.js / SPA",
+                status: "beta",
+                summary: "React hooks and providers for auth, data fetching, and realtime project state.",
+                quickStartSnippet: `import { NexusForgeProvider, useNexusProject } from '@nexus-forge-sdk/react';
 
-function App() {
-  return (
-    <NexusForgeProvider config={{ baseUrl: 'https://api.your-app.com' }}>
-      <Dashboard />
-    </NexusForgeProvider>
-  );
+function Dashboard() {
+  const project = useNexusProject();
+  return <pre>{JSON.stringify(project.data, null, 2)}</pre>;
 }`,
-    },
-    {
-        slug: "nexusforge-python",
-        name: "NexusForge Python SDK",
-        packageName: "nexusforge-sdk",
-        language: "Python",
-        category: "backend",
-        status: "beta",
-        summary: "Python client for backend jobs, data sync pipelines, and automation scripts.",
-        longDescription:
-            "NexusForge Python SDK is designed for automation and server-side tasks, including batch data imports and integration workers.",
-        documentationSections: [
-            "Installation",
-            "Client initialization",
-            "Authentication",
-            "Batch operations",
-            "Retry and backoff",
-            "Error handling",
-        ],
-        quickStartSnippet: `from nexusforge_sdk import NexusForgeClient
+                documentationSections: [
+                    "Installation",
+                    "Provider setup",
+                    "Data hooks",
+                    "Optimistic updates",
+                    "Caching strategy",
+                ],
+            },
+            {
+                slug: "python",
+                name: "Python Client",
+                packageName: "nexusforge-sdk",
+                language: "Python",
+                runtime: "Workers / Data Pipelines",
+                status: "beta",
+                summary: "Python client for backend jobs, data sync pipelines, and automation scripts.",
+                quickStartSnippet: `from nexusforge_sdk import NexusForgeClient
 
 client = NexusForgeClient(
     base_url="https://api.your-app.com",
@@ -122,9 +174,29 @@ client = NexusForgeClient(
 )
 
 projects = client.projects.list(limit=10)`,
+                documentationSections: [
+                    "Installation",
+                    "Client initialization",
+                    "Authentication",
+                    "Batch operations",
+                    "Retry and backoff",
+                    "Error handling",
+                ],
+            },
+        ],
     },
 ];
 
-export function getSdkBySlug(slug: string): SdkCatalogItem | undefined {
-    return sdkCatalog.find((sdk) => sdk.slug === slug);
+export function getSdkFamilyBySlug(slug: string): SdkFamily | undefined {
+    return sdkCatalog.find((family) => family.slug === slug);
+}
+
+export function getSdkVariant(familySlug: string, variantSlug: string): { family: SdkFamily; variant: SdkVariant } | undefined {
+    const family = getSdkFamilyBySlug(familySlug);
+    if (!family) return undefined;
+
+    const variant = family.variants.find((item) => item.slug === variantSlug);
+    if (!variant) return undefined;
+
+    return { family, variant };
 }

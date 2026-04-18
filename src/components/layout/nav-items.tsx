@@ -26,20 +26,6 @@ export const globalNavItems: NavItem[] = [
         ),
     },
     {
-        label: "SDK",
-        href: "/sdk",
-        children: sdkCatalog.flatMap((sdk) => [
-            { label: sdk.name, href: `/sdk/${sdk.slug}` },
-            { label: `${sdk.name} Docs`, href: `/sdk/${sdk.slug}/documentation` },
-        ]),
-        icon: (
-            <svg aria-hidden="true" className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 6.087c0-.355.186-.676.401-.959.221-.29.349-.634.349-1.003 0-1.036-1.007-1.875-2.25-1.875s-2.25.84-2.25 1.875c0 .369.128.713.349 1.003.215.283.401.604.401.959" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4.5h6M7.5 7.5h9A1.5 1.5 0 0118 9v9a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 016 18V9a1.5 1.5 0 011.5-1.5z" />
-            </svg>
-        ),
-    },
-    {
         label: "Notifications",
         href: "/notifications",
         icon: (
@@ -86,6 +72,20 @@ export function getProjectNavItems(projectId: string): NavItem[] {
                 <svg aria-hidden="true" className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11s1.343 3 3 3 3-1.343 3-3z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 12v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6" />
+                </svg>
+            ),
+        },
+        {
+            label: "SDK",
+            href: `/projects/${projectId}/sdk`,
+            children: sdkCatalog.map((family) => ({
+                label: family.name,
+                href: `/projects/${projectId}/sdk/${family.slug}`,
+            })),
+            icon: (
+                <svg aria-hidden="true" className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 6.087c0-.355.186-.676.401-.959.221-.29.349-.634.349-1.003 0-1.036-1.007-1.875-2.25-1.875s-2.25.84-2.25 1.875c0 .369.128.713.349 1.003.215.283.401.604.401.959" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4.5h6M7.5 7.5h9A1.5 1.5 0 0118 9v9a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 016 18V9a1.5 1.5 0 011.5-1.5z" />
                 </svg>
             ),
         },
