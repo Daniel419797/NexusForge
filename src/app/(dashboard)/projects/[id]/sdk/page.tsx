@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { sdkCatalog } from "@/lib/sdk-catalog";
+import { getPublishedSdkCatalog } from "@/lib/sdk-catalog";
 import { Button } from "@/components/ui/button";
 
 interface ProjectSdkIndexPageProps {
@@ -8,6 +8,7 @@ interface ProjectSdkIndexPageProps {
 
 export default async function ProjectSdkIndexPage({ params }: ProjectSdkIndexPageProps) {
     const { id } = await params;
+    const sdkCatalog = getPublishedSdkCatalog();
 
     return (
         <div className="space-y-6">

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { sdkCatalog } from "@/lib/sdk-catalog";
+import { getPublishedSdkCatalog } from "@/lib/sdk-catalog";
 
 export interface NavItem {
     label: string;
@@ -38,6 +38,8 @@ export const globalNavItems: NavItem[] = [
 
 /** Build project-specific nav items for a given project ID. */
 export function getProjectNavItems(projectId: string): NavItem[] {
+    const publishedSdkFamilies = getPublishedSdkCatalog();
+
     return [
         {
             label: "Documentation",
@@ -78,7 +80,7 @@ export function getProjectNavItems(projectId: string): NavItem[] {
         {
             label: "SDK",
             href: `/projects/${projectId}/sdk`,
-            children: sdkCatalog.map((family) => ({
+            children: publishedSdkFamilies.map((family) => ({
                 label: family.name,
                 href: `/projects/${projectId}/sdk/${family.slug}`,
             })),

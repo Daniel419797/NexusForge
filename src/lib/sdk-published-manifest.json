@@ -1,0 +1,11 @@
+{
+  "generatedAt": "2026-04-18T22:04:33.813Z",
+  "packages": {
+    "@nexus-forge-sdk/auth": true,
+    "@nexus-forge-sdk/react-auth": false,
+    "@nexus-forge-sdk/js-client": false,
+    "@nexus-forge-sdk/react": false,
+    "nexusforge-auth": false,
+    "nexusforge-sdk": false
+  }
+}

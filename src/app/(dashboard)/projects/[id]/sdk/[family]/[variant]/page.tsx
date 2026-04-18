@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { getSdkVariant } from "@/lib/sdk-catalog";
+import { getPublishedSdkVariant } from "@/lib/sdk-catalog";
 
 interface ProjectSdkVariantPageProps {
     params: Promise<{ id: string; family: string; variant: string }>;
@@ -9,7 +9,7 @@ interface ProjectSdkVariantPageProps {
 
 export default async function ProjectSdkVariantPage({ params }: ProjectSdkVariantPageProps) {
     const { id, family: familySlug, variant: variantSlug } = await params;
-    const record = getSdkVariant(familySlug, variantSlug);
+    const record = getPublishedSdkVariant(familySlug, variantSlug);
 
     if (!record) notFound();
 
