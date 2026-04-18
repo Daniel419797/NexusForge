@@ -195,7 +195,7 @@ export default function CreateProjectDialog({
                                 <CardContent className="pt-4">
                                     <p className="text-sm font-medium mb-2">SDK Quickstart</p>
                                     <pre className="p-2.5 rounded-lg bg-muted text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all">
-{`import { NexusForgeAuth } from '@nexusforge/auth';
+{`import { NexusForgeAuth } from '@nexus-forge-sdk/auth';
 
 const auth = new NexusForgeAuth({
   baseUrl: '${sdkConfig.baseUrl}',
@@ -207,7 +207,7 @@ const auth = new NexusForgeAuth({
                                         size="sm"
                                         className="mt-2 text-xs"
                                         onClick={() => navigator.clipboard.writeText(
-                                            `import { NexusForgeAuth } from '@nexusforge/auth';\n\nconst auth = new NexusForgeAuth({\n  baseUrl: '${sdkConfig.baseUrl}',\n  projectId: '${sdkConfig.projectId}',\n});`
+                                            `import { NexusForgeAuth } from '@nexus-forge-sdk/auth';\n\nconst auth = new NexusForgeAuth({\n  baseUrl: '${sdkConfig.baseUrl}',\n  projectId: '${sdkConfig.projectId}',\n});`
                                         )}
                                     >
                                         Copy Snippet
