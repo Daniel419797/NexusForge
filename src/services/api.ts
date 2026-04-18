@@ -24,9 +24,18 @@ const api = axios.create({
     withCredentials: true,
 });
 
-// ── Request Interceptor: No-op — auth tokens are sent via httpOnly cookies ──
+// ── Request Interceptor: Inject Bearer token from localStorage (fallback alongside httpOnly cookie) ──
 api.interceptors.request.use(
-    (config) => config,
+    (config) => {
+        if (typeof window !== "undefined") {
+            const token = localStorage.getItem("accessToken");
+            if (token) {
+                config.headers = config.headers ?? {};
+                config.headers["Authorization"] = `Bearer ${token}`;
+            }
+        }
+        return config;
+    },
     (error) => Promise.reject(error)
 );
 
@@ -66,13 +75,26 @@ api.interceptors.response.use(
             isRefreshing = true;
 
             try {
-                await axios.post('/api/v1/auth/refresh', {}, { withCredentials: true });
+                const { data } = await axios.post<{ data?: { accessToken?: string; refreshToken?: string } }>(
+                    '/api/v1/auth/refresh',
+                    {},
+                    { withCredentials: true },
+                );
+                // Keep localStorage in sync so Bearer header stays fresh
+                if (typeof window !== "undefined" && data?.data?.accessToken) {
+                    localStorage.setItem("accessToken", data.data.accessToken);
+                    if (data.data.refreshToken) {
+                        localStorage.setItem("refreshToken", data.data.refreshToken);
+                    }
+                }
 
                 processQueue(null);
                 return api(originalRequest);
             } catch (refreshError) {
                 processQueue(refreshError);
                 if (typeof window !== "undefined") {
+                    localStorage.removeItem("accessToken");
+                    localStorage.removeItem("refreshToken");
                     window.location.href = "/login";
                 }
                 return Promise.reject(refreshError);
