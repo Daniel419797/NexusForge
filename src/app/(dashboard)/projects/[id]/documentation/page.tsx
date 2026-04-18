@@ -762,6 +762,7 @@ export default function DocumentationPage() {
                         />
                     ))}
                 </div>
+                <br />
                 {/* Custom Tables are part of Step 3 */}
                 {(tablesLoading || customTables.length > 0) && (
                     <div className="mb-6 pb-6 border-b border-white/[0.04]">
