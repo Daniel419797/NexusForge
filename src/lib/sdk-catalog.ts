@@ -3,6 +3,7 @@ export interface SdkCatalogItem {
     name: string;
     packageName: string;
     language: string;
+    category: "core" | "frontend" | "backend";
     status: "stable" | "beta";
     summary: string;
     longDescription: string;
@@ -16,6 +17,7 @@ export const sdkCatalog: SdkCatalogItem[] = [
         name: "NexusForge Auth SDK",
         packageName: "@nexus-forge-sdk/auth",
         language: "TypeScript / JavaScript",
+        category: "core",
         status: "stable",
         summary: "Type-safe auth client for login, token refresh, profile access, and OAuth redirects.",
         longDescription:
@@ -44,6 +46,7 @@ const me = await auth.getMe();`,
         name: "NexusForge JS Client",
         packageName: "@nexus-forge-sdk/js-client",
         language: "TypeScript / JavaScript",
+        category: "backend",
         status: "beta",
         summary: "Generated API client for project endpoints with typed request and response models.",
         longDescription:
@@ -70,6 +73,7 @@ const users = await client.users.list({ limit: 20 });`,
         name: "NexusForge React SDK",
         packageName: "@nexus-forge-sdk/react",
         language: "React",
+        category: "frontend",
         status: "beta",
         summary: "React hooks and providers for auth, data fetching, and realtime project state.",
         longDescription:
@@ -97,6 +101,7 @@ function App() {
         name: "NexusForge Python SDK",
         packageName: "nexusforge-sdk",
         language: "Python",
+        category: "backend",
         status: "beta",
         summary: "Python client for backend jobs, data sync pipelines, and automation scripts.",
         longDescription:
