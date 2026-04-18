@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { getSdkFamilyBySlug } from "@/lib/sdk-catalog";
+import { getPublishedSdkFamilyBySlug } from "@/lib/sdk-catalog";
 
 interface ProjectSdkFamilyPageProps {
     params: Promise<{ id: string; family: string }>;
@@ -9,7 +9,7 @@ interface ProjectSdkFamilyPageProps {
 
 export default async function ProjectSdkFamilyPage({ params }: ProjectSdkFamilyPageProps) {
     const { id, family: familySlug } = await params;
-    const family = getSdkFamilyBySlug(familySlug);
+    const family = getPublishedSdkFamilyBySlug(familySlug);
 
     if (!family) notFound();
 

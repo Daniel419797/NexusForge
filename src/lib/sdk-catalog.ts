@@ -1,3 +1,5 @@
+import sdkPublishedManifest from "./sdk-published-manifest.json";
+
 export interface SdkVariant {
     slug: string;
     name: string;
@@ -193,6 +195,37 @@ export function getSdkFamilyBySlug(slug: string): SdkFamily | undefined {
 
 export function getSdkVariant(familySlug: string, variantSlug: string): { family: SdkFamily; variant: SdkVariant } | undefined {
     const family = getSdkFamilyBySlug(familySlug);
+    if (!family) return undefined;
+
+    const variant = family.variants.find((item) => item.slug === variantSlug);
+    if (!variant) return undefined;
+
+    return { family, variant };
+}
+
+function isVariantPublished(variant: SdkVariant): boolean {
+    const packages = sdkPublishedManifest.packages as Record<string, boolean>;
+    return packages[variant.packageName] === true;
+}
+
+export function getPublishedSdkCatalog(): SdkFamily[] {
+    return sdkCatalog
+        .map((family) => ({
+            ...family,
+            variants: family.variants.filter(isVariantPublished),
+        }))
+        .filter((family) => family.variants.length > 0);
+}
+
+export function getPublishedSdkFamilyBySlug(slug: string): SdkFamily | undefined {
+    return getPublishedSdkCatalog().find((family) => family.slug === slug);
+}
+
+export function getPublishedSdkVariant(
+    familySlug: string,
+    variantSlug: string,
+): { family: SdkFamily; variant: SdkVariant } | undefined {
+    const family = getPublishedSdkFamilyBySlug(familySlug);
     if (!family) return undefined;
 
     const variant = family.variants.find((item) => item.slug === variantSlug);
