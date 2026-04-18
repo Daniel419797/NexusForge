@@ -13,9 +13,6 @@ const nextConfig = {
   },
   experimental: {
     optimizeCss: true,
-    sri: {
-      algorithm: 'sha256',
-    },
   },
   async rewrites() {
     const backendUrl = (
