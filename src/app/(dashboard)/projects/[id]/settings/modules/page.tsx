@@ -67,6 +67,12 @@ export default function ModulesSettingsPage() {
                         Enable or disable core API modules for this project. Changes take effect on next deploy.
                     </p>
                 </div>
+                <Link
+                    href={`/projects/${projectId}/settings/modules/logic-modules`}
+                    className="text-xs font-medium px-3 py-2 rounded-md border border-border hover:bg-muted transition-colors"
+                >
+                    Logic Modules
+                </Link>
             </div>
 
             {message && (
