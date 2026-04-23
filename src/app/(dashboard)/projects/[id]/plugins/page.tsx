@@ -52,7 +52,8 @@ export default function ProjectPluginsPage() {
         if (!projectId) return;
         setItemLoading(name, true);
         try {
-            await PluginService.install(projectId, name);
+            const mfaCode = globalThis.window?.prompt("Enter MFA code for sensitive action (leave blank if not required)")?.trim();
+            await PluginService.install(projectId, name, { mfaCode: mfaCode || undefined });
             fetchData();
         } catch {
             // ignore

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import nextConfig from '../next.config';
+import nextConfig from '../next.config.mjs';
 
 type RewriteRule = { source: string; destination: string };
 type HeaderEntry = { source: string; headers: { key: string; value: string }[] };

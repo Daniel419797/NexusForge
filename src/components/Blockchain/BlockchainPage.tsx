@@ -169,12 +169,15 @@ export default function BlockchainPage() {
             return;
         }
         try {
+            const mfaCode = globalThis.window?.prompt("Enter MFA code for sensitive action (leave blank if not required)")?.trim();
             await BlockchainService.sendSignerTransaction(activeProject.id, {
                 hotWalletId: signerHotWalletId,
                 chain: hotWalletChain,
                 to: signerTo.trim(),
                 value: signerValue || undefined,
                 data: signerData || undefined,
+            }, {
+                mfaCode: mfaCode || undefined,
             });
             setOpsMessage("Signer transaction submitted.");
             await fetchData();

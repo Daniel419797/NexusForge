@@ -159,9 +159,12 @@ const ProjectService = {
 
 	async rotateDbUrl(
 		projectId: string,
-		payload: { dbUrl: string; dbType?: "postgresql" | "supabase" | "mssql" | "mongodb" }
+		payload: { dbUrl: string; dbType?: "postgresql" | "supabase" | "mssql" | "mongodb" },
+		options?: { mfaCode?: string }
 	): Promise<{ dbUrl: string }> {
-		const { data } = await api.post(`/projects/${projectId}/rotate-db-url`, payload);
+		const headers: Record<string, string> = {};
+		if (options?.mfaCode) headers["x-mfa-code"] = options.mfaCode;
+		const { data } = await api.post(`/projects/${projectId}/rotate-db-url`, payload, { headers });
 		return data.data;
 	},
 
