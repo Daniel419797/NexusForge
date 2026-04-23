@@ -321,10 +321,10 @@ const BlockchainService = {
         to: string;
         value?: string;
         data?: string;
-    }): Promise<Record<string, unknown>> {
-        const { data } = await api.post("/blockchain/signer/send", payload, {
-            headers: { "x-project-id": projectId },
-        });
+    }, options?: { mfaCode?: string }): Promise<Record<string, unknown>> {
+        const headers: Record<string, string> = { "x-project-id": projectId };
+        if (options?.mfaCode) headers["x-mfa-code"] = options.mfaCode;
+        const { data } = await api.post("/blockchain/signer/send", payload, { headers });
         return data.data;
     },
 
@@ -336,10 +336,10 @@ const BlockchainService = {
         functionName: string;
         args?: unknown[];
         value?: string;
-    }): Promise<Record<string, unknown>> {
-        const { data } = await api.post("/blockchain/signer/write", payload, {
-            headers: { "x-project-id": projectId },
-        });
+    }, options?: { mfaCode?: string }): Promise<Record<string, unknown>> {
+        const headers: Record<string, string> = { "x-project-id": projectId };
+        if (options?.mfaCode) headers["x-mfa-code"] = options.mfaCode;
+        const { data } = await api.post("/blockchain/signer/write", payload, { headers });
         return data.data;
     },
 

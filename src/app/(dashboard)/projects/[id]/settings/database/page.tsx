@@ -80,14 +80,9 @@ export default function ProjectDatabaseSettingsPage() {
                 const cfg = res.config;
                 if (cfg) {
                     setDbType(normalizeDbType(cfg.dbType));
-                    // Fetch DB URL via secure backend API (may be redacted or require permissions)
-                    ProjectService.getDbUrl(activeProject.id).then((r) => {
-                        if (!mounted) return;
-                        setDbUrl(r.dbUrl || "");
-                    }).catch(() => {
-                        // ignore if not permitted to view DB URL
-                        setDbUrl("");
-                    });
+                    // Backend no longer exposes plaintext DB URL retrieval endpoint.
+                    // Use configured value when present, otherwise require manual input.
+                    setDbUrl((cfg as any).dbUrl || "");
                     setSettingsFromConfig(cfg.settings || {});
                 }
             })
@@ -442,9 +437,12 @@ export default function ProjectDatabaseSettingsPage() {
                                         setRotating(false);
                                         return;
                                     }
+                                    const mfaCode = globalThis.window?.prompt("Enter MFA code for sensitive action (leave blank if not required)")?.trim();
                                     const { dbUrl: newUrl } = await ProjectService.rotateDbUrl(activeProject.id, {
                                         dbUrl: dbUrl.trim(),
                                         dbType,
+                                    }, {
+                                        mfaCode: mfaCode || undefined,
                                     });
                                     setDbUrl(newUrl);
                                     setRotateMessage("Database URL rotated successfully.");

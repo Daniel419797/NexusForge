@@ -78,11 +78,13 @@ const PluginService = {
     },
 
     // Install a plugin
-    async install(projectId: string, pluginName: string): Promise<void> {
+    async install(projectId: string, pluginName: string, options?: { mfaCode?: string }): Promise<void> {
+        const headers: Record<string, string> = { "x-project-id": projectId };
+        if (options?.mfaCode) headers["x-mfa-code"] = options.mfaCode;
         await api.post(
             "/plugins/install",
             { name: pluginName },
-            { headers: { "x-project-id": projectId } }
+            { headers }
         );
     },
 

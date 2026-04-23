@@ -187,12 +187,12 @@ function buildModuleDocs(projectId: string): ModuleDef[] {
                     auth: "bearer",
                 },
                 {
-                    method: "GET",
-                    path: `/api/v1/p/${projectId}/db/config/db-url`,
-                    title: "Get Database URL",
-                    description: "Retrieve the decrypted database connection string",
+                    method: "POST",
+                    path: `/api/v1/p/${projectId}/projects/:projectId/rotate-db-url`,
+                    title: "Rotate Database URL",
+                    description: "Rotate the configured database URL. Sensitive action may require MFA code header.",
                     auth: "bearer",
-                },
+                }
             ],
         },
         {
