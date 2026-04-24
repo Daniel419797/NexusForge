@@ -18,7 +18,6 @@ export default function OAuthButtons({ mode }: OAuthButtonsProps) {
     ).replace(/\/+$/, '');
 
     const buildOAuthUrl = (provider: 'google' | 'github') => {
-        if (!backendBase) return `/api/v1/auth/oauth/${provider}`;
 
         // Handle project-scoped API bases (e.g. /api/v1/p/:projectId) by
         // stripping the /p/:projectId segment, then passing projectId via query.
@@ -30,7 +29,10 @@ export default function OAuthButtons({ mode }: OAuthButtonsProps) {
             ? new URLSearchParams(window.location.search).get('projectId')
             : null;
         const projectId = projectIdFromBase ?? projectIdFromQuery;
+
         const q = projectId ? `?projectId=${encodeURIComponent(projectId)}` : '';
+
+        if (!backendBase) return `/api/v1/auth/oauth/${provider}${q}`;
 
         if (authBase.endsWith('/api/v1')) {
             return `${authBase}/auth/oauth/${provider}${q}`;
