@@ -1,4 +1,5 @@
 import api from "./api";
+import { assert, assertNonEmptyString, isRecord, toArray, unwrapDataEnvelope } from "./serviceGuards";
 
 export interface Notification {
     id: string;
@@ -17,39 +18,84 @@ export interface PushDevice {
     createdAt: string;
 }
 
+function requiredString(value: unknown, fieldName: string): string {
+    assert(typeof value === "string" && value.trim().length > 0, `${fieldName} is required`);
+    return value;
+}
+
+function asPushDevice(value: unknown): PushDevice {
+    assert(isRecord(value), "Invalid push device response");
+    return {
+        id: requiredString(value.id, "device.id"),
+        token: requiredString(value.token, "device.token"),
+        platform: requiredString(value.platform, "device.platform"),
+        createdAt: requiredString(value.createdAt, "device.createdAt"),
+    };
+}
+
+function asNotification(value: unknown): Notification {
+    assert(isRecord(value), "Invalid notification item");
+    return {
+        id: requiredString(value.id, "notification.id"),
+        type: requiredString(value.type, "notification.type"),
+        title: requiredString(value.title, "notification.title"),
+        body: value.body == null ? null : requiredString(value.body, "notification.body"),
+        read: Boolean(value.read),
+        createdAt: requiredString(value.createdAt, "notification.createdAt"),
+        metadata: isRecord(value.metadata) ? value.metadata : undefined,
+    };
+}
+
+function asUnreadCount(value: unknown): number {
+    assert(isRecord(value), "Invalid unread-count response");
+    const count = value.count;
+    if (typeof count === "number" && Number.isFinite(count)) return count;
+    if (typeof count === "string" && count.trim().length > 0) return Number(count);
+    return 0;
+}
+
 const NotificationService = {
-    async getNotifications(params?: { limit?: number; cursor?: string; unreadOnly?: boolean }) {
+    async getNotifications(params?: { limit?: number; cursor?: string; unreadOnly?: boolean }): Promise<Notification[]> {
         const { data } = await api.get("/notifications", { params });
-        return data.data;
+        return toArray(unwrapDataEnvelope(data), asNotification);
     },
 
-    async getUnreadCount() {
+    async getUnreadCount(): Promise<number> {
         const { data } = await api.get("/notifications/unread-count");
-        return data.data.count as number;
+        return asUnreadCount(unwrapDataEnvelope(data));
     },
 
-    async markAsRead(id: string) {
+    async markAsRead(id: string): Promise<Notification> {
+        assertNonEmptyString(id, "id");
         const { data } = await api.patch(`/notifications/${id}/read`);
-        return data.data;
+        return asNotification(unwrapDataEnvelope(data));
     },
 
-    async markAllAsRead() {
+    async markAllAsRead(): Promise<{ success: boolean; updated?: number }> {
         const { data } = await api.post("/notifications/read-all");
-        return data.data;
+        const payload = unwrapDataEnvelope(data);
+        assert(isRecord(payload), "Invalid mark-all-read response");
+        return {
+            success: typeof payload.success === "boolean" ? payload.success : true,
+            updated: typeof payload.updated === "number" && Number.isFinite(payload.updated) ? payload.updated : undefined,
+        };
     },
 
     // Push device management
     async getDevices(): Promise<PushDevice[]> {
         const { data } = await api.get("/notifications/devices");
-        return data.data || [];
+        return toArray(unwrapDataEnvelope(data), asPushDevice);
     },
 
     async registerDevice(payload: { token: string; platform: string }): Promise<PushDevice> {
+        assertNonEmptyString(payload.token, "token");
+        assertNonEmptyString(payload.platform, "platform");
         const { data } = await api.post("/notifications/devices", payload);
-        return data.data;
+        return asPushDevice(unwrapDataEnvelope(data));
     },
 
     async removeDevice(deviceId: string): Promise<void> {
+        assertNonEmptyString(deviceId, "deviceId");
         await api.delete(`/notifications/devices/${deviceId}`);
     },
 };

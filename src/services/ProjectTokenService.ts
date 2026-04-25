@@ -1,4 +1,5 @@
 import api from './api';
+import { assertProjectId, assertNonEmptyString, isRecord, unwrapDataEnvelope } from './serviceGuards';
 
 const API_TOKEN_STORAGE_KEY = (projectId: string) => `projectToken:${projectId}`;
 
@@ -24,9 +25,12 @@ const isTokenExpired = (token: string) => {
 };
 
 const ProjectTokenService = {
-    async fetchAndStore(projectId: string) {
+    async fetchAndStore(projectId: string): Promise<string> {
+        assertProjectId(projectId);
         const { data } = await api.post(`/projects/${projectId}/token`);
-        const token = data.data?.token as string;
+        const payload = unwrapDataEnvelope(data);
+        const token = isRecord(payload) && typeof payload.token === 'string' ? payload.token : undefined;
+        assertNonEmptyString(token ?? '', 'token');
         if (!token) throw new Error('Failed to obtain project token');
         try {
             localStorage.setItem(API_TOKEN_STORAGE_KEY(projectId), JSON.stringify({ token, fetchedAt: Date.now() }));
@@ -36,7 +40,8 @@ const ProjectTokenService = {
         return token;
     },
 
-    async getToken(projectId: string) {
+    async getToken(projectId: string): Promise<string> {
+        assertProjectId(projectId);
         if (typeof window !== 'undefined') {
             try {
                 const raw = localStorage.getItem(API_TOKEN_STORAGE_KEY(projectId));
@@ -53,7 +58,8 @@ const ProjectTokenService = {
         return this.fetchAndStore(projectId);
     },
 
-    clearToken(projectId: string) {
+    clearToken(projectId: string): void {
+        assertProjectId(projectId);
         if (typeof window !== 'undefined') {
             try {
                 localStorage.removeItem(API_TOKEN_STORAGE_KEY(projectId));

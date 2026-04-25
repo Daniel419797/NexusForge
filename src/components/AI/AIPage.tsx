@@ -43,7 +43,9 @@ export default function AIPage() {
         setTextResult("");
         try {
             const resp = await AIService.generateText(activeProject.id, { prompt: textPrompt, temperature: temperature[0] });
-            setTextResult(resp.text || resp.message || JSON.stringify(resp, null, 2));
+            const messageText = typeof resp.message?.content === "string" ? resp.message.content : undefined;
+            const text = typeof resp.text === "string" ? resp.text : undefined;
+            setTextResult(text || messageText || JSON.stringify(resp, null, 2));
         } catch (err: unknown) {
             const e = err as { response?: { data?: { message?: string } } };
             setTextResult(e.response?.data?.message || "Generation failed.");

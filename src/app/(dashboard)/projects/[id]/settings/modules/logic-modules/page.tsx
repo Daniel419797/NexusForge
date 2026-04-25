@@ -96,6 +96,12 @@ export default function LogicModulesListPage() {
                         New Module
                     </Button>
                 </Link>
+                <Link href={`/projects/${projectId}/settings/modules/guide`}>
+                    <Button size="sm" variant="outline" className="gap-1.5">
+                        <FileText className="w-4 h-4" />
+                        Guide
+                    </Button>
+                </Link>
             </div>
 
             {message && (
