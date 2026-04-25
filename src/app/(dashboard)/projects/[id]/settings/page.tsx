@@ -13,6 +13,9 @@ import ProjectService, { type IntegrationConfig } from "@/services/ProjectServic
 import X402Service, { type X402Config } from "@/services/X402Service";
 import { useProjectStore } from "@/store/projectStore";
 
+const LOGIC_LIMIT_MIN = 5;
+const LOGIC_LIMIT_MAX = 1000;
+
 export default function ProjectSettingsPage() {
     const router = useRouter();
     const activeProject = useProjectStore((s) => s.activeProject);
@@ -20,6 +23,7 @@ export default function ProjectSettingsPage() {
     const [name, setName] = useState(activeProject?.name || "");
     const [origins, setOrigins] = useState<string[]>([]);
     const [newOrigin, setNewOrigin] = useState("");
+    const [projectSettings, setProjectSettings] = useState<Record<string, any>>({});
 
     // UI States
     const [saving, setSaving] = useState(false);
@@ -27,6 +31,14 @@ export default function ProjectSettingsPage() {
     const [deleting, setDeleting] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
     const [corsMessage, setCorsMessage] = useState<string | null>(null);
+    const [savingLogicLimits, setSavingLogicLimits] = useState(false);
+    const [logicLimitsMessage, setLogicLimitsMessage] = useState<string | null>(null);
+
+    const [logicWebhookLimit, setLogicWebhookLimit] = useState("120");
+    const [logicGetLimit, setLogicGetLimit] = useState("180");
+    const [logicPostLimit, setLogicPostLimit] = useState("60");
+    const [logicPatchLimit, setLogicPatchLimit] = useState("30");
+    const [logicDeleteLimit, setLogicDeleteLimit] = useState("20");
 
     // x402 config state
         // OAuth credentials state
@@ -54,8 +66,27 @@ export default function ProjectSettingsPage() {
     useEffect(() => {
         if (!activeProject) return;
         ProjectService.getById(activeProject.id).then((res) => {
+            setProjectSettings(res.config?.settings || {});
             if (res.config?.settings?.allowedOrigins) {
                 setOrigins(res.config.settings.allowedOrigins);
+            }
+
+            const logicModules = res.config?.settings?.rateLimit?.logicModules;
+            const crud = logicModules?.crud;
+            if (typeof logicModules?.webhookPerMinute === "number") {
+                setLogicWebhookLimit(String(logicModules.webhookPerMinute));
+            }
+            if (typeof crud?.getPerMinute === "number") {
+                setLogicGetLimit(String(crud.getPerMinute));
+            }
+            if (typeof crud?.postPerMinute === "number") {
+                setLogicPostLimit(String(crud.postPerMinute));
+            }
+            if (typeof crud?.patchPerMinute === "number") {
+                setLogicPatchLimit(String(crud.patchPerMinute));
+            }
+            if (typeof crud?.deletePerMinute === "number") {
+                setLogicDeleteLimit(String(crud.deletePerMinute));
             }
         });
         ProjectService.getOAuth(activeProject.id).then((cfg) => {
@@ -123,6 +154,60 @@ export default function ProjectSettingsPage() {
             setCorsMessage("Failed to update CORS origins.");
         } finally {
             setSavingCors(false);
+        }
+    };
+
+    const handleSaveLogicLimits = async () => {
+        const fields = [
+            { name: "Webhook", value: logicWebhookLimit },
+            { name: "CRUD GET", value: logicGetLimit },
+            { name: "CRUD POST", value: logicPostLimit },
+            { name: "CRUD PATCH", value: logicPatchLimit },
+            { name: "CRUD DELETE", value: logicDeleteLimit },
+        ];
+
+        const parsed: Record<string, number> = {};
+        for (const field of fields) {
+            const value = Number(field.value);
+            if (!Number.isInteger(value)) {
+                setLogicLimitsMessage(`${field.name} must be an integer.`);
+                return;
+            }
+            if (value < LOGIC_LIMIT_MIN || value > LOGIC_LIMIT_MAX) {
+                setLogicLimitsMessage(`${field.name} must be between ${LOGIC_LIMIT_MIN} and ${LOGIC_LIMIT_MAX}.`);
+                return;
+            }
+            parsed[field.name] = value;
+        }
+
+        setSavingLogicLimits(true);
+        setLogicLimitsMessage(null);
+        try {
+            const nextSettings = {
+                ...projectSettings,
+                rateLimit: {
+                    ...(projectSettings?.rateLimit || {}),
+                    logicModules: {
+                        ...((projectSettings?.rateLimit?.logicModules as Record<string, unknown>) || {}),
+                        webhookPerMinute: parsed["Webhook"],
+                        crud: {
+                            ...((projectSettings?.rateLimit?.logicModules?.crud as Record<string, unknown>) || {}),
+                            getPerMinute: parsed["CRUD GET"],
+                            postPerMinute: parsed["CRUD POST"],
+                            patchPerMinute: parsed["CRUD PATCH"],
+                            deletePerMinute: parsed["CRUD DELETE"],
+                        },
+                    },
+                },
+            };
+
+            await ProjectService.updateConfig(activeProject.id, { settings: nextSettings });
+            setProjectSettings(nextSettings);
+            setLogicLimitsMessage("Logic Modules rate limits saved.");
+        } catch {
+            setLogicLimitsMessage("Failed to save Logic Modules rate limits.");
+        } finally {
+            setSavingLogicLimits(false);
         }
     };
 
@@ -208,9 +293,56 @@ export default function ProjectSettingsPage() {
 
             <Separator />
 
+            <section className="animate-in-up stagger-3">
+                <h2 className="text-sm font-semibold font-display tracking-tight mb-1">Logic Modules Rate Limits</h2>
+                <p className="text-xs text-muted-foreground mb-4">
+                    Configure method-specific limits for public Logic Module invocation. Values are requests per minute.
+                </p>
+                <div className="space-y-4">
+                    {logicLimitsMessage && (
+                        <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm">
+                            {logicLimitsMessage}
+                        </div>
+                    )}
+
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="logicWebhookLimit">Webhook</Label>
+                            <Input id="logicWebhookLimit" type="number" min={LOGIC_LIMIT_MIN} max={LOGIC_LIMIT_MAX} value={logicWebhookLimit} onChange={(e) => setLogicWebhookLimit(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="logicGetLimit">CRUD GET</Label>
+                            <Input id="logicGetLimit" type="number" min={LOGIC_LIMIT_MIN} max={LOGIC_LIMIT_MAX} value={logicGetLimit} onChange={(e) => setLogicGetLimit(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="logicPostLimit">CRUD POST</Label>
+                            <Input id="logicPostLimit" type="number" min={LOGIC_LIMIT_MIN} max={LOGIC_LIMIT_MAX} value={logicPostLimit} onChange={(e) => setLogicPostLimit(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="logicPatchLimit">CRUD PATCH</Label>
+                            <Input id="logicPatchLimit" type="number" min={LOGIC_LIMIT_MIN} max={LOGIC_LIMIT_MAX} value={logicPatchLimit} onChange={(e) => setLogicPatchLimit(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="logicDeleteLimit">CRUD DELETE</Label>
+                            <Input id="logicDeleteLimit" type="number" min={LOGIC_LIMIT_MIN} max={LOGIC_LIMIT_MAX} value={logicDeleteLimit} onChange={(e) => setLogicDeleteLimit(e.target.value)} />
+                        </div>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground">
+                        Allowed range: {LOGIC_LIMIT_MIN} to {LOGIC_LIMIT_MAX}. Recommended: keep write/delete limits lower than reads.
+                    </p>
+
+                    <Button onClick={handleSaveLogicLimits} disabled={savingLogicLimits}>
+                        {savingLogicLimits ? "Saving..." : "Save Logic Modules Limits"}
+                    </Button>
+                </div>
+            </section>
+
+            <Separator />
+
             {/* x402 Payment Config */}
             {/* OAuth Credentials */}
-            <section className="animate-in-up stagger-3">
+            <section className="animate-in-up stagger-4">
                 <h2 className="text-sm font-semibold font-display tracking-tight mb-1">OAuth Credentials</h2>
                 <p className="text-xs text-muted-foreground mb-4">
                     Provide your own Google / GitHub OAuth app credentials so the login consent screen shows your project&apos;s branding.

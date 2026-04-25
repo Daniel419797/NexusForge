@@ -1,5 +1,6 @@
 import api from "./api";
 import type { AxiosError } from "axios";
+import { assert, assertProjectId, isRecord, toArray, unwrapDataEnvelope } from "./serviceGuards";
 
 /* ──────────────────────────────────────────
    DashboardService — powers the dashboard widgets
@@ -126,6 +127,67 @@ const EMPTY_SNAPSHOT: RealtimeSnapshot = {
   serverTime: new Date().toISOString(),
 };
 
+function requiredString(value: unknown, fieldName: string): string {
+  assert(typeof value === "string" && value.trim().length > 0, `${fieldName} is required`);
+  return value;
+}
+
+function requiredNumber(value: unknown, fieldName: string): number {
+  assert(typeof value === "number" && Number.isFinite(value), `${fieldName} must be a number`);
+  return value;
+}
+
+function asDashboardStats(value: unknown): DashboardStats {
+  assert(isRecord(value), "Invalid dashboard stats response");
+  return {
+    totalProjects: requiredNumber(value.totalProjects, "stats.totalProjects"),
+    apiRequests24h: requiredNumber(value.apiRequests24h, "stats.apiRequests24h"),
+    activeUsers: requiredNumber(value.activeUsers, "stats.activeUsers"),
+    revenueMtd: requiredNumber(value.revenueMtd, "stats.revenueMtd"),
+    totalWallets: requiredNumber(value.totalWallets, "stats.totalWallets"),
+    totalTransactions: requiredNumber(value.totalTransactions, "stats.totalTransactions"),
+    aiTokensUsed: requiredNumber(value.aiTokensUsed, "stats.aiTokensUsed"),
+    installedPlugins: requiredNumber(value.installedPlugins, "stats.installedPlugins"),
+  };
+}
+
+function asModuleUsage(value: unknown): ModuleUsage {
+  assert(isRecord(value), "Invalid module usage item");
+  return {
+    module: requiredString(value.module, "moduleUsage.module"),
+    count: requiredNumber(value.count, "moduleUsage.count"),
+  };
+}
+
+function asTimeSeriesBucket(value: unknown): TimeSeriesBucket {
+  assert(isRecord(value), "Invalid timeseries bucket item");
+  return {
+    timestamp: requiredString(value.timestamp, "timeSeries.timestamp"),
+    apiRequests: requiredNumber(value.apiRequests, "timeSeries.apiRequests"),
+    wsEvents: requiredNumber(value.wsEvents, "timeSeries.wsEvents"),
+    dbOperations: requiredNumber(value.dbOperations, "timeSeries.dbOperations"),
+  };
+}
+
+function asAnalyticsResult(value: unknown): AnalyticsResult {
+  assert(isRecord(value), "Invalid analytics response");
+  return {
+    moduleUsage: toArray(value.moduleUsage, asModuleUsage),
+    timeSeries: toArray(value.timeSeries, asTimeSeriesBucket),
+  };
+}
+
+function asRealtimeSnapshot(value: unknown): RealtimeSnapshot {
+  assert(isRecord(value), "Invalid realtime snapshot response");
+  return {
+    wsConnectionsActive: requiredNumber(value.wsConnectionsActive, "snapshot.wsConnectionsActive"),
+    dbConnectionsActive: requiredNumber(value.dbConnectionsActive, "snapshot.dbConnectionsActive"),
+    httpRequestsTotal: requiredNumber(value.httpRequestsTotal, "snapshot.httpRequestsTotal"),
+    requestsLastMinute: requiredNumber(value.requestsLastMinute, "snapshot.requestsLastMinute"),
+    serverTime: requiredString(value.serverTime, "snapshot.serverTime"),
+  };
+}
+
 const DashboardService = {
   /**
    * Get aggregated dashboard stats (project count, API calls, users, wallets, etc.)
@@ -133,12 +195,14 @@ const DashboardService = {
    * @param signal AbortSignal for request cancellation
    */
   async getStats(projectId?: string, signal?: AbortSignal): Promise<DashboardStats> {
+    if (projectId !== undefined) assertProjectId(projectId);
     return withRetry(async () => {
       const { data } = await api.get("/dashboard/stats", {
         params: projectId ? { projectId } : undefined,
         signal,
       });
-      return data.data ?? EMPTY_STATS;
+      const payload = unwrapDataEnvelope(data);
+      return payload == null ? EMPTY_STATS : asDashboardStats(payload);
     });
   },
 
@@ -150,9 +214,10 @@ const DashboardService = {
     limit?: number;
     before?: string;
   }, signal?: AbortSignal): Promise<ActivityEntry[]> {
+    if (params?.projectId !== undefined) assertProjectId(params.projectId);
     return withRetry(async () => {
       const { data } = await api.get("/dashboard/activity", { params, signal });
-      return data.data ?? [];
+      return toArray(unwrapDataEnvelope(data), (item) => item as ActivityEntry);
     });
   },
 
@@ -160,12 +225,13 @@ const DashboardService = {
    * Get data model info with live row counts.
    */
   async getModels(projectId?: string, signal?: AbortSignal): Promise<DataModelInfo[]> {
+    if (projectId !== undefined) assertProjectId(projectId);
     return withRetry(async () => {
       const { data } = await api.get("/dashboard/models", {
         params: projectId ? { projectId } : undefined,
         signal,
       });
-      return data.data ?? [];
+      return toArray(unwrapDataEnvelope(data), (item) => item as DataModelInfo);
     });
   },
 
@@ -180,12 +246,14 @@ const DashboardService = {
     opts?: { projectId?: string; buckets?: number; intervalSeconds?: number },
     signal?: AbortSignal,
   ): Promise<AnalyticsResult> {
+    if (opts?.projectId !== undefined) assertProjectId(opts.projectId);
     return withRetry(async () => {
       const { data } = await api.get("/dashboard/analytics", {
         params: opts,
         signal,
       });
-      return data.data ?? EMPTY_ANALYTICS;
+      const payload = unwrapDataEnvelope(data);
+      return payload == null ? EMPTY_ANALYTICS : asAnalyticsResult(payload);
     });
   },
 
@@ -200,11 +268,13 @@ const DashboardService = {
    * @param signal AbortSignal for request cancellation
    */
   async getRealtimeSnapshot(projectId?: string, signal?: AbortSignal): Promise<RealtimeSnapshot> {
+    if (projectId !== undefined) assertProjectId(projectId);
     const { data } = await api.get("/dashboard/analytics/snapshot", {
       params: projectId ? { projectId } : undefined,
       signal,
     });
-    return data.data ?? EMPTY_SNAPSHOT;
+    const payload = unwrapDataEnvelope(data);
+    return payload == null ? EMPTY_SNAPSHOT : asRealtimeSnapshot(payload);
   },
 };
 

@@ -73,6 +73,12 @@ export default function ModulesSettingsPage() {
                 >
                     Logic Modules
                 </Link>
+                <Link
+                    href={`/projects/${projectId}/settings/modules/guide`}
+                    className="text-xs font-medium px-3 py-2 rounded-md border border-border hover:bg-muted transition-colors"
+                >
+                    Modules Guide
+                </Link>
             </div>
 
             {message && (

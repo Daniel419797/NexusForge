@@ -21,11 +21,20 @@ import { ArrowLeft } from "lucide-react";
 
 import LogicModuleService, {
     type LogicModuleDefinition,
+    type LogicModuleDeadLetterDetail,
+    type LogicModuleDeadLetterSummary,
     type WorkflowDefinitionInput,
     type WorkflowNodeInput,
 } from "@/services/LogicModuleService";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -177,6 +186,10 @@ export default function LogicBuilderPage() {
     const [runsLoading, setRunsLoading] = useState(false);
     const [selectedRunTrace, setSelectedRunTrace] = useState<{ id: string; status: string; steps: Array<{ nodeId: string; nodeType: string; status: string; output?: unknown; error?: string }>; createdAt: string } | null>(null);
     const [isRetrying, setIsRetrying] = useState<string | null>(null);
+    const [deadLetters, setDeadLetters] = useState<LogicModuleDeadLetterSummary[]>([]);
+    const [deadLettersLoading, setDeadLettersLoading] = useState(false);
+    const [deadLetterDetail, setDeadLetterDetail] = useState<LogicModuleDeadLetterDetail | null>(null);
+    const [deadLetterDetailOpen, setDeadLetterDetailOpen] = useState(false);
 
     const selectedNode = useMemo(() => nodes.find((n) => n.id === selectedNodeId) || null, [nodes, selectedNodeId]);
 
@@ -232,6 +245,18 @@ export default function LogicBuilderPage() {
         }
     };
 
+    const loadDeadLetters = async (projId: string, key: string) => {
+        setDeadLettersLoading(true);
+        try {
+            const data = await LogicModuleService.listDeadLetters(projId, key, { limit: 20 });
+            setDeadLetters(data);
+        } catch {
+            // silently ignore
+        } finally {
+            setDeadLettersLoading(false);
+        }
+    };
+
     const handleExecute = async () => {
         if (!projectId || !moduleKey) return;
         setIsExecuting(true);
@@ -242,6 +267,7 @@ export default function LogicBuilderPage() {
             const result = await LogicModuleService.executeModule(projectId, moduleKey, parsedInput);
             setExecuteResult(result);
             await loadRunHistory(projectId, moduleKey);
+            await loadDeadLetters(projectId, moduleKey);
         } catch (error: any) {
             setMessage(error?.response?.data?.message || "Execution failed");
         } finally {
@@ -266,6 +292,7 @@ export default function LogicBuilderPage() {
         try {
             await LogicModuleService.retryRun(projectId, moduleKey, runId);
             await loadRunHistory(projectId, moduleKey);
+            await loadDeadLetters(projectId, moduleKey);
         } catch {
             setMessage("Retry failed.");
         } finally {
@@ -283,6 +310,17 @@ export default function LogicBuilderPage() {
         }
     };
 
+    const handleViewDeadLetter = async (deadLetterId: string) => {
+        if (!projectId || !moduleKey) return;
+        try {
+            const detail = await LogicModuleService.getDeadLetter(projectId, moduleKey, deadLetterId);
+            setDeadLetterDetail(detail);
+            setDeadLetterDetailOpen(true);
+        } catch {
+            setMessage("Failed to load dead-letter details.");
+        }
+    };
+
     useEffect(() => {
         if (!projectId) return;
         setIsLoading(true);
@@ -292,6 +330,7 @@ export default function LogicBuilderPage() {
                 if (urlModuleKey) {
                     await loadModuleByKey(projectId, urlModuleKey);
                     await loadRunHistory(projectId, urlModuleKey);
+                    await loadDeadLetters(projectId, urlModuleKey);
                 } else {
                     const seed = flowFromDefinition(emptySeed);
                     setNodes(seed.nodes);
@@ -643,6 +682,7 @@ export default function LogicBuilderPage() {
             </div>
 
             {selectedModuleKey && (
+                <div className="space-y-4">
                 <Card className="p-4 space-y-3">
                     <div className="flex items-center justify-between">
                         <Label>Run History</Label>
@@ -727,7 +767,94 @@ export default function LogicBuilderPage() {
                         </div>
                     )}
                 </Card>
+
+                <Card className="p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                        <Label>Dead Letters</Label>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => loadDeadLetters(projectId!, selectedModuleKey)}
+                            disabled={deadLettersLoading}
+                        >
+                            {deadLettersLoading ? "Loading..." : "Refresh"}
+                        </Button>
+                    </div>
+
+                    {deadLetters.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">No dead letters.</p>
+                    ) : (
+                        <div className="divide-y border rounded-md text-sm">
+                            {deadLetters.map((deadLetter) => (
+                                <div key={deadLetter.id} className="flex items-center gap-3 px-3 py-2">
+                                    <span className="text-xs text-muted-foreground font-mono flex-1 truncate">{deadLetter.id.slice(0, 8)}…</span>
+                                    <span className="text-xs truncate max-w-[320px] text-muted-foreground">
+                                        {deadLetter.reason || deadLetter.runErrorSummary || "Execution failed"}
+                                    </span>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-xs"
+                                        onClick={() => handleViewDeadLetter(deadLetter.id)}
+                                    >
+                                        View
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </Card>
+                </div>
             )}
+
+            <Dialog open={deadLetterDetailOpen} onOpenChange={setDeadLetterDetailOpen}>
+                <DialogContent className="sm:max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Dead-letter Detail</DialogTitle>
+                        <DialogDescription>
+                            Inspect payload and error metadata for failed runs.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {deadLetterDetail ? (
+                        <div className="space-y-3">
+                            <div className="grid sm:grid-cols-2 gap-3 text-xs">
+                                <div className="rounded border p-2">
+                                    <p className="text-muted-foreground">Dead-letter ID</p>
+                                    <p className="font-mono break-all">{deadLetterDetail.id}</p>
+                                </div>
+                                <div className="rounded border p-2">
+                                    <p className="text-muted-foreground">Run ID</p>
+                                    <p className="font-mono break-all">{deadLetterDetail.moduleRunId || "-"}</p>
+                                </div>
+                                <div className="rounded border p-2">
+                                    <p className="text-muted-foreground">Retry Count</p>
+                                    <p>{deadLetterDetail.retryCount ?? 0}</p>
+                                </div>
+                                <div className="rounded border p-2">
+                                    <p className="text-muted-foreground">Created</p>
+                                    <p>{new Date(deadLetterDetail.createdAt).toLocaleString()}</p>
+                                </div>
+                            </div>
+                            <div className="rounded border p-2">
+                                <p className="text-xs text-muted-foreground">Reason</p>
+                                <p className="text-sm mt-1">{deadLetterDetail.reason || deadLetterDetail.runErrorSummary || "Unknown error"}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground mb-1">Payload</p>
+                                <Textarea
+                                    readOnly
+                                    className="min-h-[220px] font-mono text-xs"
+                                    value={JSON.stringify(deadLetterDetail.payloadJson ?? {}, null, 2)}
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="text-sm text-muted-foreground">No details loaded.</p>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

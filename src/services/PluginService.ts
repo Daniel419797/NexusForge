@@ -1,4 +1,5 @@
 import api from "./api";
+import { assertNonEmptyString, assertProjectId, unwrapDataEnvelope } from "./serviceGuards";
 
 export interface PluginMeta {
     name: string;
@@ -56,18 +57,20 @@ function mapAvailablePlugin(plugin: Record<string, unknown>): PluginMeta {
 const PluginService = {
     // Get all available plugins from the "marketplace"
     async getAvailable(projectId: string): Promise<PluginMeta[]> {
+        assertProjectId(projectId);
         const { data } = await api.get("/plugins/available", {
             headers: { "x-project-id": projectId },
         });
-        return extractPluginsArray(data.data).map(mapAvailablePlugin);
+        return extractPluginsArray(unwrapDataEnvelope(data)).map(mapAvailablePlugin);
     },
 
     // Get plugins installed on this project
     async getInstalled(projectId: string): Promise<InstalledPlugin[]> {
+        assertProjectId(projectId);
         const { data } = await api.get("/plugins/installed", {
             headers: { "x-project-id": projectId },
         });
-        return extractPluginsArray(data.data).map((plugin) => ({
+        return extractPluginsArray(unwrapDataEnvelope(data)).map((plugin) => ({
             name: typeof plugin.pluginName === "string" ? plugin.pluginName : typeof plugin.name === "string" ? plugin.name : "",
             version: typeof plugin.version === "string" ? plugin.version : "1.0.0",
             config: plugin.config && typeof plugin.config === "object" ? plugin.config as Record<string, unknown> : {},
@@ -79,6 +82,8 @@ const PluginService = {
 
     // Install a plugin
     async install(projectId: string, pluginName: string, options?: { mfaCode?: string }): Promise<void> {
+        assertProjectId(projectId);
+        assertNonEmptyString(pluginName, "pluginName");
         const headers: Record<string, string> = { "x-project-id": projectId };
         if (options?.mfaCode) headers["x-mfa-code"] = options.mfaCode;
         await api.post(
@@ -90,6 +95,8 @@ const PluginService = {
 
     // Uninstall a plugin
     async uninstall(projectId: string, pluginName: string): Promise<void> {
+        assertProjectId(projectId);
+        assertNonEmptyString(pluginName, "pluginName");
         await api.delete(`/plugins/${pluginName}/uninstall`, {
             headers: { "x-project-id": projectId },
         });
@@ -97,6 +104,8 @@ const PluginService = {
 
     // Update plugin config
     async updateConfig(projectId: string, pluginName: string, config: any): Promise<void> {
+        assertProjectId(projectId);
+        assertNonEmptyString(pluginName, "pluginName");
         await api.patch(
             `/plugins/${pluginName}/config`,
             { config },
@@ -106,6 +115,9 @@ const PluginService = {
 
     // Submit an idea
     async submitIdea(projectId: string, idea: { title: string; description: string; category?: string }): Promise<void> {
+        assertProjectId(projectId);
+        assertNonEmptyString(idea.title, "title");
+        assertNonEmptyString(idea.description, "description");
         await api.post("/plugins/ideas", idea, {
             headers: { "x-project-id": projectId },
         });
