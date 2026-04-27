@@ -54,6 +54,11 @@ export default function ActivityFeed() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const wsToken = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("accessToken");
+  }, [activeProject?.id]);
+
   const wsUrl = useMemo(() => {
     if (!activeProject?.id) return null;
     const base = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001/ws";
@@ -76,17 +81,11 @@ export default function ActivityFeed() {
     }
   }, [activeProject?.id]);
 
-  useEffect(() => {
-    fetchActivity();
-    // Poll every 30s for near-realtime updates
-    const interval = setInterval(fetchActivity, 30_000);
-    return () => clearInterval(interval);
-  }, [fetchActivity]);
-
-  useWebSocket({
+  const { isConnected } = useWebSocket({
     url: wsUrl || "ws://localhost:3001/ws",
-    enabled: Boolean(wsUrl),
-    reconnect: Boolean(wsUrl),
+    token: wsToken,
+    enabled: Boolean(wsUrl && wsToken),
+    reconnect: Boolean(wsUrl && wsToken),
     onMessage: (message) => {
       if (!wsUrl || !message || typeof message !== "object") return;
       const payload = message as { event?: string; data?: unknown };
@@ -102,6 +101,15 @@ export default function ActivityFeed() {
       });
     },
   });
+
+  useEffect(() => {
+    fetchActivity();
+
+    // Keep polling only as fallback when WS is unavailable/disconnected.
+    if (isConnected) return;
+    const interval = setInterval(fetchActivity, 30_000);
+    return () => clearInterval(interval);
+  }, [fetchActivity, isConnected]);
 
   return (
     <div ref={ref}>

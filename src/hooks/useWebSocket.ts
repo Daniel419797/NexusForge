@@ -7,7 +7,7 @@ interface UseWebSocketOptions {
     token?: string | null;
     onMessage?: (data: unknown) => void;
     onOpen?: () => void;
-    onClose?: () => void;
+    onClose?: (event: CloseEvent) => void;
     onError?: (error: Event) => void;
     reconnect?: boolean;
     reconnectInterval?: number;
@@ -28,6 +28,7 @@ export function useWebSocket({
     const wsRef = useRef<WebSocket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    const NON_RETRYABLE_CLOSE_CODES = new Set([4401, 4403, 4429]);
 
     const connect = useCallback(() => {
         const wsUrl = token
@@ -49,10 +50,10 @@ export function useWebSocket({
             }
         };
 
-        ws.onclose = () => {
+        ws.onclose = (event) => {
             setIsConnected(false);
-            onClose?.();
-            if (reconnect) {
+            onClose?.(event);
+            if (reconnect && !NON_RETRYABLE_CLOSE_CODES.has(event.code)) {
                 reconnectTimerRef.current = setTimeout(connect, reconnectInterval);
             }
         };
