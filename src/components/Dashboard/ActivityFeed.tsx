@@ -1,9 +1,10 @@
 ﻿"use client";
 
 import { motion, useInView } from "framer-motion";
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 
 import DashboardService, { type ActivityEntry } from "@/services/DashboardService";
+import { useWebSocket } from "@/hooks/useWebSocket";
 import { useProjectStore } from "@/store/projectStore";
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -53,6 +54,13 @@ export default function ActivityFeed() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const wsUrl = useMemo(() => {
+    if (!activeProject?.id) return null;
+    const base = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001/ws";
+    const joiner = base.includes("?") ? "&" : "?";
+    return `${base}${joiner}projectId=${encodeURIComponent(activeProject.id)}`;
+  }, [activeProject?.id]);
+
   const fetchActivity = useCallback(async () => {
     try {
       setError(false);
@@ -74,6 +82,26 @@ export default function ActivityFeed() {
     const interval = setInterval(fetchActivity, 30_000);
     return () => clearInterval(interval);
   }, [fetchActivity]);
+
+  useWebSocket({
+    url: wsUrl || "ws://localhost:3001/ws",
+    enabled: Boolean(wsUrl),
+    reconnect: Boolean(wsUrl),
+    onMessage: (message) => {
+      if (!wsUrl || !message || typeof message !== "object") return;
+      const payload = message as { event?: string; data?: unknown };
+      if (payload.event !== "activity:new" || !payload.data || typeof payload.data !== "object") return;
+
+      const incoming = payload.data as ActivityEntry;
+      if (!incoming?.id || !incoming?.action || !incoming?.createdAt) return;
+      if (activeProject?.id && incoming.projectId !== activeProject.id) return;
+
+      setItems((prev) => {
+        const deduped = prev.filter((item) => item.id !== incoming.id);
+        return [incoming, ...deduped].slice(0, 20);
+      });
+    },
+  });
 
   return (
     <div ref={ref}>

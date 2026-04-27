@@ -11,6 +11,7 @@ interface UseWebSocketOptions {
     onError?: (error: Event) => void;
     reconnect?: boolean;
     reconnectInterval?: number;
+    enabled?: boolean;
 }
 
 export function useWebSocket({
@@ -22,6 +23,7 @@ export function useWebSocket({
     onError,
     reconnect = true,
     reconnectInterval = 3000,
+    enabled = true,
 }: UseWebSocketOptions) {
     const wsRef = useRef<WebSocket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
@@ -63,13 +65,14 @@ export function useWebSocket({
     }, [url, token, onMessage, onOpen, onClose, onError, reconnect, reconnectInterval]);
 
     useEffect(() => {
+        if (!enabled) return;
         connect();
         return () => {
             if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
             wsRef.current?.close();
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [url, token]);
+    }, [url, token, enabled]);
 
     const send = useCallback((data: unknown) => {
         if (wsRef.current?.readyState === WebSocket.OPEN) {
