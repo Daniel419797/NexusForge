@@ -51,6 +51,7 @@ export default function ActivityFeed() {
   const activeProject = useProjectStore((s) => s.activeProject);
 
   const [items, setItems] = useState<ActivityEntry[]>([]);
+  const [wsStatus, setWsStatus] = useState<"connecting" | "connected" | "auth_failed" | "disconnected">("connecting");
 
   const wsToken = useMemo(() => {
     if (typeof window === "undefined") return null;
@@ -69,6 +70,16 @@ export default function ActivityFeed() {
     token: wsToken,
     enabled: Boolean(wsUrl && wsToken),
     reconnect: Boolean(wsUrl && wsToken),
+    onOpen: () => {
+      setWsStatus("connected");
+    },
+    onClose: (event) => {
+      if (event.code === 4401 || event.code === 4403) {
+        setWsStatus("auth_failed");
+        return;
+      }
+      setWsStatus("disconnected");
+    },
     onMessage: (message) => {
       if (!wsUrl || !message || typeof message !== "object") return;
       const payload = message as { event?: string; data?: unknown };
@@ -101,7 +112,13 @@ export default function ActivityFeed() {
         {items.length === 0 ? (
           <div className="py-8 text-center">
             <p className="text-xs text-white/25">
-              {isConnected ? "Waiting for live activity events..." : "Connecting to live activity stream..."}
+              {isConnected || wsStatus === "connected"
+                ? "Waiting for live activity events..."
+                : wsStatus === "auth_failed"
+                  ? "Live stream authorization failed. Please refresh and sign in again."
+                  : wsStatus === "disconnected"
+                    ? "Live stream disconnected. Reconnecting..."
+                    : "Connecting to live activity stream..."}
             </p>
           </div>
         ) : (
