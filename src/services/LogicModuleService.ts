@@ -27,7 +27,26 @@ export interface LogicModuleVersion {
 
 export interface WorkflowNodeInput {
     id: string;
-    type: 'start' | 'filter' | 'branch' | 'read_table' | 'write_table' | 'notify' | 'end';
+    type:
+        | 'start'
+        | 'filter'
+        | 'branch'
+        | 'read_table'
+        | 'write_table'
+        | 'notify'
+        | 'transform'
+        | 'compute'
+        | 'aggregate'
+        | 'for_each'
+        | 'http_request'
+        | 'idempotency'
+        | 'lock'
+        | 'cache'
+        | 'subflow'
+        | 'delay'
+        | 'wait_until'
+        | 'report_export'
+        | 'end';
     config: Record<string, unknown>;
 }
 

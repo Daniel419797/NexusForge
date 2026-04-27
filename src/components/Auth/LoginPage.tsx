@@ -54,7 +54,7 @@ export default function LoginPage() {
 
             <div className="relative my-6">
                 <Separator />
-                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-xs text-muted-foreground">
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-xs text-foreground/80">
                     or continue with email
                 </span>
             </div>
