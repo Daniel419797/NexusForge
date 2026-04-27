@@ -1,15 +1,15 @@
 ﻿"use client";
 
 import { motion, useInView } from "framer-motion";
-import { useRef, useEffect, useState, useCallback, useMemo } from "react";
+import { useRef, useState, useMemo } from "react";
 
-import DashboardService, { type ActivityEntry } from "@/services/DashboardService";
+import { type ActivityEntry } from "@/services/DashboardService";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useProjectStore } from "@/store/projectStore";
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    ActivityFeed â€” Live activity stream
-   Wired to GET /api/v1/dashboard/activity
+  Wired to WS event: activity:new
    â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 type ActivityType = "create" | "deploy" | "update" | "delete" | "ai";
@@ -51,8 +51,6 @@ export default function ActivityFeed() {
   const activeProject = useProjectStore((s) => s.activeProject);
 
   const [items, setItems] = useState<ActivityEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
 
   const wsToken = useMemo(() => {
     if (typeof window === "undefined") return null;
@@ -64,21 +62,6 @@ export default function ActivityFeed() {
     const base = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001/ws";
     const joiner = base.includes("?") ? "&" : "?";
     return `${base}${joiner}projectId=${encodeURIComponent(activeProject.id)}`;
-  }, [activeProject?.id]);
-
-  const fetchActivity = useCallback(async () => {
-    try {
-      setError(false);
-      const data = await DashboardService.getActivity({
-        projectId: activeProject?.id,
-        limit: 20,
-      });
-      setItems(data);
-    } catch {
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
   }, [activeProject?.id]);
 
   const { isConnected } = useWebSocket({
@@ -102,15 +85,6 @@ export default function ActivityFeed() {
     },
   });
 
-  useEffect(() => {
-    fetchActivity();
-
-    // Keep polling only as fallback when WS is unavailable/disconnected.
-    if (isConnected) return;
-    const interval = setInterval(fetchActivity, 30_000);
-    return () => clearInterval(interval);
-  }, [fetchActivity, isConnected]);
-
   return (
     <div ref={ref}>
       <div className="h-full">
@@ -124,28 +98,11 @@ export default function ActivityFeed() {
           </span>
         </div>
 
-        {loading && items.length === 0 ? (
-          <div className="space-y-3 py-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-start gap-3 px-2 py-2.5 animate-pulse">
-                <span className="h-2 w-2 rounded-full bg-white/10 shrink-0 mt-1.5" />
-                <div className="flex-1 space-y-1.5">
-                  <div className="h-3 w-3/4 rounded bg-white/[0.06]" />
-                  <div className="h-2 w-1/4 rounded bg-white/[0.04]" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : error ? (
+        {items.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="text-xs text-white/25">Failed to load activity</p>
-            <button onClick={fetchActivity} className="mt-2 text-xs text-white/30 hover:text-white/50 transition-colors">
-              Retry
-            </button>
-          </div>
-        ) : items.length === 0 ? (
-          <div className="py-8 text-center">
-            <p className="text-xs text-white/25">No activity yet. Start building!</p>
+            <p className="text-xs text-white/25">
+              {isConnected ? "Waiting for live activity events..." : "Connecting to live activity stream..."}
+            </p>
           </div>
         ) : (
           <div className="space-y-0.5 max-h-[340px] overflow-y-auto pr-1 scrollbar-thin">

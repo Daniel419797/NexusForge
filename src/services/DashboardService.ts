@@ -207,21 +207,6 @@ const DashboardService = {
   },
 
   /**
-   * Get recent activity (audit log entries) across user's projects.
-   */
-  async getActivity(params?: {
-    projectId?: string;
-    limit?: number;
-    before?: string;
-  }, signal?: AbortSignal): Promise<ActivityEntry[]> {
-    if (params?.projectId !== undefined) assertProjectId(params.projectId);
-    return withRetry(async () => {
-      const { data } = await api.get("/dashboard/activity", { params, signal });
-      return toArray(unwrapDataEnvelope(data), (item) => item as ActivityEntry);
-    });
-  },
-
-  /**
    * Get data model info with live row counts.
    */
   async getModels(projectId?: string, signal?: AbortSignal): Promise<DataModelInfo[]> {
