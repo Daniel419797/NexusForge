@@ -27,6 +27,7 @@ export interface LogicModuleVersion {
 
 export interface WorkflowNodeInput {
     id: string;
+    title?: string;
     type:
         | 'start'
         | 'filter'
@@ -43,6 +44,13 @@ export interface WorkflowNodeInput {
         | 'lock'
         | 'cache'
         | 'subflow'
+        | 'queue_publish'
+        | 'queue_consume'
+        | 'stream_publish'
+        | 'stream_consume'
+        | 'approval_wait'
+        | 'saga_step'
+        | 'saga_compensate'
         | 'delay'
         | 'wait_until'
         | 'report_export'
