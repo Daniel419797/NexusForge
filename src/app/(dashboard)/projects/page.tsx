@@ -50,12 +50,13 @@ export default function ProjectsPage() {
 
     const fetchStats = useCallback(async () => {
         try {
-            const data = await DashboardService.getStats(activeProject?.id);
+            // Keep top-strip metrics global so they match /dashboard/stats without project scoping.
+            const data = await DashboardService.getStats();
             setStats(data);
         } catch {
             // Stats are non-critical â€” fail silently
         }
-    }, [activeProject?.id]);
+    }, []);
 
     useEffect(() => {
         fetchProjects();
@@ -114,8 +115,8 @@ export default function ProjectsPage() {
             >
                 {([
                     { label: "Total Projects", value: stats?.totalProjects ?? projects.length, color: "text-cyan-400" },
-                    { label: "API Requests (24h)", value: stats?.apiRequests24h ?? 0, color: "text-white/70" },
-                    { label: "Active Users", value: stats?.activeUsers ?? 0, color: "text-emerald-400" },
+                    { label: "Activity Events (24h)", value: stats?.apiRequests24h ?? 0, color: "text-white/70" },
+                    { label: "Users Active (24h)", value: stats?.activeUsers ?? 0, color: "text-emerald-400" },
                 ] as const).map(({ label, value, color }) => (
                     <div key={label} className="flex-1 px-6 py-4">
                         <p className={`text-2xl font-bold tabular-nums ${color}`}>{value.toLocaleString()}</p>
