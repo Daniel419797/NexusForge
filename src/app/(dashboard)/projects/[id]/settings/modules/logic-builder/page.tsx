@@ -44,7 +44,23 @@ type WorkflowNodeType = WorkflowNodeInput["type"];
 
 type FlowData = {
     workflowType: WorkflowNodeType;
+    title: string;
+    label: string;
     configText: string;
+};
+
+type DraftSimulationStep = {
+    nodeId: string;
+    nodeType: WorkflowNodeType;
+    title: string;
+    routeLabel: string | null;
+    note?: string;
+};
+
+type DraftSimulationResult = {
+    status: "succeeded" | "failed";
+    steps: DraftSimulationStep[];
+    error?: string;
 };
 
 const NODE_TYPE_OPTIONS: Array<{ value: WorkflowNodeType; label: string }> = [
@@ -63,6 +79,13 @@ const NODE_TYPE_OPTIONS: Array<{ value: WorkflowNodeType; label: string }> = [
     { value: "lock", label: "lock" },
     { value: "cache", label: "cache" },
     { value: "subflow", label: "subflow" },
+    { value: "queue_publish", label: "queue_publish" },
+    { value: "queue_consume", label: "queue_consume" },
+    { value: "stream_publish", label: "stream_publish" },
+    { value: "stream_consume", label: "stream_consume" },
+    { value: "approval_wait", label: "approval_wait" },
+    { value: "saga_step", label: "saga_step" },
+    { value: "saga_compensate", label: "saga_compensate" },
     { value: "delay", label: "delay" },
     { value: "wait_until", label: "wait_until" },
     { value: "report_export", label: "report_export" },
@@ -194,6 +217,81 @@ function defaultNodeConfig(type: WorkflowNodeType): Record<string, unknown> {
             outputKey: "subflow",
         };
     }
+    if (type === "queue_publish") {
+        return {
+            queueName: "orders",
+            jobName: "process-order",
+            payload: pathRef("input"),
+            messageId: pathRef("input.requestId"),
+            delayMs: 0,
+            priority: 5,
+            outputKey: "queue_publish",
+        };
+    }
+    if (type === "queue_consume") {
+        return {
+            queueName: "orders",
+            maxMessages: 10,
+            outputKey: "queue_consume",
+        };
+    }
+    if (type === "stream_publish") {
+        return {
+            streamName: "events",
+            eventName: "order.created",
+            payload: pathRef("input"),
+            maxLen: 10000,
+            outputKey: "stream_publish",
+        };
+    }
+    if (type === "stream_consume") {
+        return {
+            streamName: "events",
+            consumerGroup: "logic-modules",
+            consumerName: "worker-a",
+            lastId: "$",
+            count: 10,
+            blockMs: 0,
+            ack: true,
+            outputKey: "stream_consume",
+        };
+    }
+    if (type === "approval_wait") {
+        return {
+            requestKey: pathRef("input.requestId"),
+            timeoutMs: 300000,
+            pollIntervalMs: 1000,
+            onTimeout: "timeout",
+            outputKey: "approval_wait",
+        };
+    }
+    if (type === "saga_step") {
+        return {
+            execute: {
+                moduleKey: "reserve_inventory",
+                version: 1,
+                passInput: true,
+                input: {
+                    orderId: pathRef("input.orderId"),
+                },
+            },
+            compensate: {
+                moduleKey: "release_inventory",
+                version: 1,
+                passInput: true,
+                input: {
+                    orderId: pathRef("input.orderId"),
+                },
+            },
+            outputKey: "saga_step",
+        };
+    }
+    if (type === "saga_compensate") {
+        return {
+            continueOnError: true,
+            outputKey: "saga_compensate",
+        };
+    }
     if (type === "delay") {
         return {
             delayMs: 500,
@@ -238,10 +336,137 @@ function nodeConfigHint(type: WorkflowNodeType): string {
     if (type === "lock") return "Acquire or release distributed locks for shared resources.";
     if (type === "cache") return "Read/write/delete cached values with TTL and hit/miss branching.";
     if (type === "subflow") return "Invoke another active logic module with bounded retries and recursion guard.";
+    if (type === "queue_publish") return "Publish first-class queue jobs for backend worker processing with optional delay.";
+    if (type === "queue_consume") return "Consume queue jobs directly in workflow runtime and route on empty/non-empty.";
+    if (type === "stream_publish") return "Publish events into Redis streams for downstream consumers.";
+    if (type === "stream_consume") return "Read stream events with optional consumer groups, blocking reads, and ACK.";
+    if (type === "approval_wait") return "Pause for human approval with timeout routing (approved/rejected/timeout).";
+    if (type === "saga_step") return "Execute a forward subflow step and register a compensation subflow for rollback.";
+    if (type === "saga_compensate") return "Execute registered compensations in reverse order for long-running saga recovery.";
     if (type === "delay") return "Pause execution for bounded milliseconds in the current run.";
     if (type === "wait_until") return "Wait until target timestamp with bounded maxWaitMs safety guard.";
     if (type === "report_export") return "Export array snapshots as JSON/CSV with delivery limits (inline/cache/table).";
     return "Edit JSON config for this node. Use templates to keep schema-compliant shape.";
+}
+
+function defaultNodeTitle(type: WorkflowNodeType, index?: number): string {
+    const option = NODE_TYPE_OPTIONS.find((item) => item.value === type);
+    const base = option?.label ?? type;
+    return typeof index === "number" ? `${base} ${index + 1}` : base;
+}
+
+function escapeRegex(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function formatNodeAwareMessage(message: string, nodeTitleById: Map<string, string>): string {
+    let formatted = message;
+
+    nodeTitleById.forEach((title, nodeId) => {
+        if (!title || title === nodeId) return;
+        const safeNodeId = escapeRegex(nodeId);
+        const withTitle = `${title} [${nodeId}]`;
+
+        formatted = formatted
+            .replace(new RegExp(`(\\bnode\\s+['"]?)${safeNodeId}(['"]?)`, "gi"), `$1${withTitle}$2`)
+            .replace(new RegExp(`(\\bnodeId\\s*[:=]\\s*['"]?)${safeNodeId}(['"]?)`, "gi"), `$1${withTitle}$2`)
+            .replace(new RegExp(`(\\bstep\\s+['"]?)${safeNodeId}(['"]?)`, "gi"), `$1${withTitle}$2`)
+            .replace(new RegExp(`([\\[(])${safeNodeId}([\\])])`, "g"), `$1${withTitle}$2`)
+            .replace(new RegExp(`(['"])${safeNodeId}\\1`, "g"), `"${withTitle}"`);
+    });
+
+    return formatted;
+}
+
+function evaluateExpression(expression: string, input: Record<string, unknown>, steps: Record<string, unknown>): boolean {
+    try {
+        const fn = new Function("input", "steps", `return (${expression});`);
+        return Boolean(fn(input, steps));
+    } catch {
+        return false;
+    }
+}
+
+function simulateDraftDefinition(definition: WorkflowDefinitionInput, input: Record<string, unknown>): DraftSimulationResult {
+    const nodeById = new Map(definition.nodes.map((node) => [node.id, node]));
+    const startNode = definition.entryNodeId
+        ? nodeById.get(definition.entryNodeId)
+        : definition.nodes.find((node) => node.type === "start") ?? definition.nodes[0];
+
+    if (!startNode) {
+        return { status: "failed", steps: [], error: "No start node found." };
+    }
+
+    const stepsContext: Record<string, unknown> = {};
+    const steps: DraftSimulationStep[] = [];
+    const maxSteps = 200;
+    let currentNodeId: string | undefined = startNode.id;
+    let stepCount = 0;
+
+    while (currentNodeId && stepCount < maxSteps) {
+        const node = nodeById.get(currentNodeId);
+        if (!node) {
+            return { status: "failed", steps, error: `Node '${currentNodeId}' not found.` };
+        }
+
+        const outgoing = definition.edges.filter((edge) => edge.from === node.id);
+        let routeLabel: string | null = null;
+        let nextNodeId: string | undefined = outgoing[0]?.to;
+        let note: string | undefined;
+
+        if (node.type === "filter") {
+            const expression = String((node.config as Record<string, unknown>)?.expression ?? "false");
+            const passed = evaluateExpression(expression, input, stepsContext);
+            routeLabel = passed ? "true" : "false";
+            nextNodeId = outgoing.find((edge) => edge.condition === routeLabel)?.to ?? outgoing[0]?.to;
+            note = `expression: ${expression}`;
+        } else if (node.type === "branch") {
+            const config = node.config as Record<string, unknown>;
+            const cases = Array.isArray(config?.cases) ? config.cases : [];
+            const match = cases.find((value) => {
+                if (!value || typeof value !== "object") return false;
+                const expression = String((value as Record<string, unknown>).expression ?? "false");
+                return evaluateExpression(expression, input, stepsContext);
+            }) as Record<string, unknown> | undefined;
+
+            const selectedLabel = match
+                ? String(match.label ?? "")
+                : String(config?.defaultLabel ?? "default");
+            routeLabel = selectedLabel;
+            nextNodeId = outgoing.find((edge) => edge.condition === selectedLabel)?.to ?? outgoing[0]?.to;
+            note = match ? "matched case" : "default case";
+        } else if (node.type === "end") {
+            steps.push({
+                nodeId: node.id,
+                nodeType: node.type,
+                title: node.id,
+                routeLabel: null,
+            });
+            return { status: "succeeded", steps };
+        }
+
+        stepsContext[node.id] = { routeLabel };
+        steps.push({
+            nodeId: node.id,
+            nodeType: node.type,
+            title: node.id,
+            routeLabel,
+            ...(note ? { note } : {}),
+        });
+
+        currentNodeId = nextNodeId;
+        stepCount += 1;
+    }
+
+    if (stepCount >= maxSteps) {
+        return { status: "failed", steps, error: "Simulation exceeded max step count (possible cycle)." };
+    }
+
+    return {
+        status: "failed",
+        steps,
+        error: "Simulation reached a node with no outgoing edge before an end node.",
+    };
 }
 
 function flowFromDefinition(definition: WorkflowDefinitionInput): { nodes: Node<FlowData>[]; edges: Edge[] } {
@@ -251,6 +476,8 @@ function flowFromDefinition(definition: WorkflowDefinitionInput): { nodes: Node<
         position: { x: 140 + (i % 4) * 260, y: 60 + Math.floor(i / 4) * 160 },
         data: {
             workflowType: n.type,
+            title: n.title?.trim() || defaultNodeTitle(n.type, i),
+            label: n.title?.trim() || defaultNodeTitle(n.type, i),
             configText: JSON.stringify(n.config || {}, null, 2),
         },
     }));
@@ -284,6 +511,7 @@ function definitionFromFlow(
         }
         return {
             id: n.id,
+            ...(n.data.title?.trim() ? { title: n.data.title.trim() } : {}),
             type: n.data.workflowType,
             config,
         };
@@ -368,6 +596,8 @@ export default function LogicBuilderPage() {
     const [isExecuting, setIsExecuting] = useState(false);
     const [executeInput, setExecuteInput] = useState("{}");
     const [executeResult, setExecuteResult] = useState<{ status: string; traces: Array<{ nodeId: string; nodeType: string; status: string; output?: unknown; error?: string }> } | null>(null);
+    const [simulationInput, setSimulationInput] = useState("{}");
+    const [simulationResult, setSimulationResult] = useState<DraftSimulationResult | null>(null);
 
     const [runs, setRuns] = useState<Array<{ id: string; status: string; triggeredBy: string | null; createdAt: string; completedAt: string | null }>>([]);
     const [runsLoading, setRunsLoading] = useState(false);
@@ -379,6 +609,81 @@ export default function LogicBuilderPage() {
     const [deadLetterDetailOpen, setDeadLetterDetailOpen] = useState(false);
 
     const selectedNode = useMemo(() => nodes.find((n) => n.id === selectedNodeId) || null, [nodes, selectedNodeId]);
+    const nodeTitleById = useMemo(() => {
+        const map = new Map<string, string>();
+        nodes.forEach((node) => {
+            map.set(node.id, node.data.title || node.data.label || node.id);
+        });
+        return map;
+    }, [nodes]);
+    const simulationNodeOrder = useMemo(() => {
+        const result = new Map<string, number>();
+        simulationResult?.steps.forEach((step, index) => {
+            if (!result.has(step.nodeId)) {
+                result.set(step.nodeId, index + 1);
+            }
+        });
+        return result;
+    }, [simulationResult]);
+
+    const simulationEdgeSet = useMemo(() => {
+        const edgesInPath = new Set<string>();
+        const steps = simulationResult?.steps ?? [];
+        for (let i = 0; i < steps.length - 1; i += 1) {
+            edgesInPath.add(`${steps[i].nodeId}->${steps[i + 1].nodeId}`);
+        }
+        return edgesInPath;
+    }, [simulationResult]);
+
+    const displayNodes = useMemo(() => nodes.map((node) => {
+        const order = simulationNodeOrder.get(node.id);
+        const baseTitle = node.data.title || node.data.label || node.id;
+        if (!order) {
+            return {
+                ...node,
+                data: {
+                    ...node.data,
+                    label: baseTitle,
+                },
+                style: undefined,
+            };
+        }
+
+        return {
+            ...node,
+            data: {
+                ...node.data,
+                label: `${order}. ${baseTitle}`,
+            },
+            style: {
+                ...node.style,
+                border: "2px solid rgb(34 197 94)",
+                boxShadow: "0 0 0 2px rgba(34,197,94,0.25)",
+            },
+        };
+    }), [nodes, simulationNodeOrder]);
+
+    const displayEdges = useMemo(() => edges.map((edge) => {
+        const isHighlighted = simulationEdgeSet.has(`${edge.source}->${edge.target}`);
+        if (!isHighlighted) {
+            return {
+                ...edge,
+                animated: Boolean(edge.label),
+                style: undefined,
+            };
+        }
+
+        return {
+            ...edge,
+            animated: true,
+            style: {
+                ...edge.style,
+                stroke: "rgb(34 197 94)",
+                strokeWidth: 2.5,
+            },
+        };
+    }), [edges, simulationEdgeSet]);
+
     const selectedNodeConfig = useMemo<Record<string, unknown> | null>(() => {
         if (!selectedNode) return null;
         try {
@@ -556,23 +861,26 @@ export default function LogicBuilderPage() {
         const type = event.dataTransfer.getData("application/workflow-node") as WorkflowNodeType;
         if (!type) return;
 
-        const rect = wrapperRef.current.getBoundingClientRect();
         const position = rf.screenToFlowPosition({
-            x: event.clientX - rect.left,
-            y: event.clientY - rect.top,
+            x: event.clientX,
+            y: event.clientY,
         });
 
         const nodeId = `${type}_${Date.now().toString(36)}`;
+        const title = defaultNodeTitle(type, nodes.length);
         const nextNode: Node<FlowData> = {
             id: nodeId,
             type: "default",
             position,
             data: {
                 workflowType: type,
+                title,
+                label: title,
                 configText: JSON.stringify(defaultNodeConfig(type), null, 2),
             },
         };
         setNodes((prev) => [...prev, nextNode]);
+        setSelectedNodeId(nodeId);
     };
 
     const onDragOver = (event: React.DragEvent<HTMLDivElement>) => {
@@ -582,6 +890,7 @@ export default function LogicBuilderPage() {
 
     const addNode = () => {
         const nodeId = `${paletteNodeType}_${Date.now().toString(36)}`;
+        const title = defaultNodeTitle(paletteNodeType, nodes.length);
         setNodes((prev) => [
             ...prev,
             {
@@ -590,10 +899,13 @@ export default function LogicBuilderPage() {
                 position: { x: 150 + prev.length * 30, y: 120 + prev.length * 20 },
                 data: {
                     workflowType: paletteNodeType,
+                    title,
+                    label: title,
                     configText: JSON.stringify(defaultNodeConfig(paletteNodeType), null, 2),
                 },
             },
         ]);
+        setSelectedNodeId(nodeId);
     };
 
     const removeSelectedNode = () => {
@@ -609,6 +921,17 @@ export default function LogicBuilderPage() {
             prev.map((n) =>
                 n.id === selectedNodeId
                     ? { ...n, data: { ...n.data, configText: text } }
+                    : n,
+            ),
+        );
+    };
+
+    const updateSelectedNodeTitle = (title: string) => {
+        if (!selectedNodeId) return;
+        setNodes((prev) =>
+            prev.map((n) =>
+                n.id === selectedNodeId
+                    ? { ...n, data: { ...n.data, title, label: title } }
                     : n,
             ),
         );
@@ -700,6 +1023,53 @@ export default function LogicBuilderPage() {
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const simulateDraft = () => {
+        setSimulationResult(null);
+
+        try {
+            let parsedInput: Record<string, unknown> = {};
+            try {
+                const parsed = JSON.parse(simulationInput);
+                if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+                    parsedInput = parsed as Record<string, unknown>;
+                }
+            } catch {
+                // Keep empty input when invalid JSON is entered.
+            }
+
+            const definition = definitionFromFlow(
+                nodes,
+                edges,
+                triggerType,
+                triggerTableName,
+                triggerWatchFields,
+                triggerCron,
+                triggerSecret,
+            );
+
+            const simulated = simulateDraftDefinition(definition, parsedInput);
+            const titleById = new Map(nodes.map((node) => [node.id, node.data.title || node.data.label || node.id]));
+
+            setSimulationResult({
+                ...simulated,
+                steps: simulated.steps.map((step) => ({
+                    ...step,
+                    title: titleById.get(step.nodeId) ?? step.nodeId,
+                })),
+            });
+        } catch {
+            setSimulationResult({
+                status: "failed",
+                steps: [],
+                error: "Simulation failed due to invalid graph or config.",
+            });
+        }
+    };
+
+    const clearSimulation = () => {
+        setSimulationResult(null);
     };
 
     if (!projectId) return null;
@@ -827,13 +1197,14 @@ export default function LogicBuilderPage() {
                         onDragOver={onDragOver}
                     >
                         <ReactFlow<Node<FlowData>, Edge>
-                            nodes={nodes}
-                            edges={edges}
+                            nodes={displayNodes}
+                            edges={displayEdges}
                             onNodesChange={onNodesChange}
                             onEdgesChange={onEdgesChange}
                             onConnect={onConnect}
                             onInit={(instance) => setRf(instance)}
                             onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+                            onPaneClick={() => setSelectedNodeId(null)}
                             fitView
                         >
                             <Background gap={20} />
@@ -848,6 +1219,14 @@ export default function LogicBuilderPage() {
                     {selectedNode ? (
                         <>
                             <p className="text-xs text-muted-foreground">{selectedNode.id} ({selectedNode.data.workflowType})</p>
+                            <div className="space-y-1">
+                                <Label className="text-xs">Node Title</Label>
+                                <Input
+                                    value={selectedNode.data.title || ""}
+                                    onChange={(e) => updateSelectedNodeTitle(e.target.value)}
+                                    placeholder="Node title"
+                                />
+                            </div>
                             <p className="text-xs text-muted-foreground">{nodeConfigHint(selectedNode.data.workflowType)}</p>
                             <div className="flex flex-wrap gap-2">
                                 <Button type="button" variant="outline" size="sm" onClick={applySelectedNodeTemplate}>Apply Template</Button>
@@ -1088,8 +1467,60 @@ export default function LogicBuilderPage() {
                             }`}>
                                 <p className="font-semibold mb-1">{executeResult.status.toUpperCase()}</p>
                                 {executeResult.traces.slice(0, 3).map((t, i) => (
-                                    <p key={i}>{t.nodeId}: {t.status}{t.error ? ` — ${t.error}` : ""}</p>
+                                    <p key={i}>
+                                        {nodeTitleById.get(t.nodeId) ?? t.nodeId}
+                                        <span className="opacity-70"> [{t.nodeId}]</span>: {t.status}
+                                        {t.error ? ` — ${t.error}` : ""}
+                                    </p>
                                 ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="pt-2 border-t space-y-2">
+                        <Label>Draft Simulation (Local)</Label>
+                        <p className="text-[11px] text-muted-foreground">
+                            Preview execution path locally before publishing. Filter and branch expressions are evaluated against the sample input.
+                        </p>
+                        <Textarea
+                            value={simulationInput}
+                            onChange={(e) => setSimulationInput(e.target.value)}
+                            className="min-h-[80px] font-mono text-xs"
+                            placeholder='{"score": 8, "amount": 120}'
+                        />
+                        <div className="flex gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={simulateDraft}
+                                className="w-full"
+                            >
+                                Simulate Draft
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={clearSimulation}
+                                disabled={!simulationResult}
+                            >
+                                Clear
+                            </Button>
+                        </div>
+                        {simulationResult && (
+                            <div className={`text-xs p-2 rounded border font-mono ${
+                                simulationResult.status === "succeeded"
+                                    ? "bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300"
+                                    : "bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300"
+                            }`}>
+                                <p className="font-semibold mb-1">{simulationResult.status === "succeeded" ? "SIMULATION SUCCEEDED" : "SIMULATION FAILED"}</p>
+                                {simulationResult.steps.slice(0, 12).map((step, index) => (
+                                    <p key={`${step.nodeId}-${index}`}>
+                                        {step.title} ({step.nodeType})
+                                        {step.routeLabel ? ` -> ${step.routeLabel}` : ""}
+                                        {step.note ? ` [${step.note}]` : ""}
+                                    </p>
+                                ))}
+                                {simulationResult.error ? <p className="mt-1">{simulationResult.error}</p> : null}
                             </div>
                         )}
                     </div>
@@ -1173,7 +1604,8 @@ export default function LogicBuilderPage() {
                                         <span className={step.status === "succeeded" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
                                             {step.status === "succeeded" ? "✓" : "✗"}
                                         </span>
-                                        <span className="text-muted-foreground">{step.nodeId}</span>
+                                        <span className="text-muted-foreground">{nodeTitleById.get(step.nodeId) ?? step.nodeId}</span>
+                                        <span className="opacity-70">[{step.nodeId}]</span>
                                         <span>({step.nodeType})</span>
                                         {step.error && <span className="text-red-500 truncate max-w-[200px]">{step.error}</span>}
                                     </div>
@@ -1205,7 +1637,7 @@ export default function LogicBuilderPage() {
                                 <div key={deadLetter.id} className="flex items-center gap-3 px-3 py-2">
                                     <span className="text-xs text-muted-foreground font-mono flex-1 truncate">{deadLetter.id.slice(0, 8)}…</span>
                                     <span className="text-xs truncate max-w-[320px] text-muted-foreground">
-                                        {deadLetter.reason || deadLetter.runErrorSummary || "Execution failed"}
+                                        {formatNodeAwareMessage(deadLetter.reason || deadLetter.runErrorSummary || "Execution failed", nodeTitleById)}
                                     </span>
                                     <Button
                                         type="button"
@@ -1254,7 +1686,7 @@ export default function LogicBuilderPage() {
                             </div>
                             <div className="rounded border p-2">
                                 <p className="text-xs text-muted-foreground">Reason</p>
-                                <p className="text-sm mt-1">{deadLetterDetail.reason || deadLetterDetail.runErrorSummary || "Unknown error"}</p>
+                                <p className="text-sm mt-1">{formatNodeAwareMessage(deadLetterDetail.reason || deadLetterDetail.runErrorSummary || "Unknown error", nodeTitleById)}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-muted-foreground mb-1">Payload</p>
