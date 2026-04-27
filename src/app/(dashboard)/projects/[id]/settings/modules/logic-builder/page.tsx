@@ -47,14 +47,201 @@ type FlowData = {
     configText: string;
 };
 
+const NODE_TYPE_OPTIONS: Array<{ value: WorkflowNodeType; label: string }> = [
+    { value: "start", label: "start" },
+    { value: "filter", label: "filter" },
+    { value: "branch", label: "branch" },
+    { value: "read_table", label: "read_table" },
+    { value: "write_table", label: "write_table" },
+    { value: "notify", label: "notify" },
+    { value: "transform", label: "transform" },
+    { value: "compute", label: "compute" },
+    { value: "aggregate", label: "aggregate" },
+    { value: "for_each", label: "for_each" },
+    { value: "http_request", label: "http_request" },
+    { value: "idempotency", label: "idempotency" },
+    { value: "lock", label: "lock" },
+    { value: "cache", label: "cache" },
+    { value: "subflow", label: "subflow" },
+    { value: "delay", label: "delay" },
+    { value: "wait_until", label: "wait_until" },
+    { value: "report_export", label: "report_export" },
+    { value: "end", label: "end" },
+];
+
+function literal(value: unknown): Record<string, unknown> {
+    return { kind: "literal", value };
+}
+
+function pathRef(path: string): Record<string, unknown> {
+    return { kind: "path", path };
+}
+
 function defaultNodeConfig(type: WorkflowNodeType): Record<string, unknown> {
     if (type === "filter") return { expression: "input.score >= 5" };
     if (type === "branch") return { cases: [{ label: "yes", expression: "true" }], defaultLabel: "no" };
     if (type === "read_table") return { tableName: "events", limit: 20 };
     if (type === "write_table") return { tableName: "events", operation: "insert", payload: {} };
     if (type === "notify") return { channel: "in_app", recipientField: "input.userId", messageTemplate: "Workflow notification" };
+    if (type === "transform") {
+        return {
+            fields: {
+                userId: pathRef("input.userId"),
+                amount: pathRef("input.amount"),
+                requestId: pathRef("input.requestId"),
+            },
+            outputKey: "output",
+        };
+    }
+    if (type === "compute") {
+        return {
+            operation: "sum",
+            values: [pathRef("input.amount"), literal(0)],
+            round: 2,
+            outputKey: "value",
+        };
+    }
+    if (type === "aggregate") {
+        return {
+            sourcePath: "input.items",
+            reducer: "sum",
+            valuePath: "amount",
+            round: 2,
+            outputKey: "value",
+        };
+    }
+    if (type === "for_each") {
+        return {
+            sourcePath: "input.items",
+            maxItems: 100,
+            itemValuePath: "score",
+            reducer: "mean",
+            round: 2,
+            outputKey: "value",
+        };
+    }
+    if (type === "http_request") {
+        return {
+            url: literal("https://api.example.com/v1/process"),
+            method: "POST",
+            headers: {
+                accept: literal("application/json"),
+            },
+            body: pathRef("input"),
+            allowedHosts: ["api.example.com"],
+            maxRequestBytes: 32768,
+            timeoutMs: 3000,
+            maxResponseBytes: 32768,
+            responseSchema: {
+                type: "json",
+                requireFields: ["status", "data"],
+                maxDepth: 8,
+            },
+            circuitBreaker: {
+                enabled: true,
+                failureThreshold: 5,
+                windowSeconds: 120,
+                cooldownSeconds: 120,
+            },
+            retry: {
+                maxAttempts: 2,
+                backoffMs: 200,
+                retryOnStatuses: [429, 500, 503],
+            },
+            outputKey: "response",
+        };
+    }
+    if (type === "idempotency") {
+        return {
+            key: pathRef("input.requestId"),
+            ttlSeconds: 3600,
+            onDuplicate: "route_duplicate",
+            outputKey: "idempotency",
+        };
+    }
+    if (type === "lock") {
+        return {
+            operation: "acquire",
+            key: pathRef("input.resourceId"),
+            ttlSeconds: 30,
+            waitTimeoutMs: 500,
+            retryIntervalMs: 100,
+            outputKey: "lock",
+        };
+    }
+    if (type === "cache") {
+        return {
+            operation: "get",
+            key: pathRef("input.cacheKey"),
+            ttlSeconds: 300,
+            outputKey: "cache",
+        };
+    }
+    if (type === "subflow") {
+        return {
+            moduleKey: "risk_calculator",
+            version: 1,
+            input: {
+                userId: pathRef("input.userId"),
+                score: pathRef("steps.compute_1.value"),
+            },
+            passInput: false,
+            propagateFailure: true,
+            retry: {
+                maxAttempts: 2,
+                backoffMs: 200,
+            },
+            outputKey: "subflow",
+        };
+    }
+    if (type === "delay") {
+        return {
+            delayMs: 500,
+            outputKey: "delay",
+        };
+    }
+    if (type === "wait_until") {
+        return {
+            timestamp: literal(new Date(Date.now() + 1_000).toISOString()),
+            maxWaitMs: 15_000,
+            outputKey: "wait_until",
+        };
+    }
+    if (type === "report_export") {
+        return {
+            sourcePath: "input.items",
+            format: "json",
+            columns: [
+                { key: "id", path: "id" },
+                { key: "amount", path: "amount" },
+            ],
+            batchSize: 250,
+            maxRows: 1000,
+            maxBytes: 131072,
+            delivery: {
+                type: "inline",
+            },
+            outputKey: "report_export",
+        };
+    }
     if (type === "end") return { result: "done" };
     return {};
+}
+
+function nodeConfigHint(type: WorkflowNodeType): string {
+    if (type === "transform") return "Map fields from input/steps using { kind: 'path' | 'literal' }.";
+    if (type === "compute") return "Use operation + values array for deterministic numeric math.";
+    if (type === "aggregate") return "Reduce arrays from sourcePath with reducer/valuePath/weightPath.";
+    if (type === "for_each") return "Bounded iteration with maxItems and reducer over selected item values.";
+    if (type === "http_request") return "Outbound call must target allowlisted hosts and respects timeout/size/retry limits.";
+    if (type === "idempotency") return "Suppress duplicate calls by key with TTL and branch on first/duplicate.";
+    if (type === "lock") return "Acquire or release distributed locks for shared resources.";
+    if (type === "cache") return "Read/write/delete cached values with TTL and hit/miss branching.";
+    if (type === "subflow") return "Invoke another active logic module with bounded retries and recursion guard.";
+    if (type === "delay") return "Pause execution for bounded milliseconds in the current run.";
+    if (type === "wait_until") return "Wait until target timestamp with bounded maxWaitMs safety guard.";
+    if (type === "report_export") return "Export array snapshots as JSON/CSV with delivery limits (inline/cache/table).";
+    return "Edit JSON config for this node. Use templates to keep schema-compliant shape.";
 }
 
 function flowFromDefinition(definition: WorkflowDefinitionInput): { nodes: Node<FlowData>[]; edges: Edge[] } {
@@ -192,6 +379,17 @@ export default function LogicBuilderPage() {
     const [deadLetterDetailOpen, setDeadLetterDetailOpen] = useState(false);
 
     const selectedNode = useMemo(() => nodes.find((n) => n.id === selectedNodeId) || null, [nodes, selectedNodeId]);
+    const selectedNodeConfig = useMemo<Record<string, unknown> | null>(() => {
+        if (!selectedNode) return null;
+        try {
+            const parsed = JSON.parse(selectedNode.data.configText || "{}");
+            return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+                ? parsed as Record<string, unknown>
+                : null;
+        } catch {
+            return null;
+        }
+    }, [selectedNode]);
 
     const loadModuleByKey = async (projId: string, key: string) => {
         setIsLoading(true);
@@ -416,6 +614,43 @@ export default function LogicBuilderPage() {
         );
     };
 
+    const patchSelectedNodeConfig = (patch: Record<string, unknown>) => {
+        if (!selectedNodeConfig) return;
+        updateSelectedNodeConfig(JSON.stringify({ ...selectedNodeConfig, ...patch }, null, 2));
+    };
+
+    const setValueSourcePath = (field: string, value: string) => {
+        if (!selectedNodeConfig) return;
+        const existing = selectedNodeConfig[field];
+        const next = {
+            ...(selectedNodeConfig as Record<string, unknown>),
+            [field]: {
+                ...(existing && typeof existing === "object" ? existing as Record<string, unknown> : {}),
+                kind: "path",
+                path: value,
+            },
+        };
+        updateSelectedNodeConfig(JSON.stringify(next, null, 2));
+    };
+
+    const applySelectedNodeTemplate = () => {
+        if (!selectedNode) return;
+        const template = defaultNodeConfig(selectedNode.data.workflowType);
+        updateSelectedNodeConfig(JSON.stringify(template, null, 2));
+        setMessage(`Applied ${selectedNode.data.workflowType} template.`);
+    };
+
+    const formatSelectedNodeConfig = () => {
+        if (!selectedNode) return;
+        try {
+            const parsed = JSON.parse(selectedNode.data.configText || "{}");
+            updateSelectedNodeConfig(JSON.stringify(parsed, null, 2));
+            setMessage("Formatted selected node config JSON.");
+        } catch {
+            setMessage("Selected node config is invalid JSON.");
+        }
+    };
+
     const loadSelectedModule = () => {
         if (!projectId || !selectedModuleKey) return;
         loadModuleByKey(projectId, selectedModuleKey);
@@ -571,13 +806,9 @@ export default function LogicBuilderPage() {
                             onChange={(e) => setPaletteNodeType(e.target.value as WorkflowNodeType)}
                             className="h-8 px-2 border rounded-md bg-background"
                         >
-                            <option value="start">start</option>
-                            <option value="filter">filter</option>
-                            <option value="branch">branch</option>
-                            <option value="read_table">read_table</option>
-                            <option value="write_table">write_table</option>
-                            <option value="notify">notify</option>
-                            <option value="end">end</option>
+                            {NODE_TYPE_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
                         </select>
                         <Button type="button" variant="secondary" onClick={addNode}>Add Node</Button>
                         <div
@@ -617,6 +848,190 @@ export default function LogicBuilderPage() {
                     {selectedNode ? (
                         <>
                             <p className="text-xs text-muted-foreground">{selectedNode.id} ({selectedNode.data.workflowType})</p>
+                            <p className="text-xs text-muted-foreground">{nodeConfigHint(selectedNode.data.workflowType)}</p>
+                            <div className="flex flex-wrap gap-2">
+                                <Button type="button" variant="outline" size="sm" onClick={applySelectedNodeTemplate}>Apply Template</Button>
+                                <Button type="button" variant="outline" size="sm" onClick={formatSelectedNodeConfig}>Format JSON</Button>
+                            </div>
+                            {selectedNodeConfig && selectedNode.data.workflowType === "delay" && (
+                                <div className="space-y-2 rounded-md border p-2">
+                                    <Label className="text-xs">Delay (ms)</Label>
+                                    <Input
+                                        type="number"
+                                        min={1}
+                                        max={30000}
+                                        value={Number(selectedNodeConfig.delayMs ?? 500)}
+                                        onChange={(e) => patchSelectedNodeConfig({ delayMs: Number(e.target.value || 500) })}
+                                    />
+                                    <p className="text-[11px] text-muted-foreground">Bounded to 1-30000ms in runtime.</p>
+                                </div>
+                            )}
+                            {selectedNodeConfig && selectedNode.data.workflowType === "wait_until" && (
+                                <div className="space-y-2 rounded-md border p-2">
+                                    <Label className="text-xs">Timestamp Path</Label>
+                                    <Input
+                                        value={String((selectedNodeConfig.timestamp as any)?.path ?? "input.resumeAt")}
+                                        onChange={(e) => setValueSourcePath("timestamp", e.target.value)}
+                                        placeholder="input.resumeAt"
+                                    />
+                                    <Label className="text-xs">Max Wait (ms)</Label>
+                                    <Input
+                                        type="number"
+                                        min={1}
+                                        max={30000}
+                                        value={Number(selectedNodeConfig.maxWaitMs ?? 15000)}
+                                        onChange={(e) => patchSelectedNodeConfig({ maxWaitMs: Number(e.target.value || 15000) })}
+                                    />
+                                    <p className="text-[11px] text-muted-foreground">Use ISO timestamp in input for precise scheduling.</p>
+                                </div>
+                            )}
+                            {selectedNodeConfig && selectedNode.data.workflowType === "report_export" && (
+                                <div className="space-y-2 rounded-md border p-2">
+                                    <Label className="text-xs">Source Path</Label>
+                                    <Input
+                                        value={String(selectedNodeConfig.sourcePath ?? "input.items")}
+                                        onChange={(e) => patchSelectedNodeConfig({ sourcePath: e.target.value })}
+                                    />
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-1">
+                                            <Label className="text-xs">Format</Label>
+                                            <select
+                                                className="w-full h-8 px-2 border rounded-md bg-background text-xs"
+                                                value={String(selectedNodeConfig.format ?? "json")}
+                                                onChange={(e) => patchSelectedNodeConfig({ format: e.target.value })}
+                                            >
+                                                <option value="json">json</option>
+                                                <option value="csv">csv</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-xs">Delivery</Label>
+                                            <select
+                                                className="w-full h-8 px-2 border rounded-md bg-background text-xs"
+                                                value={String((selectedNodeConfig.delivery as any)?.type ?? "inline")}
+                                                onChange={(e) => patchSelectedNodeConfig({ delivery: { ...(selectedNodeConfig.delivery as Record<string, unknown> ?? {}), type: e.target.value } })}
+                                            >
+                                                <option value="inline">inline</option>
+                                                <option value="cache">cache</option>
+                                                <option value="table">table</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Input
+                                            type="number"
+                                            min={1}
+                                            max={5000}
+                                            value={Number(selectedNodeConfig.maxRows ?? 1000)}
+                                            onChange={(e) => patchSelectedNodeConfig({ maxRows: Number(e.target.value || 1000) })}
+                                            placeholder="max rows"
+                                        />
+                                        <Input
+                                            type="number"
+                                            min={256}
+                                            max={1048576}
+                                            value={Number(selectedNodeConfig.maxBytes ?? 131072)}
+                                            onChange={(e) => patchSelectedNodeConfig({ maxBytes: Number(e.target.value || 131072) })}
+                                            placeholder="max bytes"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                            {selectedNodeConfig && selectedNode.data.workflowType === "http_request" && (
+                                <div className="space-y-2 rounded-md border p-2">
+                                    <Label className="text-xs">Request URL Path</Label>
+                                    <Input
+                                        value={String((selectedNodeConfig.url as any)?.path ?? "input.targetUrl")}
+                                        onChange={(e) => setValueSourcePath("url", e.target.value)}
+                                        placeholder="input.targetUrl"
+                                    />
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-1">
+                                            <Label className="text-xs">Method</Label>
+                                            <select
+                                                className="w-full h-8 px-2 border rounded-md bg-background text-xs"
+                                                value={String(selectedNodeConfig.method ?? "GET")}
+                                                onChange={(e) => patchSelectedNodeConfig({ method: e.target.value })}
+                                            >
+                                                <option value="GET">GET</option>
+                                                <option value="POST">POST</option>
+                                                <option value="PUT">PUT</option>
+                                                <option value="PATCH">PATCH</option>
+                                                <option value="DELETE">DELETE</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-xs">Auth Secret Ref</Label>
+                                            <Input
+                                                value={String(selectedNodeConfig.authHeaderSecretRef ?? "")}
+                                                onChange={(e) => patchSelectedNodeConfig({ authHeaderSecretRef: e.target.value || undefined })}
+                                                placeholder="externalApiToken"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Input
+                                            type="number"
+                                            min={100}
+                                            max={15000}
+                                            value={Number(selectedNodeConfig.timeoutMs ?? 3000)}
+                                            onChange={(e) => patchSelectedNodeConfig({ timeoutMs: Number(e.target.value || 3000) })}
+                                            placeholder="timeout ms"
+                                        />
+                                        <Input
+                                            type="number"
+                                            min={1}
+                                            max={262144}
+                                            value={Number(selectedNodeConfig.maxResponseBytes ?? 32768)}
+                                            onChange={(e) => patchSelectedNodeConfig({ maxResponseBytes: Number(e.target.value || 32768) })}
+                                            placeholder="max response bytes"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Input
+                                            type="number"
+                                            min={1}
+                                            max={262144}
+                                            value={Number(selectedNodeConfig.maxRequestBytes ?? 32768)}
+                                            onChange={(e) => patchSelectedNodeConfig({ maxRequestBytes: Number(e.target.value || 32768) })}
+                                            placeholder="max request bytes"
+                                        />
+                                        <Input
+                                            value={String((selectedNodeConfig.allowedHosts as string[] | undefined)?.join(",") ?? "")}
+                                            onChange={(e) => patchSelectedNodeConfig({ allowedHosts: e.target.value.split(",").map((x) => x.trim()).filter(Boolean) })}
+                                            placeholder="api.example.com"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                            {selectedNodeConfig && selectedNode.data.workflowType === "filter" && (
+                                <div className="space-y-2 rounded-md border p-2">
+                                    <Label className="text-xs">Expression Builder</Label>
+                                    <Input
+                                        value={String(selectedNodeConfig.expression ?? "")}
+                                        onChange={(e) => patchSelectedNodeConfig({ expression: e.target.value })}
+                                        placeholder="input.amount > 100 && input.status == 'open'"
+                                    />
+                                    <p className="text-[11px] text-muted-foreground">Supports logical and comparison operators with bounded complexity.</p>
+                                </div>
+                            )}
+                            {selectedNodeConfig && selectedNode.data.workflowType === "subflow" && (
+                                <div className="space-y-2 rounded-md border p-2">
+                                    <Label className="text-xs">Subflow Module Key</Label>
+                                    <Input
+                                        value={String(selectedNodeConfig.moduleKey ?? "")}
+                                        onChange={(e) => patchSelectedNodeConfig({ moduleKey: e.target.value })}
+                                    />
+                                    <Label className="text-xs">Pinned Version (optional)</Label>
+                                    <Input
+                                        type="number"
+                                        min={1}
+                                        value={selectedNodeConfig.version == null ? "" : Number(selectedNodeConfig.version)}
+                                        onChange={(e) => patchSelectedNodeConfig({ version: e.target.value ? Number(e.target.value) : undefined })}
+                                        placeholder="leave empty for active version"
+                                    />
+                                </div>
+                            )}
                             <Textarea
                                 value={selectedNode.data.configText}
                                 onChange={(e) => updateSelectedNodeConfig(e.target.value)}

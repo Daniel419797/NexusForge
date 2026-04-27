@@ -126,7 +126,8 @@ export default function LogicModulesGuidePage() {
                     <section id="workflow-design" className="space-y-3 scroll-mt-24">
                         <h2 className="text-xl font-semibold">3. Design Workflow</h2>
                         <p className="text-sm text-muted-foreground leading-7">
-                            Build with node types: start, filter, branch, read_table, write_table, notify, end.
+                            Build with node types: start, filter, branch, read_table, write_table, notify, transform, compute, aggregate,
+                            for_each, http_request, idempotency, lock, cache, subflow, delay, wait_until, report_export, end.
                             Trigger types: manual, row_created, row_updated, scheduled, webhook.
                         </p>
                         <div className="rounded-lg border border-border p-4">

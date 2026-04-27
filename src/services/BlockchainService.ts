@@ -38,6 +38,15 @@ export interface NFT {
     createdAt: string;
 }
 
+export interface CreateNFTPayload {
+    tokenId: string;
+    contractAddress: string;
+    ownerAddress?: string;
+    metadata?: Record<string, unknown>;
+    chain: "ethereum" | "base" | "polygon" | "solana" | "arbitrum" | "bsc" | "other";
+    mintedAt?: string;
+}
+
 export interface ContractEvent {
     id: string;
     projectId: string;
@@ -368,6 +377,16 @@ const BlockchainService = {
             params,
         });
         return mapList(unwrapDataEnvelope(data), "nfts", asNft);
+    },
+
+    async createNFT(projectId: string, payload: CreateNFTPayload): Promise<NFT> {
+        assertNonEmptyString(payload.tokenId, "tokenId");
+        assertNonEmptyString(payload.contractAddress, "contractAddress");
+        assertNonEmptyString(payload.chain, "chain");
+        const { data } = await api.post("/blockchain/nfts", payload, {
+            headers: projectHeaders(projectId),
+        });
+        return asNft(unwrapDataEnvelope(data));
     },
 
     async getNFT(projectId: string, nftId: string): Promise<NFT> {

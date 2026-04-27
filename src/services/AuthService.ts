@@ -29,6 +29,12 @@ export interface AuthResponse {
 
 export type AuthUser = AuthResponse["user"];
 
+export interface UpdateProfilePayload {
+    name?: string;
+    currentPassword?: string;
+    newPassword?: string;
+}
+
 function requiredString(value: unknown, fieldName: string): string {
     assert(typeof value === "string" && value.trim().length > 0, `${fieldName} is required`);
     return value;
@@ -92,6 +98,15 @@ const AuthService = {
         const raw = unwrapDataEnvelope(data);
         if (raw == null) return null;
         return asAuthUser(raw);
+    },
+
+    async updateProfile(payload: UpdateProfilePayload): Promise<AuthUser> {
+        const { data } = await api.patch("/auth/me", payload);
+        return asAuthUser(unwrapDataEnvelope(data));
+    },
+
+    async deleteAccount(): Promise<void> {
+        await api.delete("/auth/me");
     },
 
     getGoogleAuthUrl() {

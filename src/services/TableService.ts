@@ -33,6 +33,13 @@ export interface TableDataResult {
     total: number;
 }
 
+export interface TableBackfillResult {
+    total: number;
+    succeeded: number;
+    failed: number;
+    results: Array<{ tableId: string; tableName: string; ok: boolean; error?: string }>;
+}
+
 function requiredString(value: unknown, fieldName: string): string {
     assert(typeof value === "string" && value.trim().length > 0, `${fieldName} is required`);
     return value;
@@ -98,6 +105,24 @@ function asRowRecord(value: unknown): Record<string, unknown> {
     return value;
 }
 
+function asBackfillResult(value: unknown): TableBackfillResult {
+    assert(isRecord(value), "Invalid table backfill response");
+    return {
+        total: requiredNumber(value.total, "total"),
+        succeeded: requiredNumber(value.succeeded, "succeeded"),
+        failed: requiredNumber(value.failed, "failed"),
+        results: toArray(value.results, (item) => {
+            assert(isRecord(item), "Invalid backfill result item");
+            return {
+                tableId: requiredString(item.tableId, "results.tableId"),
+                tableName: requiredString(item.tableName, "results.tableName"),
+                ok: requiredBoolean(item.ok, "results.ok"),
+                error: item.error == null ? undefined : requiredString(item.error, "results.error"),
+            };
+        }),
+    };
+}
+
 const TableService = {
     async listTables(projectId: string): Promise<CustomTable[]> {
         assertProjectId(projectId);
@@ -133,6 +158,12 @@ const TableService = {
         assertUuid(tableId, "tableId");
         const { data } = await api.post(`/projects/${projectId}/tables/${tableId}/migrate`);
         return asMigrateResult(unwrapDataEnvelope(data));
+    },
+
+    async backfillIndexes(projectId: string): Promise<TableBackfillResult> {
+        assertProjectId(projectId);
+        const { data } = await api.post(`/projects/${projectId}/tables/backfill-indexes`);
+        return asBackfillResult(unwrapDataEnvelope(data));
     },
 
     async listRows(projectId: string, tableId: string, limit = 20, offset = 0): Promise<TableDataResult> {
