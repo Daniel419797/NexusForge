@@ -50,7 +50,10 @@ function asUnreadCount(value: unknown): number {
     assert(isRecord(value), "Invalid unread-count response");
     const count = value.count ?? value.unreadCount;
     if (typeof count === "number" && Number.isFinite(count)) return count;
-    if (typeof count === "string" && count.trim().length > 0) return Number(count);
+    if (typeof count === "string" && count.trim().length > 0) {
+        const parsed = Number(count);
+        if (Number.isFinite(parsed)) return parsed;
+    }
     return 0;
 }
 

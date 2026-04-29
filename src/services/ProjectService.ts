@@ -35,6 +35,7 @@ export interface ProjectConfig {
 	dbType: "postgresql" | "supabase" | "mssql" | "mongodb";
 	dbUrl?: string | null;
 	settings: Record<string, any>;
+	dbConnected?: boolean;
 }
 
 export interface ProjectDetail {
@@ -135,8 +136,14 @@ function asCategoryTemplate(value: unknown): CategoryTemplate {
 		category: requiredString(value.category, "template.category"),
 		description: requiredString(value.description, "template.description"),
 		defaultSettings: isRecord(value.defaultSettings) ? value.defaultSettings : {},
-		suggestedPlugins: toArray(value.suggestedPlugins, (item) => String(item)),
-		notificationEvents: toArray(value.notificationEvents, (item) => String(item)),
+		suggestedPlugins: toArray(value.suggestedPlugins, (item) => {
+			assert(typeof item === "string", "Invalid suggestedPlugins entry in template: expected string");
+			return item;
+		}),
+		notificationEvents: toArray(value.notificationEvents, (item) => {
+			assert(typeof item === "string", "Invalid notificationEvents entry in template: expected string");
+			return item;
+		}),
 	};
 }
 
@@ -147,10 +154,12 @@ function asProjectConfig(value: unknown): ProjectConfig {
 		dbType === "postgresql" || dbType === "supabase" || dbType === "mssql" || dbType === "mongodb",
 		"Invalid config.dbType",
 	);
+	const dbConnected = typeof value.dbConnected === "boolean" ? value.dbConnected : undefined;
 	return {
 		dbType,
 		dbUrl: optionalStringOrNull(value.dbUrl) ?? undefined,
 		settings: isRecord(value.settings) ? value.settings : {},
+		dbConnected,
 	};
 }
 
@@ -172,8 +181,14 @@ function asCreateProjectResult(value: unknown): CreateProjectResult {
 	assert(isRecord(value.template), "Invalid create project template response");
 	const template: CreateProjectTemplate = {
 		name: requiredString(value.template.name, "template.name"),
-		suggestedPlugins: toArray(value.template.suggestedPlugins, (item) => String(item)),
-		notificationEvents: toArray(value.template.notificationEvents, (item) => String(item)),
+		suggestedPlugins: toArray(value.template.suggestedPlugins, (item) => {
+			assert(typeof item === "string", "Invalid suggestedPlugins entry in value.template: expected string");
+			return item;
+		}),
+		notificationEvents: toArray(value.template.notificationEvents, (item) => {
+			assert(typeof item === "string", "Invalid notificationEvents entry in value.template: expected string");
+			return item;
+		}),
 	};
 	const config = asProjectConfig(value.config);
 	const projectToken = requiredString(value.projectToken, "projectToken");

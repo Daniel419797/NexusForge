@@ -132,20 +132,27 @@ export default function ProjectDatabaseSettingsPage() {
         setSaving(true);
         setMessage(null);
         try {
-            const updated = await ProjectService.updateConfig(activeProject.id, {
+            await ProjectService.updateConfig(activeProject.id, {
                 dbType,
                 dbUrl,
                 settings: buildSettings(),
             });
-            // update store
+            // Refresh detail so dbConnected is up-to-date across all CTAs.
+            const refreshed = await ProjectService.getById(activeProject.id);
             const setActive = useProjectStore.getState().setActiveProject;
             const current = useProjectStore.getState().activeProject;
             if (current?.id === activeProject.id) {
-                setActive({ ...current, config: updated });
+                setActive({
+                    ...current,
+                    ...refreshed.project,
+                    config: refreshed.config ?? null,
+                    membership: refreshed.membership ?? null,
+                });
             }
             setMessage("Saved successfully.");
-        } catch {
-            setMessage("Failed to save configuration.");
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { message?: string } } };
+            setMessage(axiosErr.response?.data?.message || "Failed to save configuration.");
         } finally {
             setSaving(false);
         }
