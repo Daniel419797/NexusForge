@@ -13,6 +13,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import NotificationService, { type Notification } from "@/services/NotificationService";
 import { useWebSocket } from "@/hooks/useWebSocket";
 
+function isNotificationEvent(value: unknown): value is { type?: string } {
+    return !!value && typeof value === "object";
+}
+
 export default function NotificationBell() {
     const [unreadCount, setUnreadCount] = useState(0);
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -23,43 +27,48 @@ export default function NotificationBell() {
 
     useWebSocket({
         url: wsUrl,
-        onMessage: (data: any) => {
+        onMessage: (data: unknown) => {
             // If we receive a live notification event:
-            if (data?.type === "NOTIFICATION_NEW") {
+            if (isNotificationEvent(data) && data.type === "NOTIFICATION_NEW") {
                 setUnreadCount((c) => c + 1);
                 if (open) {
                     // If popover is open, fetch latest
-                    fetchRecent();
+                    void fetchRecent();
                 }
             }
         },
     });
 
-    const fetchUnreadCount = async () => {
-        try {
-            const count = await NotificationService.getUnreadCount();
-            setUnreadCount(count);
-        } catch {
-            // ignore
-        }
-    };
-
     const fetchRecent = async () => {
         try {
             const resp = await NotificationService.getNotifications({ limit: 5 });
-            setNotifications((resp as any).items || []);
+            setNotifications(resp);
         } catch {
             // ignore
         }
     };
 
     useEffect(() => {
-        fetchUnreadCount();
+        let cancelled = false;
+
+        void NotificationService.getUnreadCount()
+            .then((count) => {
+                if (!cancelled) {
+                    setUnreadCount(count);
+                }
+            })
+            .catch(() => {
+                // ignore
+            });
+
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     useEffect(() => {
         if (open) {
-            fetchRecent();
+            void fetchRecent();
         }
     }, [open]);
 
@@ -67,7 +76,7 @@ export default function NotificationBell() {
         try {
             await NotificationService.markAllAsRead();
             setUnreadCount(0);
-            fetchRecent();
+            void fetchRecent();
         } catch {
             // ignore
         }
@@ -78,7 +87,7 @@ export default function NotificationBell() {
             try {
                 await NotificationService.markAsRead(notif.id);
                 setUnreadCount((c) => Math.max(0, c - 1));
-                fetchRecent();
+                void fetchRecent();
             } catch {
                 // ignore
             }

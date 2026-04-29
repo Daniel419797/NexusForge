@@ -78,10 +78,13 @@ function asReadinessResult(value: unknown): ReadinessResult {
         ready: Boolean(value.ready),
         checks: toArray(value.checks, (item): ReadinessResult["checks"][number] => {
             assert(isRecord(item), "Invalid readiness check item");
+            const key = item.key ?? item.name;
+            const label = item.label ?? item.message;
             return {
-                name: requiredString(item.name, "check.name"),
+                key: requiredString(key, "check.key"),
+                label: requiredString(label, "check.label"),
                 status: requiredString(item.status, "check.status") as ReadinessResult["checks"][number]["status"],
-                message: requiredString(item.message, "check.message"),
+                message: item.message == null ? undefined : requiredString(item.message, "check.message"),
             };
         }),
     };

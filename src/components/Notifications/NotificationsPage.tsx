@@ -41,7 +41,7 @@ export default function NotificationsPage() {
     const fetchNotifications = async () => {
         try {
             const resp = await NotificationService.getNotifications({ limit: 50 });
-            setNotifications((resp as any).items || []);
+            setNotifications(resp);
         } catch { /* ignore */ } finally { setLoading(false); }
     };
 

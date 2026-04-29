@@ -12,6 +12,10 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 import ScrollReveal from "@/components/Dashboard/ScrollReveal";
 import ElectricRippleButton from "@/components/Dashboard/ElectricRippleButton";
 
+function isChatSocketMessage(value: unknown): value is { type?: string; payload?: ChatMessage } {
+    return !!value && typeof value === "object";
+}
+
 export default function ChatPage() {
     const { activeProject } = useProjectStore();
     const { user } = useAuthStore();
@@ -28,8 +32,8 @@ export default function ChatPage() {
 
     useWebSocket({
         url: wsUrl,
-        onMessage: (data: any) => {
-            if (data?.type === "CHAT_MESSAGE" && data.payload?.roomId === activeRoomId) {
+        onMessage: (data: unknown) => {
+            if (isChatSocketMessage(data) && data.type === "CHAT_MESSAGE" && data.payload?.roomId === activeRoomId) {
                 setMessages((prev) => [...prev, data.payload]);
             }
         },
@@ -41,7 +45,7 @@ export default function ChatPage() {
             setLoadingRooms(true);
             try {
                 const resp = await ChatService.getRooms(activeProject.id);
-                const fetchedRooms = (resp as any).items || [];
+                const fetchedRooms = resp;
                 setRooms(fetchedRooms);
                 if (fetchedRooms.length > 0 && !activeRoomId) setActiveRoomId(fetchedRooms[0].id);
             } catch { /* ignore */ } finally { setLoadingRooms(false); }
@@ -55,7 +59,7 @@ export default function ChatPage() {
             setLoadingMessages(true);
             try {
                 const resp = await ChatService.getMessages(activeRoomId, activeProject.id, { limit: 50 });
-                setMessages(((resp as any).items || []).reverse());
+                setMessages([...resp].reverse());
             } catch { /* ignore */ } finally { setLoadingMessages(false); }
         };
         fetchMessages();
