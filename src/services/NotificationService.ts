@@ -48,7 +48,7 @@ function asNotification(value: unknown): Notification {
 
 function asUnreadCount(value: unknown): number {
     assert(isRecord(value), "Invalid unread-count response");
-    const count = value.count;
+    const count = value.count ?? value.unreadCount;
     if (typeof count === "number" && Number.isFinite(count)) return count;
     if (typeof count === "string" && count.trim().length > 0) return Number(count);
     return 0;
@@ -75,9 +75,10 @@ const NotificationService = {
         const { data } = await api.post("/notifications/read-all");
         const payload = unwrapDataEnvelope(data);
         assert(isRecord(payload), "Invalid mark-all-read response");
+        const updated = payload.updated ?? payload.markedRead;
         return {
             success: typeof payload.success === "boolean" ? payload.success : true,
-            updated: typeof payload.updated === "number" && Number.isFinite(payload.updated) ? payload.updated : undefined,
+            updated: typeof updated === "number" && Number.isFinite(updated) ? updated : undefined,
         };
     },
 

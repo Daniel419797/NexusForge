@@ -127,9 +127,10 @@ export interface DeploymentLog {
 }
 
 export interface ReadinessCheck {
-    name: string;
+    key: string;
+    label: string;
     status: 'pass' | 'fail' | 'warn';
-    message: string;
+    message?: string;
 }
 
 export interface ReadinessResult {

@@ -55,6 +55,12 @@ export interface IntegrationConfig {
 	gatewayUrl: string;
 }
 
+export interface CreateProjectTemplate {
+	name: string;
+	suggestedPlugins: string[];
+	notificationEvents: string[];
+}
+
 export interface ApiDocsEndpoint {
 	method: string;
 	path: string;
@@ -86,7 +92,7 @@ export interface ProjectApiDocs {
 export interface CreateProjectResult {
 	project: Project;
 	config: ProjectConfig;
-	template: CategoryTemplate;
+	template: CreateProjectTemplate;
 	projectToken: string;
 	integration?: {
 		sdkConfig: SdkConfig;
@@ -163,7 +169,12 @@ function asProjectDetail(value: unknown): ProjectDetail {
 
 function asCreateProjectResult(value: unknown): CreateProjectResult {
 	assert(isRecord(value), "Invalid create project response");
-	const template = asCategoryTemplate(value.template);
+	assert(isRecord(value.template), "Invalid create project template response");
+	const template: CreateProjectTemplate = {
+		name: requiredString(value.template.name, "template.name"),
+		suggestedPlugins: toArray(value.template.suggestedPlugins, (item) => String(item)),
+		notificationEvents: toArray(value.template.notificationEvents, (item) => String(item)),
+	};
 	const config = asProjectConfig(value.config);
 	const projectToken = requiredString(value.projectToken, "projectToken");
 	let integration: CreateProjectResult["integration"] | undefined;

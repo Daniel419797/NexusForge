@@ -100,9 +100,9 @@ function ReadinessPanel({ projectId }: Readonly<{ projectId: string }>) {
                         const dotColor = check.status === "pass" ? "bg-emerald-400" : check.status === "warn" ? "bg-amber-400" : "bg-red-400";
                         const textColor = check.status === "pass" ? "text-white/60" : check.status === "warn" ? "text-amber-400/80" : "text-red-400/80";
                         return (
-                            <div key={check.name} className="flex items-center gap-3 py-2.5">
+                            <div key={check.key} className="flex items-center gap-3 py-2.5">
                                 <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${dotColor}`} />
-                                <span className={`flex-1 text-xs ${textColor}`}>{check.message}</span>
+                                <span className={`flex-1 text-xs ${textColor}`}>{check.message ?? check.label}</span>
                                 <span className={`shrink-0 text-[10px] uppercase tracking-wider font-mono ${
                                     check.status === "pass" ? "text-emerald-400/60" : check.status === "warn" ? "text-amber-400/60" : "text-red-400/60"
                                 }`}>{check.status}</span>

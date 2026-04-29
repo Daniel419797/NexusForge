@@ -89,7 +89,7 @@ describe('AuthService', () => {
 
     describe('verifyEmail', () => {
         it('sends token for verification', async () => {
-            mockPost.mockResolvedValue({ data: { data: { verified: true } } });
+            mockPost.mockResolvedValue({ data: { data: { email: 'user@test.com' } } });
             const result = await AuthService.verifyEmail('verification-token');
             expect(mockPost).toHaveBeenCalledWith('/auth/verify-email', { token: 'verification-token' });
             expect(result).toEqual({ verified: true });
@@ -98,7 +98,7 @@ describe('AuthService', () => {
 
     describe('resendVerification', () => {
         it('sends email for re-verification', async () => {
-            mockPost.mockResolvedValue({ data: { data: { sent: true } } });
+            mockPost.mockResolvedValue({ data: { data: null } });
             const result = await AuthService.resendVerification('user@test.com');
             expect(mockPost).toHaveBeenCalledWith('/auth/resend-verification', { email: 'user@test.com' });
             expect(result).toEqual({ sent: true });
@@ -107,7 +107,7 @@ describe('AuthService', () => {
 
     describe('forgotPassword', () => {
         it('sends email for password reset', async () => {
-            mockPost.mockResolvedValue({ data: { data: { sent: true } } });
+            mockPost.mockResolvedValue({ data: { data: null } });
             const result = await AuthService.forgotPassword('user@test.com');
             expect(mockPost).toHaveBeenCalledWith('/auth/forgot-password', { email: 'user@test.com' });
             expect(result).toEqual({ sent: true });
@@ -116,7 +116,7 @@ describe('AuthService', () => {
 
     describe('resetPassword', () => {
         it('sends token and new password', async () => {
-            mockPost.mockResolvedValue({ data: { data: { reset: true } } });
+            mockPost.mockResolvedValue({ data: { data: { email: 'user@test.com' } } });
             const result = await AuthService.resetPassword('reset-tok', 'newpass123');
             expect(mockPost).toHaveBeenCalledWith('/auth/reset-password', { token: 'reset-tok', password: 'newpass123' });
             expect(result).toEqual({ reset: true });

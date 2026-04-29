@@ -68,6 +68,9 @@ function asAuthResponse(value: unknown): AuthResponse {
 }
 
 function asMessageAction(value: unknown): { message?: string } {
+    if (value == null) {
+        return {};
+    }
     assert(isRecord(value), "Invalid action response");
     return {
         message: optionalString(value.message),
@@ -123,7 +126,10 @@ const AuthService = {
         const raw = unwrapDataEnvelope(data);
         const action = asMessageAction(raw);
         return isRecord(raw)
-            ? { verified: raw.verified == null ? undefined : Boolean(raw.verified), message: action.message }
+            ? {
+                verified: raw.verified == null ? typeof raw.email === "string" : Boolean(raw.verified),
+                message: action.message,
+            }
             : action;
     },
 
@@ -133,8 +139,8 @@ const AuthService = {
         const raw = unwrapDataEnvelope(data);
         const action = asMessageAction(raw);
         return isRecord(raw)
-            ? { sent: raw.sent == null ? undefined : Boolean(raw.sent), message: action.message }
-            : action;
+            ? { sent: raw.sent == null ? true : Boolean(raw.sent), message: action.message }
+            : { sent: true, message: action.message };
     },
 
     async forgotPassword(email: string): Promise<{ sent?: boolean; message?: string }> {
@@ -143,8 +149,8 @@ const AuthService = {
         const raw = unwrapDataEnvelope(data);
         const action = asMessageAction(raw);
         return isRecord(raw)
-            ? { sent: raw.sent == null ? undefined : Boolean(raw.sent), message: action.message }
-            : action;
+            ? { sent: raw.sent == null ? true : Boolean(raw.sent), message: action.message }
+            : { sent: true, message: action.message };
     },
 
     async resetPassword(token: string, password: string): Promise<{ reset?: boolean; message?: string }> {
@@ -154,7 +160,10 @@ const AuthService = {
         const raw = unwrapDataEnvelope(data);
         const action = asMessageAction(raw);
         return isRecord(raw)
-            ? { reset: raw.reset == null ? undefined : Boolean(raw.reset), message: action.message }
+            ? {
+                reset: raw.reset == null ? typeof raw.email === "string" : Boolean(raw.reset),
+                message: action.message,
+            }
             : action;
     },
 
