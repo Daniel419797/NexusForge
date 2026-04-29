@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useProjectStore } from "@/store/projectStore";
 import ProjectService from "@/services/ProjectService";
 import ModuleService, { type ModuleInfo } from "@/services/ModuleService";
+import { useWebSocket } from "@/hooks/useWebSocket";
 
 type SupportedDbType = "postgresql" | "supabase" | "mssql" | "mongodb";
 
@@ -40,7 +41,7 @@ export default function ProjectDatabaseSettingsPage() {
     // Migration state
     const [migrationRunning, setMigrationRunning] = useState(false);
     const [migrationStatus, setMigrationStatus] = useState<string | null>(null);
-    const migrationPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const [activeMigrationJobId, setActiveMigrationJobId] = useState<string | null>(null);
 
     // DB URL rotation state
     const [rotating, setRotating] = useState(false);
@@ -49,18 +50,78 @@ export default function ProjectDatabaseSettingsPage() {
     // User migration state
     const [migratingUsers, setMigratingUsers] = useState(false);
     const [userMigrationStatus, setUserMigrationStatus] = useState<string | null>(null);
-    const userMigrationPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const [activeUserMigrationJobId, setActiveUserMigrationJobId] = useState<string | null>(null);
 
     // Enabled modules (for the "what will be created" preview)
     const [enabledModules, setEnabledModules] = useState<ModuleInfo[]>([]);
 
-    // Cleanup polling intervals on unmount
-    useEffect(() => {
-        return () => {
-            if (migrationPollRef.current) clearInterval(migrationPollRef.current);
-            if (userMigrationPollRef.current) clearInterval(userMigrationPollRef.current);
+    const accessToken = useMemo(
+        () => (typeof window === "undefined" ? null : localStorage.getItem("accessToken")),
+        []
+    );
+    const wsBaseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001/ws";
+    const wsUrl = activeProject ? `${wsBaseUrl}${wsBaseUrl.includes("?") ? "&" : "?"}projectId=${encodeURIComponent(activeProject.id)}` : wsBaseUrl;
+
+    function isMigrationStatusEvent(
+        value: unknown
+    ): value is {
+        event: "migration:status";
+        data: {
+            kind?: "schema" | "users";
+            jobId?: string;
+            state?: string;
+            progress?: number;
+            message?: string;
+            failedReason?: string;
         };
-    }, []);
+    } {
+        if (!value || typeof value !== "object") return false;
+        const event = value as { event?: unknown; data?: unknown };
+        return event.event === "migration:status" && !!event.data && typeof event.data === "object";
+    }
+
+    useWebSocket({
+        url: wsUrl,
+        token: accessToken,
+        enabled: !!activeProject && !!accessToken,
+        onMessage: (payload) => {
+            if (!isMigrationStatusEvent(payload)) return;
+            const { data } = payload;
+            if (data.kind === "schema" && data.jobId === activeMigrationJobId) {
+                const progressSuffix = typeof data.progress === "number" ? ` (${data.progress}%)` : "";
+                if (data.state === "failed") {
+                    setMigrationStatus(`failed: ${data.failedReason || data.message || "unknown error"}`);
+                    setMigrationRunning(false);
+                    setActiveMigrationJobId(null);
+                    return;
+                }
+                if (data.state === "completed") {
+                    setMigrationStatus("completed");
+                    setMigrationRunning(false);
+                    setActiveMigrationJobId(null);
+                    return;
+                }
+                setMigrationStatus(`${data.message || data.state || "running"}${progressSuffix}`);
+            }
+
+            if (data.kind === "users" && data.jobId === activeUserMigrationJobId) {
+                const progressSuffix = typeof data.progress === "number" ? ` (${data.progress}%)` : "";
+                if (data.state === "failed") {
+                    setUserMigrationStatus(`failed: ${data.failedReason || data.message || "unknown error"}`);
+                    setMigratingUsers(false);
+                    setActiveUserMigrationJobId(null);
+                    return;
+                }
+                if (data.state === "completed") {
+                    setUserMigrationStatus("completed");
+                    setMigratingUsers(false);
+                    setActiveUserMigrationJobId(null);
+                    return;
+                }
+                setUserMigrationStatus(`${data.message || data.state || "running"}${progressSuffix}`);
+            }
+        },
+    });
 
     const dbPlaceholders: Record<SupportedDbType, string> = {
         postgresql: "postgres://user:pass@host:5432/db",
@@ -391,29 +452,12 @@ export default function ProjectDatabaseSettingsPage() {
                             setMigrationStatus("starting...");
                             try {
                                 const { jobId } = await ProjectService.runMigrations(activeProject.id);
-                                setMigrationStatus(`running (job ${jobId})`);
-                                migrationPollRef.current = setInterval(async () => {
-                                    try {
-                                        const status = await ProjectService.getJobStatus(activeProject.id, jobId);
-                                        if (status.state === "completed") {
-                                            setMigrationStatus("completed");
-                                            setMigrationRunning(false);
-                                            if (migrationPollRef.current) clearInterval(migrationPollRef.current);
-                                        } else if (status.state === "failed") {
-                                            setMigrationStatus(`failed: ${status.failedReason || "unknown error"}`);
-                                            setMigrationRunning(false);
-                                            if (migrationPollRef.current) clearInterval(migrationPollRef.current);
-                                        } else {
-                                            const progressSuffix = status.progress != null ? ` (${status.progress}%)` : "";
-                                            setMigrationStatus(`${status.state}${progressSuffix}`);
-                                        }
-                                    } catch {
-                                        // keep polling
-                                    }
-                                }, 3000);
+                                setActiveMigrationJobId(jobId);
+                                setMigrationStatus(`queued (job ${jobId})`);
                             } catch {
                                 setMigrationStatus("failed to start migration");
                                 setMigrationRunning(false);
+                                setActiveMigrationJobId(null);
                             }
                         }}
                         disabled={migrationRunning}
@@ -484,29 +528,12 @@ export default function ProjectDatabaseSettingsPage() {
                                 setUserMigrationStatus("starting...");
                                 try {
                                     const { jobId } = await ProjectService.migrateUsers(activeProject.id, { selector: "all" });
-                                    setUserMigrationStatus(`running (job ${jobId})`);
-                                    userMigrationPollRef.current = setInterval(async () => {
-                                        try {
-                                            const status = await ProjectService.getJobStatus(activeProject.id, jobId);
-                                            if (status.state === "completed") {
-                                                setUserMigrationStatus("completed");
-                                                setMigratingUsers(false);
-                                                if (userMigrationPollRef.current) clearInterval(userMigrationPollRef.current);
-                                            } else if (status.state === "failed") {
-                                                setUserMigrationStatus(`failed: ${status.failedReason || "unknown error"}`);
-                                                setMigratingUsers(false);
-                                                if (userMigrationPollRef.current) clearInterval(userMigrationPollRef.current);
-                                            } else {
-                                                const progressSuffix = status.progress != null ? ` (${status.progress}%)` : "";
-                                                setUserMigrationStatus(`${status.state}${progressSuffix}`);
-                                            }
-                                        } catch {
-                                            // keep polling
-                                        }
-                                    }, 3000);
+                                    setActiveUserMigrationJobId(jobId);
+                                    setUserMigrationStatus(`queued (job ${jobId})`);
                                 } catch {
                                     setUserMigrationStatus("failed to start user migration");
                                     setMigratingUsers(false);
+                                    setActiveUserMigrationJobId(null);
                                 }
                             }
                         }}
