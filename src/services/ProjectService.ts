@@ -135,8 +135,14 @@ function asCategoryTemplate(value: unknown): CategoryTemplate {
 		category: requiredString(value.category, "template.category"),
 		description: requiredString(value.description, "template.description"),
 		defaultSettings: isRecord(value.defaultSettings) ? value.defaultSettings : {},
-		suggestedPlugins: toArray(value.suggestedPlugins, (item) => String(item)),
-		notificationEvents: toArray(value.notificationEvents, (item) => String(item)),
+		suggestedPlugins: toArray(value.suggestedPlugins, (item) => {
+			assert(typeof item === "string", "Invalid suggestedPlugins entry in template: expected string");
+			return item;
+		}),
+		notificationEvents: toArray(value.notificationEvents, (item) => {
+			assert(typeof item === "string", "Invalid notificationEvents entry in template: expected string");
+			return item;
+		}),
 	};
 }
 
@@ -172,8 +178,14 @@ function asCreateProjectResult(value: unknown): CreateProjectResult {
 	assert(isRecord(value.template), "Invalid create project template response");
 	const template: CreateProjectTemplate = {
 		name: requiredString(value.template.name, "template.name"),
-		suggestedPlugins: toArray(value.template.suggestedPlugins, (item) => String(item)),
-		notificationEvents: toArray(value.template.notificationEvents, (item) => String(item)),
+		suggestedPlugins: toArray(value.template.suggestedPlugins, (item) => {
+			assert(typeof item === "string", "Invalid suggestedPlugins entry in value.template: expected string");
+			return item;
+		}),
+		notificationEvents: toArray(value.template.notificationEvents, (item) => {
+			assert(typeof item === "string", "Invalid notificationEvents entry in value.template: expected string");
+			return item;
+		}),
 	};
 	const config = asProjectConfig(value.config);
 	const projectToken = requiredString(value.projectToken, "projectToken");
