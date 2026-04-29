@@ -12,8 +12,23 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 import ScrollReveal from "@/components/Dashboard/ScrollReveal";
 import ElectricRippleButton from "@/components/Dashboard/ElectricRippleButton";
 
-function isChatSocketMessage(value: unknown): value is { type?: string; payload?: ChatMessage } {
-    return !!value && typeof value === "object";
+function isChatMessagePayload(value: unknown): value is ChatMessage {
+    if (!value || typeof value !== "object") return false;
+    const payload = value as Partial<ChatMessage>;
+    return (
+        typeof payload.id === "string" &&
+        typeof payload.roomId === "string" &&
+        typeof payload.senderId === "string" &&
+        typeof payload.content === "string" &&
+        typeof payload.type === "string" &&
+        typeof payload.createdAt === "string"
+    );
+}
+
+function isChatSocketMessage(value: unknown): value is { type: "CHAT_MESSAGE"; payload: ChatMessage } {
+    if (!value || typeof value !== "object") return false;
+    const message = value as { type?: unknown; payload?: unknown };
+    return message.type === "CHAT_MESSAGE" && isChatMessagePayload(message.payload);
 }
 
 export default function ChatPage() {
@@ -33,7 +48,7 @@ export default function ChatPage() {
     useWebSocket({
         url: wsUrl,
         onMessage: (data: unknown) => {
-            if (isChatSocketMessage(data) && data.type === "CHAT_MESSAGE" && data.payload?.roomId === activeRoomId) {
+            if (isChatSocketMessage(data) && data.payload.roomId === activeRoomId) {
                 setMessages((prev) => [...prev, data.payload]);
             }
         },
