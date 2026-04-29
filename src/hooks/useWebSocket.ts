@@ -30,6 +30,11 @@ export function useWebSocket({
     const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const NON_RETRYABLE_CLOSE_CODES = new Set([4401, 4403, 4429]);
 
+    // Keep a ref to the latest onMessage so the ws.onmessage handler always
+    // calls the current version without needing a reconnect every render.
+    const onMessageRef = useRef(onMessage);
+    onMessageRef.current = onMessage;
+
     const connect = useCallback(() => {
         const wsUrl = token
             ? `${url}${url.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}`
@@ -44,9 +49,9 @@ export function useWebSocket({
         ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
-                onMessage?.(data);
+                onMessageRef.current?.(data);
             } catch {
-                onMessage?.(event.data);
+                onMessageRef.current?.(event.data);
             }
         };
 
@@ -63,7 +68,8 @@ export function useWebSocket({
         };
 
         wsRef.current = ws;
-    }, [url, token, onMessage, onOpen, onClose, onError, reconnect, reconnectInterval]);
+    // onMessage intentionally excluded — handled via ref above
+    }, [url, token, onOpen, onClose, onError, reconnect, reconnectInterval]);
 
     useEffect(() => {
         if (!enabled) return;

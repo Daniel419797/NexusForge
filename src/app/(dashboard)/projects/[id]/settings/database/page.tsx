@@ -59,8 +59,20 @@ export default function ProjectDatabaseSettingsPage() {
         () => (typeof window === "undefined" ? null : localStorage.getItem("accessToken")),
         []
     );
-    const wsBaseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001/ws";
-    const wsUrl = activeProject ? `${wsBaseUrl}${wsBaseUrl.includes("?") ? "&" : "?"}projectId=${encodeURIComponent(activeProject.id)}` : wsBaseUrl;
+    // Derive the WebSocket URL from the same backend URL env vars used by the API proxy.
+    // Converts https://... → wss://... and http://... → ws://...
+    const wsUrl = useMemo(() => {
+        const httpBase = (
+            process.env.NEXT_PUBLIC_BACKEND_URL ||
+            process.env.NEXT_PUBLIC_API_URL ||
+            process.env.NEXT_PUBLIC_BASE_URL ||
+            "http://localhost:3001"
+        ).replace(/\/+$/, "");
+        const wsBase = httpBase.replace(/^http/, "ws");
+        return activeProject
+            ? `${wsBase}/ws?projectId=${encodeURIComponent(activeProject.id)}`
+            : `${wsBase}/ws`;
+    }, [activeProject]);
 
     function isMigrationStatusEvent(
         value: unknown
