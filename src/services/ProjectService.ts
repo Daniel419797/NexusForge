@@ -35,6 +35,7 @@ export interface ProjectConfig {
 	dbType: "postgresql" | "supabase" | "mssql" | "mongodb";
 	dbUrl?: string | null;
 	settings: Record<string, any>;
+	dbConnected?: boolean;
 }
 
 export interface ProjectDetail {
@@ -153,10 +154,12 @@ function asProjectConfig(value: unknown): ProjectConfig {
 		dbType === "postgresql" || dbType === "supabase" || dbType === "mssql" || dbType === "mongodb",
 		"Invalid config.dbType",
 	);
+	const dbConnected = typeof value.dbConnected === "boolean" ? value.dbConnected : undefined;
 	return {
 		dbType,
 		dbUrl: optionalStringOrNull(value.dbUrl) ?? undefined,
 		settings: isRecord(value.settings) ? value.settings : {},
+		dbConnected,
 	};
 }
 
