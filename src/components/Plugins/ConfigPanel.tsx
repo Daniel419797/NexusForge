@@ -11,7 +11,7 @@ interface ConfigPanelProps {
     plugin: InstalledPlugin | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onSave: (pluginName: string, config: any) => Promise<void>;
+    onSave: (pluginName: string, config: Record<string, unknown>) => Promise<void>;
 }
 
 export default function ConfigPanel({ plugin, open, onOpenChange, onSave }: ConfigPanelProps) {
@@ -29,12 +29,15 @@ export default function ConfigPanel({ plugin, open, onOpenChange, onSave }: Conf
     const handleSave = async () => {
         if (!plugin) return;
         try {
-            const parsed = JSON.parse(configStr);
+            const parsed: unknown = JSON.parse(configStr);
+            if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+                throw new Error("Configuration must be a JSON object");
+            }
             setSaving(true);
             setError("");
-            await onSave(plugin.name, parsed);
+            await onSave(plugin.name, parsed as Record<string, unknown>);
             onOpenChange(false);
-        } catch (e: any) {
+        } catch {
             setError("Invalid JSON format");
         } finally {
             setSaving(false);

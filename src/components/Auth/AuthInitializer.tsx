@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useAuthStore } from "@/store/authStore";
 import AuthService from "@/services/AuthService";
+import { clearStoredAuthTokens, getStoredAccessToken } from "@/lib/authTokens";
 
 /**
  * AuthInitializer — mounted once in the root layout.
@@ -14,7 +15,7 @@ export default function AuthInitializer() {
     const { setUser, setLoading } = useAuthStore();
 
     useEffect(() => {
-        const token = localStorage.getItem("accessToken");
+        const token = getStoredAccessToken();
 
         if (!token) {
             setUser(null);
@@ -29,11 +30,11 @@ export default function AuthInitializer() {
 
         AuthService.getProfile()
             .then((profile) => {
-                if (localStorage.getItem("accessToken") !== currentToken) return;
+                if (getStoredAccessToken() !== currentToken) return;
                 setUser(profile);
             })
             .catch((err) => {
-                if (localStorage.getItem("accessToken") !== currentToken) return;
+                if (getStoredAccessToken() !== currentToken) return;
 
                 const status = err?.response?.status;
                 // Only invalidate the session for explicit auth rejections.
@@ -43,8 +44,7 @@ export default function AuthInitializer() {
                 // stored tokens intact so the user isn't logged out
                 // due to a transient infrastructure error.
                 if (status === 401 || status === 403) {
-                    localStorage.removeItem("accessToken");
-                    localStorage.removeItem("refreshToken");
+                    clearStoredAuthTokens();
                     setUser(null);
                 } else {
                     setLoading(false);

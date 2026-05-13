@@ -103,7 +103,7 @@ const PluginService = {
     },
 
     // Update plugin config
-    async updateConfig(projectId: string, pluginName: string, config: any): Promise<void> {
+    async updateConfig(projectId: string, pluginName: string, config: Record<string, unknown>): Promise<void> {
         assertProjectId(projectId);
         assertNonEmptyString(pluginName, "pluginName");
         await api.patch(

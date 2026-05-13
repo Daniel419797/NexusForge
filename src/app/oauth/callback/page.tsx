@@ -3,6 +3,7 @@
 import { useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthService from "@/services/AuthService";
+import { setStoredAuthTokens } from "@/lib/authTokens";
 import { useAuthStore } from "@/store/authStore";
 
 // Module-level dedup set — survives React Strict Mode remounts (unlike useRef).
@@ -36,8 +37,10 @@ function OAuthCallbackInner() {
             .then((result) => {
                 // Stale-response guard: bail if the URL code changed while in-flight.
                 if (searchParams.get("code") !== code) return;
-                localStorage.setItem("accessToken", result.accessToken);
-                localStorage.setItem("refreshToken", result.refreshToken);
+                setStoredAuthTokens({
+                    accessToken: result.accessToken,
+                    refreshToken: result.refreshToken,
+                });
                 setUser(result.user);
                 router.replace("/projects");
             })

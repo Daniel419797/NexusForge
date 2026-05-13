@@ -51,6 +51,10 @@ export interface WorkflowNodeInput {
         | 'approval_wait'
         | 'saga_step'
         | 'saga_compensate'
+        | 'submit_compute_job'
+        | 'run_transaction_unit'
+        | 'media_pipeline'
+        | 'fast_path_dispatch'
         | 'delay'
         | 'wait_until'
         | 'report_export'
@@ -91,6 +95,73 @@ export interface LogicModuleDeadLetterSummary {
 export interface LogicModuleDeadLetterDetail extends LogicModuleDeadLetterSummary {
     payloadJson?: unknown;
     triggerEventId?: string | null;
+}
+
+export interface LogicModuleReadinessCheck {
+    key: string;
+    label: string;
+    status: 'pass' | 'warn' | 'fail';
+    message: string;
+}
+
+export interface LogicModuleOpsSummary {
+    projectId: string;
+    moduleKey: string | null;
+    windowHours: number;
+    generatedAt: string;
+    modules: {
+        total: number;
+        active: number;
+        draft: number;
+        archived: number;
+        needingAttention: number;
+    };
+    runs: {
+        total: number;
+        running: number;
+        succeeded: number;
+        failed: number;
+        deadLettered: number;
+        retried: number;
+        p95DurationMs: number | null;
+    };
+    deadLetters: {
+        total: number;
+        retryCount: number;
+    };
+    retention: {
+        runRetentionDays: number;
+        sweepIntervalMinutes: number;
+    };
+    recentFailures: Array<{
+        id: string;
+        moduleKey: string;
+        status: string;
+        errorSummary: string | null;
+        startedAt: string;
+    }>;
+    brokerReadiness?: {
+        summary?: {
+            ready?: number;
+            notConfigured?: number;
+            failing?: number;
+        };
+    };
+}
+
+export interface LogicModuleReadiness {
+    projectId: string;
+    status: 'ready' | 'degraded' | 'blocked';
+    generatedAt: string;
+    checks: LogicModuleReadinessCheck[];
+    ops: LogicModuleOpsSummary;
+    triggerBackfill?: {
+        mode: 'dry-run' | 'apply';
+        scannedVersions: number;
+        versionsMissingTriggers: number;
+        insertedTriggers: number;
+        skippedInvalidDefinitions: number;
+    };
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -208,13 +279,19 @@ function asLogicModuleVersion(value: unknown): LogicModuleVersion {
 
 function asRun(value: unknown): {
     id: string;
-    status: 'succeeded' | 'failed' | 'running';
+    status: 'succeeded' | 'failed' | 'running' | 'dead_lettered';
     triggeredBy: string | null;
     createdAt: string;
     completedAt: string | null;
 } {
     assert(isRecord(value), 'Invalid run item');
-    assert(value.status === 'succeeded' || value.status === 'failed' || value.status === 'running', 'Invalid run status');
+    assert(
+        value.status === 'succeeded' ||
+        value.status === 'failed' ||
+        value.status === 'running' ||
+        value.status === 'dead_lettered',
+        'Invalid run status',
+    );
     const createdAt = value.createdAt ?? value.startedAt;
     const completedAt = value.completedAt ?? value.finishedAt ?? null;
     const id = requiredString(value.id, 'run.id');
@@ -251,11 +328,14 @@ function asDeadLetterSummary(value: unknown): LogicModuleDeadLetterSummary {
 
 function asRunResult(value: unknown): {
     runId: string;
-    status: 'succeeded' | 'failed';
+    status: 'succeeded' | 'failed' | 'dead_lettered';
     traces: Array<{ stepIndex: number; nodeId: string; nodeType: string; status: string; output?: unknown; error?: string }>;
 } {
     assert(isRecord(value), 'Invalid module execution response');
-    assert(value.status === 'succeeded' || value.status === 'failed', 'Invalid module execution status');
+    assert(
+        value.status === 'succeeded' || value.status === 'failed' || value.status === 'dead_lettered',
+        'Invalid module execution status',
+    );
     const runId = requiredString(value.runId, 'runId');
     const traces = ensureArray(value.traces, (trace): { stepIndex: number; nodeId: string; nodeType: string; status: string; output?: unknown; error?: string } => {
         assert(isRecord(trace), 'Invalid trace item');
@@ -278,11 +358,108 @@ function asRunResult(value: unknown): {
     };
 }
 
+function asOpsSummary(value: unknown): LogicModuleOpsSummary {
+    assert(isRecord(value), 'Invalid ops summary');
+    const modules = isRecord(value.modules) ? value.modules : {};
+    const runs = isRecord(value.runs) ? value.runs : {};
+    const deadLetters = isRecord(value.deadLetters) ? value.deadLetters : {};
+    const retention = isRecord(value.retention) ? value.retention : {};
+    return {
+        projectId: requiredString(value.projectId, 'ops.projectId'),
+        moduleKey: value.moduleKey == null ? null : requiredString(value.moduleKey, 'ops.moduleKey'),
+        windowHours: requiredNumber(value.windowHours, 'ops.windowHours'),
+        generatedAt: requiredString(value.generatedAt, 'ops.generatedAt'),
+        modules: {
+            total: Number(modules.total ?? 0),
+            active: Number(modules.active ?? 0),
+            draft: Number(modules.draft ?? 0),
+            archived: Number(modules.archived ?? 0),
+            needingAttention: Number(modules.needingAttention ?? 0),
+        },
+        runs: {
+            total: Number(runs.total ?? 0),
+            running: Number(runs.running ?? 0),
+            succeeded: Number(runs.succeeded ?? 0),
+            failed: Number(runs.failed ?? 0),
+            deadLettered: Number(runs.deadLettered ?? 0),
+            retried: Number(runs.retried ?? 0),
+            p95DurationMs: runs.p95DurationMs == null ? null : Number(runs.p95DurationMs),
+        },
+        deadLetters: {
+            total: Number(deadLetters.total ?? 0),
+            retryCount: Number(deadLetters.retryCount ?? 0),
+        },
+        retention: {
+            runRetentionDays: Number(retention.runRetentionDays ?? 0),
+            sweepIntervalMinutes: Number(retention.sweepIntervalMinutes ?? 0),
+        },
+        recentFailures: ensureArray(value.recentFailures, (item) => {
+            assert(isRecord(item), 'Invalid recent failure');
+            return {
+                id: requiredString(item.id, 'failure.id'),
+                moduleKey: requiredString(item.moduleKey, 'failure.moduleKey'),
+                status: requiredString(item.status, 'failure.status'),
+                errorSummary: optionalStringOrNull(item.errorSummary),
+                startedAt: requiredString(item.startedAt, 'failure.startedAt'),
+            };
+        }),
+        brokerReadiness: isRecord(value.brokerReadiness) ? value.brokerReadiness as LogicModuleOpsSummary['brokerReadiness'] : undefined,
+    };
+}
+
+function asReadiness(value: unknown): LogicModuleReadiness {
+    assert(isRecord(value), 'Invalid readiness response');
+    assert(value.status === 'ready' || value.status === 'degraded' || value.status === 'blocked', 'Invalid readiness status');
+    return {
+        projectId: requiredString(value.projectId, 'readiness.projectId'),
+        status: value.status,
+        generatedAt: requiredString(value.generatedAt, 'readiness.generatedAt'),
+        checks: ensureArray(value.checks, (check) => {
+            assert(isRecord(check), 'Invalid readiness check');
+            assert(check.status === 'pass' || check.status === 'warn' || check.status === 'fail', 'Invalid check status');
+            return {
+                key: requiredString(check.key, 'check.key'),
+                label: requiredString(check.label, 'check.label'),
+                status: check.status,
+                message: requiredString(check.message, 'check.message'),
+            };
+        }),
+        ops: asOpsSummary(value.ops),
+        triggerBackfill: isRecord(value.triggerBackfill)
+            ? {
+                mode: value.triggerBackfill.mode === 'apply' ? 'apply' : 'dry-run',
+                scannedVersions: Number(value.triggerBackfill.scannedVersions ?? 0),
+                versionsMissingTriggers: Number(value.triggerBackfill.versionsMissingTriggers ?? 0),
+                insertedTriggers: Number(value.triggerBackfill.insertedTriggers ?? 0),
+                skippedInvalidDefinitions: Number(value.triggerBackfill.skippedInvalidDefinitions ?? 0),
+            }
+            : undefined,
+    };
+}
+
 const LogicModuleService = {
     async list(projectId: string): Promise<LogicModuleDefinition[]> {
         assertProjectId(projectId);
         const { data } = await api.get(`/modules/${projectId}`);
         return ensureArray(unwrapDataEnvelope(data), asLogicModuleDefinition);
+    },
+
+    async getReadiness(projectId: string): Promise<LogicModuleReadiness> {
+        assertProjectId(projectId);
+        const { data } = await api.get(`/modules/${projectId}/readiness`);
+        return asReadiness(unwrapDataEnvelope(data));
+    },
+
+    async getOpsSummary(projectId: string, moduleKey?: string, params?: { windowHours?: number }): Promise<LogicModuleOpsSummary> {
+        assertProjectId(projectId);
+        if (moduleKey) {
+            assertModuleKey(moduleKey);
+        }
+        const url = moduleKey
+            ? `/modules/${projectId}/${moduleKey}/ops/summary`
+            : `/modules/${projectId}/ops/summary`;
+        const { data } = await api.get(url, { params });
+        return asOpsSummary(unwrapDataEnvelope(data));
     },
 
     async createDefinition(projectId: string, payload: {
@@ -376,7 +553,7 @@ const LogicModuleService = {
 
     async executeModule(projectId: string, moduleKey: string, input?: Record<string, unknown>): Promise<{
         runId: string;
-        status: 'succeeded' | 'failed';
+        status: 'succeeded' | 'failed' | 'dead_lettered';
         traces: Array<{ stepIndex: number; nodeId: string; nodeType: string; status: string; output?: unknown; error?: string }>;
     }> {
         assertProjectId(projectId);
@@ -388,7 +565,7 @@ const LogicModuleService = {
 
     async listRuns(projectId: string, moduleKey: string, params?: { status?: string; limit?: number; offset?: number }): Promise<Array<{
         id: string;
-        status: 'succeeded' | 'failed' | 'running';
+        status: 'succeeded' | 'failed' | 'running' | 'dead_lettered';
         triggeredBy: string | null;
         createdAt: string;
         completedAt: string | null;
@@ -405,7 +582,7 @@ const LogicModuleService = {
         triggeredBy: string | null;
         createdAt: string;
         completedAt: string | null;
-        steps: Array<{ nodeId: string; nodeType: string; status: string; output?: unknown; error?: string }>;
+        steps: Array<{ nodeId: string; nodeType: string; status: string; input?: unknown; output?: unknown; error?: string }>;
     }> {
         assertProjectId(projectId);
         assertModuleKey(moduleKey);
@@ -413,22 +590,27 @@ const LogicModuleService = {
         const { data } = await api.get(`/modules/${projectId}/${moduleKey}/runs/${runId}`);
         const raw = unwrapDataEnvelope(data);
         assert(isRecord(raw), 'Invalid run trace response');
-        const steps = ensureArray(raw.steps, (step): { nodeId: string; nodeType: string; status: string; output?: unknown; error?: string } => {
+        const run = isRecord(raw.run) ? raw.run : raw;
+        const steps = ensureArray(raw.steps, (step): { nodeId: string; nodeType: string; status: string; input?: unknown; output?: unknown; error?: string } => {
             assert(isRecord(step), 'Invalid run step');
+            const errorJson = isRecord(step.errorJson) ? step.errorJson : null;
             return {
-                nodeId: requiredString(step.nodeId, 'step.nodeId'),
-                nodeType: requiredString(step.nodeType, 'step.nodeType'),
+                nodeId: requiredString(step.nodeId ?? step.stepKey, 'step.nodeId'),
+                nodeType: requiredString(step.nodeType ?? step.stepType, 'step.nodeType'),
                 status: requiredString(step.status, 'step.status'),
-                output: step.output,
-                error: step.error == null ? undefined : requiredString(step.error, 'step.error'),
+                input: step.input ?? step.inputJson,
+                output: step.output ?? step.outputJson,
+                error: step.error == null
+                    ? (errorJson?.message == null ? undefined : String(errorJson.message))
+                    : requiredString(step.error, 'step.error'),
             };
         });
 
-        const traceId = requiredString(raw.id, 'trace.id');
-        const traceStatus = requiredString(raw.status, 'trace.status');
-        const createdAt = raw.createdAt ?? raw.startedAt;
+        const traceId = requiredString(run.id, 'trace.id');
+        const traceStatus = requiredString(run.status, 'trace.status');
+        const createdAt = run.createdAt ?? run.startedAt;
         assert(typeof createdAt === 'string' && createdAt.length > 0, 'trace.createdAt is required');
-        const completedAtRaw = raw.completedAt ?? null;
+        const completedAtRaw = run.completedAt ?? run.finishedAt ?? null;
         if (completedAtRaw != null) {
             assert(typeof completedAtRaw === 'string', 'trace.completedAt must be a string when present');
         }
@@ -436,18 +618,21 @@ const LogicModuleService = {
         return {
             id: traceId,
             status: traceStatus,
-            triggeredBy: optionalStringOrNull(raw.triggeredBy),
+            triggeredBy: optionalStringOrNull(run.triggeredBy),
             createdAt,
             completedAt: completedAtRaw,
             steps,
         };
     },
 
-    async retryRun(projectId: string, moduleKey: string, runId: string): Promise<void> {
+    async retryRun(projectId: string, moduleKey: string, runId: string, input?: Record<string, unknown>): Promise<void> {
         assertProjectId(projectId);
         assertModuleKey(moduleKey);
         assertUuid(runId, 'runId');
-        await api.post(`/modules/${projectId}/${moduleKey}/runs/${runId}/retry`, {});
+        if (input !== undefined) {
+            assert(isRecord(input), 'input must be an object');
+        }
+        await api.post(`/modules/${projectId}/${moduleKey}/runs/${runId}/retry`, input ? { input } : {});
     },
 
     async listDeadLetters(projectId: string, moduleKey: string, params?: { limit?: number; offset?: number }): Promise<Array<{
@@ -516,7 +701,7 @@ const LogicModuleService = {
         },
     ): Promise<{
         runId: string;
-        status: 'succeeded' | 'failed';
+        status: 'succeeded' | 'failed' | 'dead_lettered';
         traces: Array<{ stepIndex: number; nodeId: string; nodeType: string; status: string; output?: unknown; error?: string }>;
     }> {
         assertProjectId(projectId);

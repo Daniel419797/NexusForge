@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import OAuthButtons from "@/components/Auth/OAuthButtons";
 import { getPasswordPolicyError, PASSWORD_POLICY_HINT } from "@/lib/passwordPolicy";
+import { setStoredAuthTokens } from "@/lib/authTokens";
 import AuthService from "@/services/AuthService";
 import { useAuthStore } from "@/store/authStore";
 
@@ -41,8 +42,10 @@ export default function RegisterPage() {
 
         try {
             const result = await AuthService.register({ email, password, name: name || undefined });
-            localStorage.setItem("accessToken", result.accessToken);
-            localStorage.setItem("refreshToken", result.refreshToken);
+            setStoredAuthTokens({
+                accessToken: result.accessToken,
+                refreshToken: result.refreshToken,
+            });
             setUser(result.user);
             router.push("/onboarding");
         } catch (err: unknown) {

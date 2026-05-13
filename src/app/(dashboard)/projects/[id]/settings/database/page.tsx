@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useProjectStore } from "@/store/projectStore";
 import ProjectService from "@/services/ProjectService";
 import ModuleService, { type ModuleInfo } from "@/services/ModuleService";
+import { useAccessToken } from "@/hooks/useAccessToken";
 import { useWebSocket } from "@/hooks/useWebSocket";
 
 type SupportedDbType = "postgresql" | "supabase" | "mssql" | "mongodb";
@@ -55,10 +56,7 @@ export default function ProjectDatabaseSettingsPage() {
     // Enabled modules (for the "what will be created" preview)
     const [enabledModules, setEnabledModules] = useState<ModuleInfo[]>([]);
 
-    const accessToken = useMemo(
-        () => (typeof window === "undefined" ? null : localStorage.getItem("accessToken")),
-        []
-    );
+    const accessToken = useAccessToken();
     // Derive the WebSocket URL from the same backend URL env vars used by the API proxy.
     // Converts https://... → wss://... and http://... → ws://...
     const wsUrl = useMemo(() => {
@@ -96,6 +94,7 @@ export default function ProjectDatabaseSettingsPage() {
         url: wsUrl,
         token: accessToken,
         enabled: !!activeProject && !!accessToken,
+        reconnect: !!activeProject && !!accessToken,
         onMessage: (payload) => {
             if (!isMigrationStatusEvent(payload)) return;
             const { data } = payload;
@@ -155,7 +154,7 @@ export default function ProjectDatabaseSettingsPage() {
                     setDbType(normalizeDbType(cfg.dbType));
                     // Backend no longer exposes plaintext DB URL retrieval endpoint.
                     // Use configured value when present, otherwise require manual input.
-                    setDbUrl((cfg as any).dbUrl || "");
+                    setDbUrl(cfg.dbUrl || "");
                     setSettingsFromConfig(cfg.settings || {});
                 }
             })
@@ -173,19 +172,19 @@ export default function ProjectDatabaseSettingsPage() {
 
     if (!activeProject) return null;
 
-    function setSettingsFromConfig(settings: Record<string, any>) {
-        setSslMode(settings.sslMode || "disable");
-        setPoolSize(settings.poolSize ?? 10);
-        setSchemaName(settings.schemaName || "public");
+    function setSettingsFromConfig(settings: Record<string, unknown>) {
+        setSslMode(typeof settings.sslMode === "string" ? settings.sslMode : "disable");
+        setPoolSize(typeof settings.poolSize === "number" ? settings.poolSize : 10);
+        setSchemaName(typeof settings.schemaName === "string" ? settings.schemaName : "public");
         setTenantOwnedAuth(settings.tenantOwnedAuth === true);
-        setJwtSecret(settings.jwtSecret || "");
+        setJwtSecret(typeof settings.jwtSecret === "string" ? settings.jwtSecret : "");
         // encryptionKey comes back as ***REDACTED*** from the API when set
         setHasEncryptionKey(settings.encryptionKey === '***REDACTED***' || (typeof settings.encryptionKey === 'string' && settings.encryptionKey.length > 0));
         setEncryptionKey("");
     }
 
-    function buildSettings(): Record<string, any> {
-        const s: Record<string, any> = {
+    function buildSettings(): Record<string, unknown> {
+        const s: Record<string, unknown> = {
             sslMode,
             poolSize,
             schemaName,
@@ -266,7 +265,7 @@ export default function ProjectDatabaseSettingsPage() {
 
                     <div>
                         <Label htmlFor="dbUrl">Database URL</Label>
-                        <Input id="dbUrl" value={dbUrl} onChange={(e: any) => setDbUrl(e.target.value)} placeholder={currentPlaceholder} />
+                        <Input id="dbUrl" value={dbUrl} onChange={(e) => setDbUrl(e.target.value)} placeholder={currentPlaceholder} />
                     </div>
 
                     <div>
@@ -293,7 +292,7 @@ export default function ProjectDatabaseSettingsPage() {
                             min={1}
                             max={100}
                             value={poolSize}
-                            onChange={(e: any) => setPoolSize(Number.parseInt(e.target.value) || 10)}
+                            onChange={(e) => setPoolSize(Number.parseInt(e.target.value) || 10)}
                         />
                     </div>
 
@@ -302,7 +301,7 @@ export default function ProjectDatabaseSettingsPage() {
                         <Input
                             id="schemaName"
                             value={schemaName}
-                            onChange={(e: any) => setSchemaName(e.target.value)}
+                            onChange={(e) => setSchemaName(e.target.value)}
                             placeholder="public"
                         />
                     </div>
@@ -323,7 +322,7 @@ export default function ProjectDatabaseSettingsPage() {
                                     id="encryptionKey"
                                     type="password"
                                     value={encryptionKey}
-                                    onChange={(e: any) => setEncryptionKey(e.target.value)}
+                                    onChange={(e) => setEncryptionKey(e.target.value)}
                                     placeholder={hasEncryptionKey ? "••••••••  (leave blank to keep current)" : "64-char hex or passphrase (min 16 chars)"}
                                     minLength={16}
                                 />
@@ -360,7 +359,7 @@ export default function ProjectDatabaseSettingsPage() {
                                     id="jwtSecret"
                                     type="password"
                                     value={jwtSecret}
-                                    onChange={(e: any) => setJwtSecret(e.target.value)}
+                                    onChange={(e) => setJwtSecret(e.target.value)}
                                     placeholder="your-secret-key-min-16-chars"
                                     minLength={16}
                                 />

@@ -6,7 +6,7 @@ export interface CategoryTemplate {
 	name: string;
 	category: string;
 	description: string;
-	defaultSettings: Record<string, any>;
+	defaultSettings: Record<string, unknown>;
 	suggestedPlugins: string[];
 	notificationEvents: string[];
 }
@@ -34,7 +34,7 @@ export interface MigrateUsersPayload {
 export interface ProjectConfig {
 	dbType: "postgresql" | "supabase" | "mssql" | "mongodb";
 	dbUrl?: string | null;
-	settings: Record<string, any>;
+	settings: Record<string, unknown>;
 	dbConnected?: boolean;
 }
 
@@ -321,7 +321,7 @@ function asJobIdResult(value: unknown): { jobId: string } {
 	};
 }
 
-function asJobStatusResult(value: unknown): { state: string; progress?: number; result?: any; failedReason?: string } {
+function asJobStatusResult(value: unknown): { state: string; progress?: number; result?: unknown; failedReason?: string } {
 	assert(isRecord(value), "Invalid job status response");
 	return {
 		state: requiredString(value.state, "state"),
@@ -385,7 +385,7 @@ const ProjectService = {
 		return asUpdatedProjectResult(unwrapDataEnvelope(data));
 	},
 
-	async updateConfig(projectId: string, config: Record<string, any>): Promise<ProjectConfig> {
+	async updateConfig(projectId: string, config: Record<string, unknown>): Promise<ProjectConfig> {
 		assertProjectId(projectId);
 		const { data } = await api.patch(`/projects/${projectId}/config`, config);
 		return asProjectConfig(unwrapDataEnvelope(data));
@@ -421,7 +421,7 @@ const ProjectService = {
 		return asJobIdResult(unwrapDataEnvelope(data));
 	},
 
-	async getJobStatus(projectId: string, jobId: string): Promise<{ state: string; progress?: number; result?: any; failedReason?: string }> {
+	async getJobStatus(projectId: string, jobId: string): Promise<{ state: string; progress?: number; result?: unknown; failedReason?: string }> {
 		assertProjectId(projectId);
 		assertNonEmptyString(jobId, "jobId");
 		const { data } = await api.get(`/projects/${projectId}/jobs/${jobId}`);

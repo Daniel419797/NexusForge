@@ -24,6 +24,41 @@ const sections: GuideSection[] = [
     { id: "checklist", title: "10. Launch Checklist", summary: "Go-live checklist for secure production rollout" },
 ];
 
+const supportedTriggers = ["manual", "row_created", "row_updated", "scheduled", "webhook"];
+
+const supportedNodes = [
+    "start",
+    "filter",
+    "branch",
+    "read_table",
+    "write_table",
+    "notify",
+    "transform",
+    "compute",
+    "aggregate",
+    "for_each",
+    "http_request",
+    "idempotency",
+    "lock",
+    "cache",
+    "subflow",
+    "queue_publish",
+    "queue_consume",
+    "stream_publish",
+    "stream_consume",
+    "approval_wait",
+    "saga_step",
+    "saga_compensate",
+    "submit_compute_job",
+    "run_transaction_unit",
+    "media_pipeline",
+    "fast_path_dispatch",
+    "delay",
+    "wait_until",
+    "report_export",
+    "end",
+];
+
 function CodeBlock({ code }: { code: string }) {
     return (
         <pre className="rounded-lg border border-border bg-muted/30 p-4 overflow-x-auto text-xs leading-6">
@@ -126,10 +161,31 @@ export default function LogicModulesGuidePage() {
                     <section id="workflow-design" className="space-y-3 scroll-mt-24">
                         <h2 className="text-xl font-semibold">3. Design Workflow</h2>
                         <p className="text-sm text-muted-foreground leading-7">
-                            Build with node types: start, filter, branch, read_table, write_table, notify, transform, compute, aggregate,
-                            for_each, http_request, idempotency, lock, cache, subflow, delay, wait_until, report_export, end.
-                            Trigger types: manual, row_created, row_updated, scheduled, webhook.
+                            Build with the same trigger and node contract enforced by the backend workflow schema. The graph must have
+                            exactly one start node, at least one end node, unique node IDs, valid edges, reachable nodes, and no cycles.
                         </p>
+                        <div className="grid gap-3 lg:grid-cols-2">
+                            <div className="rounded-lg border border-border p-4">
+                                <p className="text-sm font-medium">Supported triggers</p>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    {supportedTriggers.map((trigger) => (
+                                        <span key={trigger} className="rounded-md border border-border px-2 py-1 font-mono text-xs">
+                                            {trigger}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="rounded-lg border border-border p-4">
+                                <p className="text-sm font-medium">Supported node types</p>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    {supportedNodes.map((node) => (
+                                        <span key={node} className="rounded-md border border-border px-2 py-1 font-mono text-xs">
+                                            {node}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
                         <div className="rounded-lg border border-border p-4">
                             <p className="text-sm font-medium">Recommended pattern for API-like modules</p>
                             <ol className="list-decimal pl-5 mt-2 text-sm text-muted-foreground space-y-1">
@@ -221,7 +277,13 @@ PATCH /api/v1/projects/:projectId/config
                             <li>Retry failed/dead-lettered runs when transient errors are resolved.</li>
                             <li>Review dead letters frequently to prevent silent backlog growth.</li>
                             <li>Use version activation/rollback for controlled releases.</li>
+                            <li>Use readiness and ops summaries before launch and after any major workflow change.</li>
                         </ol>
+                        <CodeBlock
+                            code={`GET /api/v1/modules/:projectId/readiness
+GET /api/v1/modules/:projectId/ops/summary?windowHours=24
+GET /api/v1/modules/:projectId/:moduleKey/ops/summary?windowHours=24`}
+                        />
                     </section>
 
                     <section id="advanced" className="space-y-3 scroll-mt-24">
@@ -265,10 +327,12 @@ DELETE /api/v1/modules/<projectId>/product_api/crud/prod_123`}
                             <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-2 leading-7">
                                 <li>Project DB configured and tested.</li>
                                 <li>Module created, version saved, and active.</li>
+                                <li>`module_triggers` backfill has been applied for older versions.</li>
                                 <li>Webhook trigger configured with strong secret.</li>
                                 <li>Public caller uses valid `x-webhook-signature`.</li>
                                 <li>Rate limits tuned for expected traffic profile.</li>
                                 <li>Run monitoring, retry flow, and dead-letter review in place.</li>
+                                <li>Readiness API reports ready, or any degraded checks are explicitly accepted for launch.</li>
                             </ul>
                         </div>
                         <div className="flex flex-wrap gap-2">

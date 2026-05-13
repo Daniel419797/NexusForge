@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import AIService from "@/services/AIService";
 import { useProjectStore } from "@/store/projectStore";
+import type { AIUsageSummary } from "@/services/AIService";
 
 type AnalysisTool = "analyze-wallet" | "analyze-tx" | "suggest-yield";
 
@@ -59,6 +60,13 @@ const tools: ToolConfig[] = [
     },
 ];
 
+function apiErrorMessage(error: unknown, fallback: string): string {
+    const response = error && typeof error === "object" && "response" in error
+        ? (error as { response?: { data?: { message?: unknown } } }).response
+        : undefined;
+    return typeof response?.data?.message === "string" ? response.data.message : fallback;
+}
+
 export default function AgentsPage() {
     const { activeProject } = useProjectStore();
     const [activeTool, setActiveTool] = useState<AnalysisTool | null>(null);
@@ -69,7 +77,7 @@ export default function AgentsPage() {
     const [error, setError] = useState<string | null>(null);
 
     // Usage stats
-    const [usage, setUsage] = useState<any>(null);
+    const [usage, setUsage] = useState<AIUsageSummary | null>(null);
     const [usageLoading, setUsageLoading] = useState(false);
 
     const fetchUsage = async () => {
@@ -91,19 +99,18 @@ export default function AgentsPage() {
         setResult(null);
         setError(null);
         try {
-            let response: any;
             if (tool === "analyze-wallet") {
-                response = await AIService.analyzeWallet(activeProject.id, { address: inputValue.trim(), network });
+                const response = await AIService.analyzeWallet(activeProject.id, { address: inputValue.trim(), network });
                 setResult(response.analysis);
             } else if (tool === "analyze-tx") {
-                response = await AIService.analyzeTransaction(activeProject.id, { txHash: inputValue.trim(), network });
+                const response = await AIService.analyzeTransaction(activeProject.id, { txHash: inputValue.trim(), network });
                 setResult(response.analysis);
             } else {
-                response = await AIService.suggestYield(activeProject.id, { address: inputValue.trim(), network });
+                const response = await AIService.suggestYield(activeProject.id, { address: inputValue.trim(), network });
                 setResult(response.suggestions);
             }
-        } catch (err: any) {
-            setError(err?.response?.data?.message || "Analysis failed. Please try again.");
+        } catch (err: unknown) {
+            setError(apiErrorMessage(err, "Analysis failed. Please try again."));
         } finally {
             setLoading(false);
         }

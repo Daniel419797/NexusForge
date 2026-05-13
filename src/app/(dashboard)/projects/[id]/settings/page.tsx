@@ -16,6 +16,23 @@ import { useProjectStore } from "@/store/projectStore";
 const LOGIC_LIMIT_MIN = 5;
 const LOGIC_LIMIT_MAX = 1000;
 
+type LogicCrudRateLimits = {
+    getPerMinute?: number;
+    postPerMinute?: number;
+    patchPerMinute?: number;
+    deletePerMinute?: number;
+};
+
+type ProjectSettingsState = Record<string, unknown> & {
+    allowedOrigins?: string[];
+    rateLimit?: {
+        logicModules?: {
+            webhookPerMinute?: number;
+            crud?: LogicCrudRateLimits;
+        };
+    };
+};
+
 export default function ProjectSettingsPage() {
     const router = useRouter();
     const activeProject = useProjectStore((s) => s.activeProject);
@@ -23,7 +40,7 @@ export default function ProjectSettingsPage() {
     const [name, setName] = useState(activeProject?.name || "");
     const [origins, setOrigins] = useState<string[]>([]);
     const [newOrigin, setNewOrigin] = useState("");
-    const [projectSettings, setProjectSettings] = useState<Record<string, any>>({});
+    const [projectSettings, setProjectSettings] = useState<ProjectSettingsState>({});
 
     // UI States
     const [saving, setSaving] = useState(false);
@@ -66,12 +83,13 @@ export default function ProjectSettingsPage() {
     useEffect(() => {
         if (!activeProject) return;
         ProjectService.getById(activeProject.id).then((res) => {
-            setProjectSettings(res.config?.settings || {});
-            if (res.config?.settings?.allowedOrigins) {
-                setOrigins(res.config.settings.allowedOrigins);
+            const settings = (res.config?.settings ?? {}) as ProjectSettingsState;
+            setProjectSettings(settings);
+            if (Array.isArray(settings.allowedOrigins)) {
+                setOrigins(settings.allowedOrigins.filter((origin): origin is string => typeof origin === "string"));
             }
 
-            const logicModules = res.config?.settings?.rateLimit?.logicModules;
+            const logicModules = settings.rateLimit?.logicModules;
             const crud = logicModules?.crud;
             if (typeof logicModules?.webhookPerMinute === "number") {
                 setLogicWebhookLimit(String(logicModules.webhookPerMinute));

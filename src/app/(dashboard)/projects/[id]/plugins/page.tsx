@@ -82,7 +82,7 @@ export default function ProjectPluginsPage() {
         setIsConfigOpen(true);
     };
 
-    const handleSaveConfig = async (name: string, config: any) => {
+    const handleSaveConfig = async (name: string, config: Record<string, unknown>) => {
         if (!projectId) return;
         try {
             await PluginService.updateConfig(projectId, name, config);

@@ -11,6 +11,13 @@ import Link from "next/link";
 
 type VerifyState = "verifying" | "success" | "error" | "no-token";
 
+function apiErrorMessage(error: unknown, fallback: string): string {
+    const response = error && typeof error === "object" && "response" in error
+        ? (error as { response?: { data?: { message?: unknown } } }).response
+        : undefined;
+    return typeof response?.data?.message === "string" ? response.data.message : fallback;
+}
+
 export default function VerifyEmailPage() {
     return (
         <Suspense fallback={
@@ -57,8 +64,8 @@ function VerifyEmailContent() {
         try {
             await AuthService.resendVerification(resendEmail.trim());
             setResendMessage("Verification email sent! Check your inbox.");
-        } catch (err: any) {
-            setResendMessage(err?.response?.data?.message || "Failed to resend. Please try again.");
+        } catch (err: unknown) {
+            setResendMessage(apiErrorMessage(err, "Failed to resend. Please try again."));
         } finally {
             setResending(false);
         }

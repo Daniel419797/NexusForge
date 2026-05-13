@@ -52,7 +52,8 @@ export default function DashboardLayout({
 
     // Close mobile drawer on navigation
     useEffect(() => {
-        setMobileOpen(false);
+        const timeoutId = globalThis.setTimeout(() => setMobileOpen(false), 0);
+        return () => globalThis.clearTimeout(timeoutId);
     }, [pathname]);
 
     const toggleMobileDrawer = useCallback(() => setMobileOpen((v) => !v), []);

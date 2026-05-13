@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import AuthService from "@/services/AuthService";
+import { clearStoredAuthTokens, getStoredAccessToken } from "@/lib/authTokens";
 
 /**
  * AuthProvider — wraps protected routes.
@@ -20,7 +21,7 @@ export default function AuthProvider({
     const pathname = usePathname();
 
     useEffect(() => {
-        const token = localStorage.getItem("accessToken");
+        const token = getStoredAccessToken();
 
         if (!token) {
             setUser(null);
@@ -35,8 +36,7 @@ export default function AuthProvider({
             })
             .catch(() => {
                 setUser(null);
-                localStorage.removeItem("accessToken");
-                localStorage.removeItem("refreshToken");
+                clearStoredAuthTokens();
                 router.replace("/login");
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -8,6 +8,7 @@ import ChatInput from "@/components/Chat/ChatInput";
 import ChatService, { type ChatRoom, type ChatMessage } from "@/services/ChatService";
 import { useProjectStore } from "@/store/projectStore";
 import { useAuthStore } from "@/store/authStore";
+import { useAccessToken } from "@/hooks/useAccessToken";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import ScrollReveal from "@/components/Dashboard/ScrollReveal";
 import ElectricRippleButton from "@/components/Dashboard/ElectricRippleButton";
@@ -42,11 +43,18 @@ export default function ChatPage() {
     const [newMessage, setNewMessage] = useState("");
     const [chatMessage, setChatMessage] = useState<string | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const accessToken = useAccessToken();
 
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001/ws";
+    const wsBaseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001/ws";
+    const wsUrl = activeProject?.id
+        ? `${wsBaseUrl}${wsBaseUrl.includes("?") ? "&" : "?"}projectId=${encodeURIComponent(activeProject.id)}`
+        : wsBaseUrl;
 
     useWebSocket({
         url: wsUrl,
+        token: accessToken,
+        enabled: Boolean(activeProject?.id && accessToken),
+        reconnect: Boolean(activeProject?.id && accessToken),
         onMessage: (data: unknown) => {
             if (isChatSocketMessage(data) && data.payload.roomId === activeRoomId) {
                 setMessages((prev) => [...prev, data.payload]);

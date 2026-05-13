@@ -14,10 +14,11 @@ import {
     type Connection,
     type Edge,
     type Node,
+    type ReactFlowInstance,
     useEdgesState,
     useNodesState,
 } from "@xyflow/react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Eye, RefreshCw, RotateCcw } from "lucide-react";
 
 import LogicModuleService, {
     type LogicModuleDefinition,
@@ -30,8 +31,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
     Dialog,
+    DialogClose,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
@@ -63,6 +66,28 @@ type DraftSimulationResult = {
     error?: string;
 };
 
+type RunStatusFilter = "" | "running" | "succeeded" | "failed" | "dead_lettered";
+
+type RunTraceState = {
+    id: string;
+    status: string;
+    steps: Array<{
+        nodeId: string;
+        nodeType: string;
+        status: string;
+        input?: unknown;
+        output?: unknown;
+        error?: string;
+    }>;
+    createdAt: string;
+} | null;
+
+type RetryCandidate = {
+    runId: string;
+    inputPreview: unknown;
+    source: string;
+} | null;
+
 const NODE_TYPE_OPTIONS: Array<{ value: WorkflowNodeType; label: string }> = [
     { value: "start", label: "start" },
     { value: "filter", label: "filter" },
@@ -86,6 +111,10 @@ const NODE_TYPE_OPTIONS: Array<{ value: WorkflowNodeType; label: string }> = [
     { value: "approval_wait", label: "approval_wait" },
     { value: "saga_step", label: "saga_step" },
     { value: "saga_compensate", label: "saga_compensate" },
+    { value: "submit_compute_job", label: "submit_compute_job" },
+    { value: "run_transaction_unit", label: "run_transaction_unit" },
+    { value: "media_pipeline", label: "media_pipeline" },
+    { value: "fast_path_dispatch", label: "fast_path_dispatch" },
     { value: "delay", label: "delay" },
     { value: "wait_until", label: "wait_until" },
     { value: "report_export", label: "report_export" },
@@ -292,6 +321,44 @@ function defaultNodeConfig(type: WorkflowNodeType): Record<string, unknown> {
             outputKey: "saga_compensate",
         };
     }
+    if (type === "submit_compute_job") {
+        return {
+            provider: "remote",
+            jobType: "risk.score",
+            input: pathRef("input"),
+            timeoutMs: 20000,
+            cacheTtlSeconds: 600,
+            outputKey: "compute_job",
+        };
+    }
+    if (type === "run_transaction_unit") {
+        return {
+            unitKey: "orders.reserve_inventory",
+            payload: pathRef("input"),
+            isolationLevel: "serializable",
+            requireOutbox: true,
+            outputKey: "transaction",
+        };
+    }
+    if (type === "media_pipeline") {
+        return {
+            operation: "scan_media",
+            mediaRef: pathRef("input.mediaRef"),
+            timeoutMs: 30000,
+            outputKey: "media_pipeline",
+        };
+    }
+    if (type === "fast_path_dispatch") {
+        return {
+            targetType: "queue",
+            provider: "bullmq",
+            queueName: "events",
+            payload: pathRef("input"),
+            eventName: "workflow_event",
+            sampleTraceRate: 0.05,
+            outputKey: "fast_path_dispatch",
+        };
+    }
     if (type === "delay") {
         return {
             delayMs: 500,
@@ -343,6 +410,10 @@ function nodeConfigHint(type: WorkflowNodeType): string {
     if (type === "approval_wait") return "Pause for human approval with timeout routing (approved/rejected/timeout).";
     if (type === "saga_step") return "Execute a forward subflow step and register a compensation subflow for rollback.";
     if (type === "saga_compensate") return "Execute registered compensations in reverse order for long-running saga recovery.";
+    if (type === "submit_compute_job") return "Submit bounded compute work with idempotency and cached output metadata.";
+    if (type === "run_transaction_unit") return "Execute a named transactional unit with isolation, lock keys, and outbox requirements.";
+    if (type === "media_pipeline") return "Run bounded media ingestion, scan, transform, or metadata extraction steps.";
+    if (type === "fast_path_dispatch") return "Dispatch directly to stream, queue, or HTTP targets with trace sampling.";
     if (type === "delay") return "Pause execution for bounded milliseconds in the current run.";
     if (type === "wait_until") return "Wait until target timestamp with bounded maxWaitMs safety guard.";
     if (type === "report_export") return "Export array snapshots as JSON/CSV with delivery limits (inline/cache/table).";
@@ -376,6 +447,31 @@ function formatNodeAwareMessage(message: string, nodeTitleById: Map<string, stri
     });
 
     return formatted;
+}
+
+function formatJson(value: unknown): string {
+    try {
+        return JSON.stringify(value ?? {}, null, 2);
+    } catch {
+        return String(value);
+    }
+}
+
+function asRecordInput(value: unknown): Record<string, unknown> | undefined {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+    return value as Record<string, unknown>;
+}
+
+function valueSourcePath(value: unknown, fallback: string): string {
+    const record = asRecordInput(value);
+    return typeof record?.path === "string" ? record.path : fallback;
+}
+
+function apiErrorMessage(error: unknown, fallback: string): string {
+    const response = asRecordInput(error)?.response;
+    const data = asRecordInput(response)?.data;
+    const message = asRecordInput(data)?.message;
+    return typeof message === "string" ? message : fallback;
 }
 
 function evaluateExpression(expression: string, input: Record<string, unknown>, steps: Record<string, unknown>): boolean {
@@ -567,7 +663,7 @@ export default function LogicBuilderPage() {
     const urlModuleKey = searchParams.get("moduleKey") ?? "";
 
     const wrapperRef = useRef<HTMLDivElement | null>(null);
-    const [rf, setRf] = useState<any>(null);
+    const [rf, setRf] = useState<ReactFlowInstance<Node<FlowData>, Edge> | null>(null);
 
     const [nodes, setNodes, onNodesChange] = useNodesState<Node<FlowData>>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -601,8 +697,11 @@ export default function LogicBuilderPage() {
 
     const [runs, setRuns] = useState<Array<{ id: string; status: string; triggeredBy: string | null; createdAt: string; completedAt: string | null }>>([]);
     const [runsLoading, setRunsLoading] = useState(false);
-    const [selectedRunTrace, setSelectedRunTrace] = useState<{ id: string; status: string; steps: Array<{ nodeId: string; nodeType: string; status: string; output?: unknown; error?: string }>; createdAt: string } | null>(null);
+    const [runStatusFilter, setRunStatusFilter] = useState<RunStatusFilter>("");
+    const [runOffset, setRunOffset] = useState(0);
+    const [selectedRunTrace, setSelectedRunTrace] = useState<RunTraceState>(null);
     const [isRetrying, setIsRetrying] = useState<string | null>(null);
+    const [retryCandidate, setRetryCandidate] = useState<RetryCandidate>(null);
     const [deadLetters, setDeadLetters] = useState<LogicModuleDeadLetterSummary[]>([]);
     const [deadLettersLoading, setDeadLettersLoading] = useState(false);
     const [deadLetterDetail, setDeadLetterDetail] = useState<LogicModuleDeadLetterDetail | null>(null);
@@ -736,11 +835,22 @@ export default function LogicBuilderPage() {
         }
     };
 
-    const loadRunHistory = async (projId: string, key: string) => {
+    const loadRunHistory = async (
+        projId: string,
+        key: string,
+        options?: { status?: RunStatusFilter; offset?: number },
+    ) => {
         setRunsLoading(true);
         try {
-            const data = await LogicModuleService.listRuns(projId, key, { limit: 20 });
+            const nextOffset = options?.offset ?? runOffset;
+            const status = options?.status ?? runStatusFilter;
+            const data = await LogicModuleService.listRuns(projId, key, {
+                limit: 20,
+                offset: nextOffset,
+                ...(status ? { status } : {}),
+            });
             setRuns(data);
+            setRunOffset(nextOffset);
         } catch {
             // silently ignore
         } finally {
@@ -769,10 +879,10 @@ export default function LogicBuilderPage() {
             try { parsedInput = JSON.parse(executeInput); } catch { /* use empty */ }
             const result = await LogicModuleService.executeModule(projectId, moduleKey, parsedInput);
             setExecuteResult(result);
-            await loadRunHistory(projectId, moduleKey);
+            await loadRunHistory(projectId, moduleKey, { offset: 0 });
             await loadDeadLetters(projectId, moduleKey);
-        } catch (error: any) {
-            setMessage(error?.response?.data?.message || "Execution failed");
+        } catch (error: unknown) {
+            setMessage(apiErrorMessage(error, "Execution failed"));
         } finally {
             setIsExecuting(false);
         }
@@ -784,8 +894,8 @@ export default function LogicBuilderPage() {
         try {
             await LogicModuleService.rollbackVersion(projectId, selectedModuleKey, selectedVersionNumber);
             setMessage(`Rolled back to v${selectedVersionNumber}`);
-        } catch (error: any) {
-            setMessage(error?.response?.data?.message || "Rollback failed");
+        } catch (error: unknown) {
+            setMessage(apiErrorMessage(error, "Rollback failed"));
         }
     };
 
@@ -793,13 +903,44 @@ export default function LogicBuilderPage() {
         if (!projectId || !moduleKey) return;
         setIsRetrying(runId);
         try {
-            await LogicModuleService.retryRun(projectId, moduleKey, runId);
+            await LogicModuleService.retryRun(projectId, moduleKey, runId, asRecordInput(retryCandidate?.inputPreview));
             await loadRunHistory(projectId, moduleKey);
             await loadDeadLetters(projectId, moduleKey);
         } catch {
             setMessage("Retry failed.");
         } finally {
             setIsRetrying(null);
+            setRetryCandidate(null);
+        }
+    };
+
+    const handleRunStatusFilterChange = async (status: RunStatusFilter) => {
+        setRunStatusFilter(status);
+        setRunOffset(0);
+        if (projectId && selectedModuleKey) {
+            await loadRunHistory(projectId, selectedModuleKey, { status, offset: 0 });
+        }
+    };
+
+    const prepareRetry = async (runId: string) => {
+        if (!projectId || !moduleKey) return;
+        try {
+            const trace = await LogicModuleService.getRunTrace(projectId, moduleKey, runId);
+            const firstInput = trace.steps[0]?.input;
+            const recoveredInput = firstInput && typeof firstInput === "object" && "input" in (firstInput as Record<string, unknown>)
+                ? (firstInput as Record<string, unknown>).input
+                : firstInput ?? {};
+            setRetryCandidate({
+                runId,
+                inputPreview: recoveredInput,
+                source: firstInput ? "Recovered from the first persisted run step." : "Backend will retry with an empty input object.",
+            });
+        } catch {
+            setRetryCandidate({
+                runId,
+                inputPreview: {},
+                source: "Backend will recover the original input during retry.",
+            });
         }
     };
 
@@ -822,6 +963,18 @@ export default function LogicBuilderPage() {
         } catch {
             setMessage("Failed to load dead-letter details.");
         }
+    };
+
+    const handleDeadLetterTrace = async () => {
+        if (!deadLetterDetail?.moduleRunId) return;
+        setDeadLetterDetailOpen(false);
+        await handleViewTrace(deadLetterDetail.moduleRunId);
+    };
+
+    const handleDeadLetterRetry = async () => {
+        if (!deadLetterDetail?.moduleRunId) return;
+        await prepareRetry(deadLetterDetail.moduleRunId);
+        setDeadLetterDetailOpen(false);
     };
 
     useEffect(() => {
@@ -1018,8 +1171,8 @@ export default function LogicBuilderPage() {
             setSelectedModuleKey(moduleKey);
             setSelectedVersionNumber(version.versionNumber);
             setMessage(`Saved and activated ${moduleKey}@${version.versionNumber}`);
-        } catch (error: any) {
-            setMessage(error?.response?.data?.message || "Failed to save module");
+        } catch (error: unknown) {
+            setMessage(apiErrorMessage(error, "Failed to save module"));
         } finally {
             setIsSaving(false);
         }
@@ -1249,7 +1402,7 @@ export default function LogicBuilderPage() {
                                 <div className="space-y-2 rounded-md border p-2">
                                     <Label className="text-xs">Timestamp Path</Label>
                                     <Input
-                                        value={String((selectedNodeConfig.timestamp as any)?.path ?? "input.resumeAt")}
+                                        value={valueSourcePath(selectedNodeConfig.timestamp, "input.resumeAt")}
                                         onChange={(e) => setValueSourcePath("timestamp", e.target.value)}
                                         placeholder="input.resumeAt"
                                     />
@@ -1287,7 +1440,7 @@ export default function LogicBuilderPage() {
                                             <Label className="text-xs">Delivery</Label>
                                             <select
                                                 className="w-full h-8 px-2 border rounded-md bg-background text-xs"
-                                                value={String((selectedNodeConfig.delivery as any)?.type ?? "inline")}
+                                                value={String(asRecordInput(selectedNodeConfig.delivery)?.type ?? "inline")}
                                                 onChange={(e) => patchSelectedNodeConfig({ delivery: { ...(selectedNodeConfig.delivery as Record<string, unknown> ?? {}), type: e.target.value } })}
                                             >
                                                 <option value="inline">inline</option>
@@ -1320,7 +1473,7 @@ export default function LogicBuilderPage() {
                                 <div className="space-y-2 rounded-md border p-2">
                                     <Label className="text-xs">Request URL Path</Label>
                                     <Input
-                                        value={String((selectedNodeConfig.url as any)?.path ?? "input.targetUrl")}
+                                        value={valueSourcePath(selectedNodeConfig.url, "input.targetUrl")}
                                         onChange={(e) => setValueSourcePath("url", e.target.value)}
                                         placeholder="input.targetUrl"
                                     />
@@ -1530,17 +1683,43 @@ export default function LogicBuilderPage() {
             {selectedModuleKey && (
                 <div className="space-y-4">
                 <Card className="p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                        <Label>Run History</Label>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <Label>Run History</Label>
+                            <p className="text-[11px] text-muted-foreground mt-1">Filter runs and inspect persisted step evidence.</p>
+                        </div>
                         <Button
                             type="button"
                             variant="ghost"
                             size="sm"
                             onClick={() => loadRunHistory(projectId!, selectedModuleKey)}
                             disabled={runsLoading}
+                            className="gap-1.5 self-start sm:self-auto"
                         >
+                            <RefreshCw className={`h-3.5 w-3.5 ${runsLoading ? "animate-spin" : ""}`} />
                             {runsLoading ? "Loading..." : "Refresh"}
                         </Button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                        {[
+                            ["", "All"],
+                            ["running", "Running"],
+                            ["succeeded", "Succeeded"],
+                            ["failed", "Failed"],
+                            ["dead_lettered", "Dead-lettered"],
+                        ].map(([value, label]) => (
+                            <Button
+                                key={value || "all"}
+                                type="button"
+                                variant={runStatusFilter === value ? "default" : "outline"}
+                                size="sm"
+                                className="text-xs"
+                                onClick={() => handleRunStatusFilterChange(value as RunStatusFilter)}
+                            >
+                                {label}
+                            </Button>
+                        ))}
                     </div>
 
                     {runs.length === 0 ? (
@@ -1548,71 +1727,73 @@ export default function LogicBuilderPage() {
                     ) : (
                         <div className="divide-y border rounded-md text-sm">
                             {runs.map((run) => (
-                                <div key={run.id} className="flex items-center gap-3 px-3 py-2">
+                                <div key={run.id} className="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
                                     <span className={`text-xs font-mono font-semibold px-2 py-0.5 rounded-full ${
                                         run.status === "succeeded"
                                             ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                                            : run.status === "failed"
+                                            : run.status === "failed" || run.status === "dead_lettered"
                                             ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
                                             : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
                                     }`}>{run.status}</span>
-                                    <span className="text-xs text-muted-foreground font-mono flex-1 truncate">{run.id.slice(0, 8)}…</span>
+                                    <span className="text-xs text-muted-foreground font-mono flex-1 truncate">{run.id.slice(0, 8)}...</span>
                                     <span className="text-xs text-muted-foreground">{new Date(run.createdAt).toLocaleString()}</span>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-xs"
-                                        onClick={() => handleViewTrace(run.id)}
-                                    >
-                                        Trace
-                                    </Button>
-                                    {run.status === "failed" && (
+                                    <div className="flex gap-2 sm:ml-auto">
                                         <Button
                                             type="button"
                                             variant="ghost"
                                             size="sm"
-                                            className="text-xs"
-                                            disabled={isRetrying === run.id}
-                                            onClick={() => handleRetry(run.id)}
+                                            className="text-xs gap-1.5"
+                                            onClick={() => handleViewTrace(run.id)}
                                         >
-                                            {isRetrying === run.id ? "Retrying…" : "Retry"}
+                                            <Eye className="h-3.5 w-3.5" />
+                                            Trace
                                         </Button>
-                                    )}
+                                        {(run.status === "failed" || run.status === "dead_lettered") && (
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-xs gap-1.5"
+                                                disabled={isRetrying === run.id}
+                                                onClick={() => prepareRetry(run.id)}
+                                            >
+                                                <RotateCcw className="h-3.5 w-3.5" />
+                                                {isRetrying === run.id ? "Retrying..." : "Retry"}
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     )}
 
-                    {selectedRunTrace && (
-                        <div className="border rounded-md p-3 space-y-2 bg-muted/30">
-                            <div className="flex items-center justify-between">
-                                <p className="text-xs font-semibold">Trace — {selectedRunTrace.id.slice(0, 8)}…</p>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-xs"
-                                    onClick={() => setSelectedRunTrace(null)}
-                                >
-                                    Close
-                                </Button>
-                            </div>
-                            <div className="space-y-1">
-                                {selectedRunTrace.steps.map((step, i) => (
-                                    <div key={i} className="text-xs font-mono flex gap-2">
-                                        <span className={step.status === "succeeded" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
-                                            {step.status === "succeeded" ? "✓" : "✗"}
-                                        </span>
-                                        <span className="text-muted-foreground">{nodeTitleById.get(step.nodeId) ?? step.nodeId}</span>
-                                        <span className="opacity-70">[{step.nodeId}]</span>
-                                        <span>({step.nodeType})</span>
-                                        {step.error && <span className="text-red-500 truncate max-w-[200px]">{step.error}</span>}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                    <div className="flex items-center justify-between gap-3 border-t pt-3">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="gap-1.5"
+                            disabled={runsLoading || runOffset === 0}
+                            onClick={() => loadRunHistory(projectId!, selectedModuleKey, { offset: Math.max(runOffset - 20, 0) })}
+                        >
+                            <ChevronLeft className="h-3.5 w-3.5" />
+                            Previous
+                        </Button>
+                        <span className="text-xs text-muted-foreground">
+                            {runs.length === 0 ? "No runs on this page" : `Showing ${runOffset + 1}-${runOffset + runs.length}`}
+                        </span>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="gap-1.5"
+                            disabled={runsLoading || runs.length < 20}
+                            onClick={() => loadRunHistory(projectId!, selectedModuleKey, { offset: runOffset + 20 })}
+                        >
+                            Next
+                            <ChevronRight className="h-3.5 w-3.5" />
+                        </Button>
+                    </div>
                 </Card>
 
                 <Card className="p-4 space-y-3">
@@ -1624,7 +1805,9 @@ export default function LogicBuilderPage() {
                             size="sm"
                             onClick={() => loadDeadLetters(projectId!, selectedModuleKey)}
                             disabled={deadLettersLoading}
+                            className="gap-1.5"
                         >
+                            <RefreshCw className={`h-3.5 w-3.5 ${deadLettersLoading ? "animate-spin" : ""}`} />
                             {deadLettersLoading ? "Loading..." : "Refresh"}
                         </Button>
                     </div>
@@ -1634,8 +1817,8 @@ export default function LogicBuilderPage() {
                     ) : (
                         <div className="divide-y border rounded-md text-sm">
                             {deadLetters.map((deadLetter) => (
-                                <div key={deadLetter.id} className="flex items-center gap-3 px-3 py-2">
-                                    <span className="text-xs text-muted-foreground font-mono flex-1 truncate">{deadLetter.id.slice(0, 8)}…</span>
+                                <div key={deadLetter.id} className="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
+                                    <span className="text-xs text-muted-foreground font-mono flex-1 truncate">{deadLetter.id.slice(0, 8)}...</span>
                                     <span className="text-xs truncate max-w-[320px] text-muted-foreground">
                                         {formatNodeAwareMessage(deadLetter.reason || deadLetter.runErrorSummary || "Execution failed", nodeTitleById)}
                                     </span>
@@ -1643,9 +1826,10 @@ export default function LogicBuilderPage() {
                                         type="button"
                                         variant="ghost"
                                         size="sm"
-                                        className="text-xs"
+                                        className="text-xs gap-1.5 sm:ml-auto"
                                         onClick={() => handleViewDeadLetter(deadLetter.id)}
                                     >
+                                        <Eye className="h-3.5 w-3.5" />
                                         View
                                     </Button>
                                 </div>
@@ -1655,6 +1839,119 @@ export default function LogicBuilderPage() {
                 </Card>
                 </div>
             )}
+
+            <Dialog open={!!selectedRunTrace} onOpenChange={(open) => { if (!open) setSelectedRunTrace(null); }}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Run Trace</DialogTitle>
+                        <DialogDescription>
+                            Step inputs, outputs, and errors captured for run {selectedRunTrace?.id.slice(0, 8) ?? ""}.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {selectedRunTrace ? (
+                        <div className="space-y-3">
+                            <div className="grid gap-3 text-xs sm:grid-cols-3">
+                                <div className="rounded border p-2">
+                                    <p className="text-muted-foreground">Run ID</p>
+                                    <p className="font-mono break-all">{selectedRunTrace.id}</p>
+                                </div>
+                                <div className="rounded border p-2">
+                                    <p className="text-muted-foreground">Status</p>
+                                    <p className="font-mono">{selectedRunTrace.status}</p>
+                                </div>
+                                <div className="rounded border p-2">
+                                    <p className="text-muted-foreground">Created</p>
+                                    <p>{new Date(selectedRunTrace.createdAt).toLocaleString()}</p>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                {selectedRunTrace.steps.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground">No persisted steps for this run.</p>
+                                ) : selectedRunTrace.steps.map((step, index) => (
+                                    <div key={`${step.nodeId}-${index}`} className="rounded border p-3 space-y-3">
+                                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                                            <span className={`font-mono font-semibold px-2 py-0.5 rounded-full ${
+                                                step.status === "succeeded"
+                                                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                                    : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                                            }`}>
+                                                {step.status}
+                                            </span>
+                                            <span className="font-medium">{nodeTitleById.get(step.nodeId) ?? step.nodeId}</span>
+                                            <span className="text-muted-foreground font-mono">[{step.nodeId}]</span>
+                                            <span className="text-muted-foreground">({step.nodeType})</span>
+                                        </div>
+                                        <div className="grid gap-3 lg:grid-cols-3">
+                                            <div>
+                                                <p className="text-xs text-muted-foreground mb-1">Input</p>
+                                                <Textarea readOnly className="min-h-[140px] font-mono text-xs" value={formatJson(step.input)} />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground mb-1">Output</p>
+                                                <Textarea readOnly className="min-h-[140px] font-mono text-xs" value={formatJson(step.output)} />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground mb-1">Error</p>
+                                                <Textarea readOnly className="min-h-[140px] font-mono text-xs" value={step.error || ""} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : null}
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="outline">Close</Button>
+                        </DialogClose>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={!!retryCandidate} onOpenChange={(open) => { if (!open) setRetryCandidate(null); }}>
+                <DialogContent className="sm:max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Retry Run</DialogTitle>
+                        <DialogDescription>
+                            Confirm the input source before retrying the failed execution.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {retryCandidate ? (
+                        <div className="space-y-3">
+                            <div className="rounded border p-2 text-xs">
+                                <p className="text-muted-foreground">Run ID</p>
+                                <p className="font-mono break-all">{retryCandidate.runId}</p>
+                            </div>
+                            <div className="rounded border p-2 text-xs">
+                                <p className="text-muted-foreground">Recovered Input Source</p>
+                                <p className="mt-1">{retryCandidate.source}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground mb-1">Input Preview</p>
+                                <Textarea
+                                    readOnly
+                                    className="min-h-[220px] font-mono text-xs"
+                                    value={formatJson(retryCandidate.inputPreview)}
+                                />
+                            </div>
+                        </div>
+                    ) : null}
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="outline">Cancel</Button>
+                        </DialogClose>
+                        <Button
+                            type="button"
+                            className="gap-1.5"
+                            disabled={!retryCandidate || isRetrying === retryCandidate.runId}
+                            onClick={() => retryCandidate && handleRetry(retryCandidate.runId)}
+                        >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                            {retryCandidate && isRetrying === retryCandidate.runId ? "Retrying..." : "Retry Run"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <Dialog open={deadLetterDetailOpen} onOpenChange={setDeadLetterDetailOpen}>
                 <DialogContent className="sm:max-w-2xl">
@@ -1693,9 +1990,30 @@ export default function LogicBuilderPage() {
                                 <Textarea
                                     readOnly
                                     className="min-h-[220px] font-mono text-xs"
-                                    value={JSON.stringify(deadLetterDetail.payloadJson ?? {}, null, 2)}
+                                    value={formatJson(deadLetterDetail.payloadJson)}
                                 />
                             </div>
+                            <DialogFooter>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="gap-1.5"
+                                    disabled={!deadLetterDetail.moduleRunId}
+                                    onClick={handleDeadLetterTrace}
+                                >
+                                    <Eye className="h-3.5 w-3.5" />
+                                    View Run
+                                </Button>
+                                <Button
+                                    type="button"
+                                    className="gap-1.5"
+                                    disabled={!deadLetterDetail.moduleRunId || isRetrying === deadLetterDetail.moduleRunId}
+                                    onClick={handleDeadLetterRetry}
+                                >
+                                    <RotateCcw className="h-3.5 w-3.5" />
+                                    {isRetrying === deadLetterDetail.moduleRunId ? "Retrying..." : "Retry"}
+                                </Button>
+                            </DialogFooter>
                         </div>
                     ) : (
                         <p className="text-sm text-muted-foreground">No details loaded.</p>

@@ -15,6 +15,13 @@ interface IdeaSubmissionDialogProps {
     onOpenChange: (open: boolean) => void;
 }
 
+function apiErrorMessage(error: unknown, fallback: string): string {
+    const response = error && typeof error === "object" && "response" in error
+        ? (error as { response?: { data?: { message?: unknown } } }).response
+        : undefined;
+    return typeof response?.data?.message === "string" ? response.data.message : fallback;
+}
+
 export default function IdeaSubmissionDialog({ open, onOpenChange }: IdeaSubmissionDialogProps) {
     const { activeProject } = useProjectStore();
     const [title, setTitle] = useState("");
@@ -69,8 +76,8 @@ export default function IdeaSubmissionDialog({ open, onOpenChange }: IdeaSubmiss
             setTimeout(() => {
                 handleOpenChange(false);
             }, 2000);
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Failed to submit idea.");
+        } catch (err: unknown) {
+            setError(apiErrorMessage(err, "Failed to submit idea."));
         } finally {
             setIsSubmitting(false);
         }
