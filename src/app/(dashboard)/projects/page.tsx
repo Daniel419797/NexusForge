@@ -90,7 +90,7 @@ export default function ProjectsPage() {
                             placeholder="Search projects..."
                             className="w-full sm:w-64 bg-white/[0.03] border-white/[0.06] text-white/80 placeholder:text-white/20"
                             value={searchText}
-                            onChange={(e: any) => setSearchText(e.target.value)}
+                            onChange={(e) => setSearchText(e.target.value)}
                         />
                         <Button
                             onClick={() => setCreateOpen(true)}

@@ -7,6 +7,7 @@ import { useProjectStore } from "@/store/projectStore";
 import ProjectService from "@/services/ProjectService";
 import DashboardService from "@/services/DashboardService";
 import RealtimeStreamChart from "@/components/Dashboard/RealtimeStreamChart";
+import { useAccessToken } from "@/hooks/useAccessToken";
 import { useWebSocket } from "@/hooks/useWebSocket";
 
 // Three.js must be loaded client-only (no SSR)
@@ -33,6 +34,7 @@ export default function ProjectOverviewPage() {
     const [moduleLabels, setModuleLabels] = useState<string[]>([]);
     const [realtimeData, setRealtimeData] = useState<number[][] | undefined>(undefined);
     const [analyticsError, setAnalyticsError] = useState(false);
+    const accessToken = useAccessToken();
 
     // Realtime refs (not state — avoid re-render on every tick)
     const realtimePointsRef = useRef<number[][]>([[], [], []]);
@@ -138,6 +140,9 @@ export default function ProjectOverviewPage() {
         : wsBaseUrl;
     useWebSocket({
         url: wsUrl,
+        token: accessToken,
+        enabled: Boolean(project?.id && accessToken),
+        reconnect: Boolean(project?.id && accessToken),
         onMessage: (data: unknown) => {
             const msg = data as { event?: string; data?: { requestsLastMinute: number; wsConnectionsActive: number; dbConnectionsActive: number } };
             if (msg?.event === "realtime:snapshot" && msg.data) {

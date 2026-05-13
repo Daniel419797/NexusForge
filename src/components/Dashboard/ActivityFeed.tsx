@@ -1,9 +1,10 @@
 ﻿"use client";
 
 import { motion, useInView } from "framer-motion";
-import { useRef, useState, useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { type ActivityEntry } from "@/services/DashboardService";
+import { useAccessToken } from "@/hooks/useAccessToken";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useProjectStore } from "@/store/projectStore";
 
@@ -49,27 +50,28 @@ export default function ActivityFeed() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
   const activeProject = useProjectStore((s) => s.activeProject);
+  const activeProjectId = activeProject?.id;
 
   const [items, setItems] = useState<ActivityEntry[]>([]);
   const [wsStatus, setWsStatus] = useState<"connecting" | "connected" | "auth_failed" | "disconnected">("connecting");
 
-  const wsToken = useMemo(() => {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem("accessToken");
-  }, [activeProject?.id]);
+  const wsToken = useAccessToken();
 
   const wsUrl = useMemo(() => {
-    if (!activeProject?.id) return null;
+    if (!activeProjectId) return null;
     const base = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001/ws";
     const joiner = base.includes("?") ? "&" : "?";
-    return `${base}${joiner}projectId=${encodeURIComponent(activeProject.id)}`;
-  }, [activeProject?.id]);
+    return `${base}${joiner}projectId=${encodeURIComponent(activeProjectId)}`;
+  }, [activeProjectId]);
 
   const { isConnected } = useWebSocket({
     url: wsUrl || "ws://localhost:3001/ws",
     token: wsToken,
     enabled: Boolean(wsUrl && wsToken),
     reconnect: Boolean(wsUrl && wsToken),
+    onAuthExpired: () => {
+      setWsStatus("auth_failed");
+    },
     onOpen: () => {
       setWsStatus("connected");
     },
@@ -87,7 +89,7 @@ export default function ActivityFeed() {
 
       const incoming = payload.data as ActivityEntry;
       if (!incoming?.id || !incoming?.action || !incoming?.createdAt) return;
-      if (activeProject?.id && incoming.projectId !== activeProject.id) return;
+      if (activeProjectId && incoming.projectId !== activeProjectId) return;
 
       setItems((prev) => {
         const deduped = prev.filter((item) => item.id !== incoming.id);

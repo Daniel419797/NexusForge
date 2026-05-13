@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import OAuthButtons from "@/components/Auth/OAuthButtons";
 import AuthService from "@/services/AuthService";
+import { setStoredAuthTokens } from "@/lib/authTokens";
 import { useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
@@ -26,8 +27,10 @@ export default function LoginPage() {
 
         try {
             const result = await AuthService.login({ email, password });
-            localStorage.setItem("accessToken", result.accessToken);
-            localStorage.setItem("refreshToken", result.refreshToken);
+            setStoredAuthTokens({
+                accessToken: result.accessToken,
+                refreshToken: result.refreshToken,
+            });
             setUser(result.user);
             router.push("/projects");
         } catch (err: unknown) {

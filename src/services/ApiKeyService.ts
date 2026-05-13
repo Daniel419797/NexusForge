@@ -145,7 +145,7 @@ const ApiKeyService = {
         let token = await ProjectTokenService.getToken(projectId);
         try {
             return await attempt(token);
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (axios.isAxiosError(err) && err.response?.status === 401) {
                 // token expired or revoked; refresh and retry once
                 ProjectTokenService.clearToken(projectId);
@@ -172,7 +172,7 @@ const ApiKeyService = {
         let token = await ProjectTokenService.getToken(projectId);
         try {
             return await attempt(token);
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (axios.isAxiosError(err) && err.response?.status === 401) {
                 ProjectTokenService.clearToken(projectId);
                 token = await ProjectTokenService.getToken(projectId);
@@ -197,7 +197,7 @@ const ApiKeyService = {
         let token = await ProjectTokenService.getToken(projectId);
         try {
             return await attempt(token);
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (axios.isAxiosError(err) && err.response?.status === 401) {
                 ProjectTokenService.clearToken(projectId);
                 token = await ProjectTokenService.getToken(projectId);
@@ -222,7 +222,7 @@ const ApiKeyService = {
         let token = await ProjectTokenService.getToken(projectId);
         try {
             return await attempt(token);
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (axios.isAxiosError(err) && err.response?.status === 401) {
                 ProjectTokenService.clearToken(projectId);
                 token = await ProjectTokenService.getToken(projectId);

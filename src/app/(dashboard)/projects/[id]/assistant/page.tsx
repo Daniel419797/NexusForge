@@ -46,7 +46,7 @@ export default function AssistantPage() {
                 history: messages,
             });
             setMessages((prev) => [...prev, { role: "assistant", content: response.reply }]);
-        } catch (err: any) {
+        } catch {
             setMessages((prev) => [
                 ...prev,
                 { role: "assistant", content: "Sorry, I encountered an error. Please try again." },

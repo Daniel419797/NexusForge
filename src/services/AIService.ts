@@ -10,6 +10,10 @@ export interface AIUsage {
     createdAt: string;
 }
 
+export interface AIUsageSummary {
+    totalTokens?: number;
+}
+
 export interface WalletAnalysis {
     address: string;
     analysis: string;
@@ -51,14 +55,21 @@ function asAIResponsePayload(value: unknown): AIResponsePayload {
     return value as unknown as AIResponsePayload;
 }
 
+function asAIUsageSummary(value: unknown): AIUsageSummary {
+    assertObject(value, "ai usage");
+    return {
+        totalTokens: typeof value.totalTokens === "number" ? value.totalTokens : undefined,
+    };
+}
+
 const AIService = {
     // Usage
-    async getUsage(projectId: string): Promise<unknown> {
+    async getUsage(projectId: string): Promise<AIUsageSummary> {
         assertProjectId(projectId);
         const { data } = await api.get("/ai/usage", {
             headers: { "x-project-id": projectId },
         });
-        return unwrapDataEnvelope(data);
+        return asAIUsageSummary(unwrapDataEnvelope(data));
     },
 
     // Text generation
@@ -77,7 +88,7 @@ const AIService = {
     // Multi-turn chat
     async chatCompletion(
         projectId: string,
-        payload: { messages: any[]; temperature?: number },
+        payload: { messages: unknown[]; temperature?: number },
     ): Promise<AIResponsePayload> {
         assertProjectId(projectId);
         if (payload.messages !== undefined) {

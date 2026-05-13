@@ -9,10 +9,10 @@ function UnsubscribeContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [status, setStatus] = useState<"loading" | "success" | "error" | "missing">("loading");
+  const displayStatus = token ? status : "missing";
 
   useEffect(() => {
     if (!token) {
-      setStatus("missing");
       return;
     }
 
@@ -32,14 +32,14 @@ function UnsubscribeContent() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="max-w-md mx-auto px-6 text-center">
-        {status === "loading" && (
+        {displayStatus === "loading" && (
           <div>
             <div className="w-10 h-10 mx-auto mb-4 rounded-full border-2 border-white/30 border-t-transparent animate-spin" />
             <p className="text-sm text-white/50">Processing your unsubscribe request...</p>
           </div>
         )}
 
-        {status === "success" && (
+        {displayStatus === "success" && (
           <div>
             <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center">
               <svg aria-hidden="true" className="w-7 h-7 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -60,7 +60,7 @@ function UnsubscribeContent() {
           </div>
         )}
 
-        {status === "error" && (
+        {displayStatus === "error" && (
           <div>
             <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
               <svg aria-hidden="true" className="w-7 h-7 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -81,7 +81,7 @@ function UnsubscribeContent() {
           </div>
         )}
 
-        {status === "missing" && (
+        {displayStatus === "missing" && (
           <div>
             <h1 className="text-xl font-bold text-white mb-2">Invalid Link</h1>
             <p className="text-sm text-white/50 mb-6">

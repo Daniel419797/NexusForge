@@ -7,7 +7,7 @@ export interface X402Config {
     amount?: string;
     currency?: string;
     chain?: string;
-    settings?: Record<string, any>;
+    settings?: Record<string, unknown>;
 }
 
 function requiredBoolean(value: unknown, fieldName: string): boolean {

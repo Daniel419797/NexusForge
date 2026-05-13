@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { clearStoredAuthTokens } from "@/lib/authTokens";
 import ComplianceService, {
     type ConsentType,
     type ConsentStatus,
     type ConsentRecord,
     type AuditLogEntry,
     type HipaaStatus,
+    type BreachRecord,
 } from "@/services/ComplianceService";
 
 const CONSENT_TYPES: { type: ConsentType; label: string; description: string }[] = [
@@ -43,7 +45,7 @@ export default function CompliancePage() {
     const [breachDescription, setBreachDescription] = useState("");
     const [breachDataAffected, setBreachDataAffected] = useState("");
     const [breachSeverity, setBreachSeverity] = useState<"low" | "medium" | "high" | "critical">("medium");
-    const [breaches, setBreaches] = useState<any[]>([]);
+    const [breaches, setBreaches] = useState<BreachRecord[]>([]);
     const [loadingBreaches, setLoadingBreaches] = useState(false);
     const [submittingBreach, setSubmittingBreach] = useState(false);
 
@@ -121,8 +123,7 @@ export default function CompliancePage() {
             await ComplianceService.deleteAccount(projectId);
             // Clear tokens and redirect
             if (globalThis.window !== undefined) {
-                localStorage.removeItem("accessToken");
-                localStorage.removeItem("refreshToken");
+                clearStoredAuthTokens();
                 globalThis.window.location.href = "/";
             }
         } catch {

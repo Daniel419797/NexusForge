@@ -31,7 +31,7 @@ export interface Project {
             poolSize?: number;
             schemaName?: string;
             allowedOrigins?: string[];
-            [key: string]: any;
+            [key: string]: unknown;
         };
     } | null;
     membership?: { role: string; joinedAt: string } | null;

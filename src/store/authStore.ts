@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { clearStoredAuthTokens } from "@/lib/authTokens";
 import type { User } from "@/types";
 
 interface AuthState {
@@ -18,10 +19,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ user, isAuthenticated: !!user, isLoading: false }),
     setLoading: (isLoading) => set({ isLoading }),
     logout: () => {
-        if (typeof window !== "undefined") {
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
-        }
+        clearStoredAuthTokens();
         set({ user: null, isAuthenticated: false, isLoading: false });
     },
 }));

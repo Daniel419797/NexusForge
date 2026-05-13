@@ -11,7 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import NotificationService, { type Notification } from "@/services/NotificationService";
+import { useAccessToken } from "@/hooks/useAccessToken";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { useProjectStore } from "@/store/projectStore";
 
 function isNotificationEvent(value: unknown): value is { type?: string } {
     return !!value && typeof value === "object";
@@ -21,12 +23,20 @@ export default function NotificationBell() {
     const [unreadCount, setUnreadCount] = useState(0);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [open, setOpen] = useState(false);
+    const activeProjectId = useProjectStore((s) => s.activeProject?.id);
+    const accessToken = useAccessToken();
 
     // Initialize WS connection for live notifications
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001/ws";
+    const wsBaseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001/ws";
+    const wsUrl = activeProjectId
+        ? `${wsBaseUrl}${wsBaseUrl.includes("?") ? "&" : "?"}projectId=${encodeURIComponent(activeProjectId)}`
+        : wsBaseUrl;
 
     useWebSocket({
         url: wsUrl,
+        token: accessToken,
+        enabled: Boolean(activeProjectId && accessToken),
+        reconnect: Boolean(activeProjectId && accessToken),
         onMessage: (data: unknown) => {
             // If we receive a live notification event:
             if (isNotificationEvent(data) && data.type === "NOTIFICATION_NEW") {
