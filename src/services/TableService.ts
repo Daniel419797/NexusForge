@@ -40,6 +40,12 @@ export interface TableBackfillResult {
     results: Array<{ tableId: string; tableName: string; ok: boolean; error?: string }>;
 }
 
+export interface TableMigrateResult {
+    ddl: string;
+    statements: string[];
+    migrated: boolean;
+}
+
 function requiredString(value: unknown, fieldName: string): string {
     assert(typeof value === "string" && value.trim().length > 0, `${fieldName} is required`);
     return value;
@@ -81,10 +87,20 @@ function asCustomTable(value: unknown): CustomTable {
     };
 }
 
-function asMigrateResult(value: unknown): { ddl: string; migrated: boolean } {
+function asMigrateResult(value: unknown): TableMigrateResult {
     assert(isRecord(value), "Invalid table migration response");
+    const statements = Array.isArray(value.statements)
+        ? value.statements.map((statement, index) => requiredString(statement, `statements.${index}`))
+        : [];
+    const ddl = typeof value.ddl === "string"
+        ? requiredString(value.ddl, "ddl")
+        : statements.join("\n");
+
+    assert(ddl.length > 0, "table migration response is missing DDL");
+
     return {
-        ddl: requiredString(value.ddl, "ddl"),
+        ddl,
+        statements,
         migrated: requiredBoolean(value.migrated, "migrated"),
     };
 }
@@ -153,7 +169,7 @@ const TableService = {
         return asCustomTable(unwrapDataEnvelope(data));
     },
 
-    async migrateTable(projectId: string, tableId: string): Promise<{ ddl: string; migrated: boolean }> {
+    async migrateTable(projectId: string, tableId: string): Promise<TableMigrateResult> {
         assertProjectId(projectId);
         assertUuid(tableId, "tableId");
         const { data } = await api.post(`/projects/${projectId}/tables/${tableId}/migrate`);
