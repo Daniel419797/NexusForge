@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { refreshStoredAuthTokens } from "@/lib/authTokens";
+
+const NON_RETRYABLE_CLOSE_CODES = new Set([4401, 4403, 4429]);
+const DEFAULT_AUTH_EXPIRY_SKEW_MS = 30_000;
 
 interface UseWebSocketOptions {
     url: string;
@@ -9,9 +14,36 @@ interface UseWebSocketOptions {
     onOpen?: () => void;
     onClose?: (event: CloseEvent) => void;
     onError?: (error: Event) => void;
+    onAuthExpired?: () => void;
     reconnect?: boolean;
     reconnectInterval?: number;
+    authExpirySkewMs?: number;
+    refreshOnAuthExpired?: boolean;
     enabled?: boolean;
+}
+
+function decodeBase64Url(value: string): string {
+    const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+    return atob(padded);
+}
+
+function getJwtExpirationMs(token: string): number | null {
+    try {
+        const [, payload] = token.split(".");
+        if (!payload) return null;
+        const decoded = JSON.parse(decodeBase64Url(payload)) as { exp?: unknown };
+        const exp = Number(decoded.exp);
+        return Number.isFinite(exp) ? exp * 1000 : null;
+    } catch {
+        return null;
+    }
+}
+
+function isTokenExpiredOrExpiring(token: string | null | undefined, skewMs: number): boolean {
+    if (!token) return false;
+    const expiresAt = getJwtExpirationMs(token);
+    return expiresAt !== null && expiresAt <= Date.now() + skewMs;
 }
 
 export function useWebSocket({
@@ -21,32 +53,88 @@ export function useWebSocket({
     onOpen,
     onClose,
     onError,
+    onAuthExpired,
     reconnect = true,
     reconnectInterval = 3000,
+    authExpirySkewMs = DEFAULT_AUTH_EXPIRY_SKEW_MS,
+    refreshOnAuthExpired = true,
     enabled = true,
 }: UseWebSocketOptions) {
     const wsRef = useRef<WebSocket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-    const NON_RETRYABLE_CLOSE_CODES = new Set([4401, 4403, 4429]);
+    const connectionGenerationRef = useRef(0);
+    const connectRef = useRef<() => void>(() => {});
+    const mountedRef = useRef(false);
+    const refreshInFlightRef = useRef(false);
 
-    // Keep a ref to the latest onMessage so the ws.onmessage handler always
-    // calls the current version without needing a reconnect every render.
     const onMessageRef = useRef(onMessage);
-    onMessageRef.current = onMessage;
+    const onOpenRef = useRef(onOpen);
+    const onCloseRef = useRef(onClose);
+    const onErrorRef = useRef(onError);
+    const onAuthExpiredRef = useRef(onAuthExpired);
+
+    useEffect(() => {
+        onMessageRef.current = onMessage;
+        onOpenRef.current = onOpen;
+        onCloseRef.current = onClose;
+        onErrorRef.current = onError;
+        onAuthExpiredRef.current = onAuthExpired;
+    }, [onAuthExpired, onClose, onError, onMessage, onOpen]);
+
+    const clearReconnectTimer = useCallback(() => {
+        if (reconnectTimerRef.current) {
+            clearTimeout(reconnectTimerRef.current);
+            reconnectTimerRef.current = undefined;
+        }
+    }, []);
+
+    const markDisconnected = useCallback(() => {
+        queueMicrotask(() => {
+            if (mountedRef.current) {
+                setIsConnected(false);
+            }
+        });
+    }, []);
+
+    const handleAuthExpired = useCallback(() => {
+        if (!refreshOnAuthExpired) {
+            onAuthExpiredRef.current?.();
+            return;
+        }
+
+        if (refreshInFlightRef.current) return;
+
+        refreshInFlightRef.current = true;
+        void refreshStoredAuthTokens()
+            .catch(() => {
+                onAuthExpiredRef.current?.();
+            })
+            .finally(() => {
+                refreshInFlightRef.current = false;
+            });
+    }, [refreshOnAuthExpired]);
 
     const connect = useCallback(() => {
-        const wsUrl = token
-            ? `${url}${url.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}`
-            : url;
-        const ws = new WebSocket(wsUrl);
+        clearReconnectTimer();
+        markDisconnected();
+
+        if (isTokenExpiredOrExpiring(token, authExpirySkewMs)) {
+            handleAuthExpired();
+            return;
+        }
+
+        const generation = ++connectionGenerationRef.current;
+        const ws = token ? new WebSocket(url, ["access_token", token]) : new WebSocket(url);
 
         ws.onopen = () => {
+            if (generation !== connectionGenerationRef.current) return;
             setIsConnected(true);
-            onOpen?.();
+            onOpenRef.current?.();
         };
 
         ws.onmessage = (event) => {
+            if (generation !== connectionGenerationRef.current) return;
             try {
                 const data = JSON.parse(event.data);
                 onMessageRef.current?.(data);
@@ -56,30 +144,63 @@ export function useWebSocket({
         };
 
         ws.onclose = (event) => {
+            if (generation !== connectionGenerationRef.current) return;
             setIsConnected(false);
-            onClose?.(event);
-            if (reconnect && !NON_RETRYABLE_CLOSE_CODES.has(event.code)) {
-                reconnectTimerRef.current = setTimeout(connect, reconnectInterval);
+            onCloseRef.current?.(event);
+
+            if (NON_RETRYABLE_CLOSE_CODES.has(event.code)) {
+                if (event.code === 4401) {
+                    handleAuthExpired();
+                }
+                return;
+            }
+
+            if (isTokenExpiredOrExpiring(token, authExpirySkewMs)) {
+                handleAuthExpired();
+                return;
+            }
+
+            if (reconnect) {
+                reconnectTimerRef.current = setTimeout(() => connectRef.current(), reconnectInterval);
             }
         };
 
         ws.onerror = (error) => {
-            onError?.(error);
+            if (generation !== connectionGenerationRef.current) return;
+            onErrorRef.current?.(error);
         };
 
         wsRef.current = ws;
-    // onMessage intentionally excluded — handled via ref above
-    }, [url, token, onOpen, onClose, onError, reconnect, reconnectInterval]);
+    }, [authExpirySkewMs, clearReconnectTimer, handleAuthExpired, markDisconnected, reconnect, reconnectInterval, token, url]);
 
     useEffect(() => {
-        if (!enabled) return;
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        connectRef.current = connect;
+    }, [connect]);
+
+    useEffect(() => {
+        if (!enabled) {
+            connectionGenerationRef.current += 1;
+            clearReconnectTimer();
+            wsRef.current?.close();
+            wsRef.current = null;
+            return;
+        }
+
         connect();
         return () => {
-            if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+            connectionGenerationRef.current += 1;
+            clearReconnectTimer();
             wsRef.current?.close();
+            wsRef.current = null;
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [url, token, enabled]);
+    }, [clearReconnectTimer, connect, enabled]);
 
     const send = useCallback((data: unknown) => {
         if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -87,5 +208,5 @@ export function useWebSocket({
         }
     }, []);
 
-    return { isConnected, send, ws: wsRef };
+    return { isConnected: enabled && isConnected, send, ws: wsRef };
 }

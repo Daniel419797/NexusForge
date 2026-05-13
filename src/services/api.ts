@@ -1,4 +1,5 @@
 import axios from "axios";
+import { clearStoredAuthTokens, getStoredAccessToken, refreshStoredAuthTokens } from "@/lib/authTokens";
 
 // ── Global error event emitter for toast integration ──
 type ErrorListener = (message: string) => void;
@@ -28,7 +29,7 @@ const api = axios.create({
 api.interceptors.request.use(
     (config) => {
         if (typeof window !== "undefined") {
-            const token = localStorage.getItem("accessToken");
+            const token = getStoredAccessToken();
             if (token) {
                 config.headers = config.headers ?? {};
                 config.headers["Authorization"] = `Bearer ${token}`;
@@ -75,26 +76,15 @@ api.interceptors.response.use(
             isRefreshing = true;
 
             try {
-                const { data } = await axios.post<{ data?: { accessToken?: string; refreshToken?: string } }>(
-                    '/api/v1/auth/refresh',
-                    {},
-                    { withCredentials: true },
-                );
-                // Keep localStorage in sync so Bearer header stays fresh
-                if (typeof window !== "undefined" && data?.data?.accessToken) {
-                    localStorage.setItem("accessToken", data.data.accessToken);
-                    if (data.data.refreshToken) {
-                        localStorage.setItem("refreshToken", data.data.refreshToken);
-                    }
-                }
+                // Keep localStorage in sync so Bearer headers and WebSockets both use the fresh token.
+                await refreshStoredAuthTokens();
 
                 processQueue(null);
                 return api(originalRequest);
             } catch (refreshError) {
                 processQueue(refreshError);
                 if (typeof window !== "undefined") {
-                    localStorage.removeItem("accessToken");
-                    localStorage.removeItem("refreshToken");
+                    clearStoredAuthTokens();
                     window.location.href = "/login";
                 }
                 return Promise.reject(refreshError);
