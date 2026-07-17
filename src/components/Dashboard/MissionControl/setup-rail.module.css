@@ -1,0 +1,186 @@
+.railSection {
+  width: 100%;
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 18px;
+  color: var(--mc-text);
+  background: var(--mc-panel);
+  border: 1px solid var(--mc-border);
+  border-radius: 7px;
+}
+
+.kicker {
+  margin: 0 0 7px;
+  color: var(--mc-cyan);
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 15px;
+}
+
+.sectionHeading h2 {
+  margin: 0;
+  color: var(--mc-text);
+  font-size: 17px;
+  font-weight: 680;
+  letter-spacing: -0.025em;
+}
+
+.sectionHeading > p {
+  max-width: 480px;
+  margin: 0;
+  color: var(--mc-faint);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.railList {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.railStep {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  min-height: 82px;
+  padding: 11px 10px;
+  color: var(--mc-muted);
+  background: #080d10;
+  border: 1px solid #172229;
+  border-radius: 5px;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+a.railStep:hover {
+  color: var(--mc-text);
+  background: #0e1519;
+  border-color: var(--mc-border-strong);
+}
+
+.railMarker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 25px;
+  width: 25px;
+  height: 25px;
+  color: var(--mc-faint);
+  background: #0c1317;
+  border: 1px solid var(--mc-border);
+  border-radius: 4px;
+}
+
+.railMarker svg {
+  width: 13px;
+  height: 13px;
+}
+
+.railCopy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.railNumber {
+  color: var(--mc-faint);
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 9px;
+}
+
+.railTitle {
+  margin-top: 3px;
+  overflow: hidden;
+  color: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+}
+
+.railStatus {
+  margin-top: 6px;
+  color: var(--mc-faint);
+  font-size: 9px;
+}
+
+.rail_complete {
+  border-color: rgb(81 214 154 / 32%);
+}
+
+.rail_complete .railMarker,
+.rail_complete .railStatus {
+  color: var(--mc-green);
+}
+
+.rail_current {
+  color: var(--mc-text);
+  background: #0d181d;
+  border-color: var(--mc-cyan-strong);
+}
+
+.rail_current .railMarker,
+.rail_current .railStatus {
+  color: var(--mc-cyan);
+}
+
+.rail_available .railMarker,
+.rail_available .railStatus {
+  color: var(--mc-violet);
+}
+
+.rail_locked {
+  opacity: 0.54;
+}
+
+.rail_unverified .railMarker,
+.rail_unverified .railStatus {
+  color: var(--mc-amber);
+}
+
+@media (max-width: 1180px) {
+  .railList {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .railSection {
+    padding: 15px;
+  }
+
+  .sectionHeading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sectionHeading > p {
+    max-width: none;
+    text-align: left;
+  }
+
+  .railList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .railStep {
+    min-height: 78px;
+  }
+}

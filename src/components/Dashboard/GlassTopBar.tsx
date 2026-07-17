@@ -1,159 +1,140 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
-import { useProjectStore } from "@/store/projectStore";
+import { usePathname, useRouter } from "next/navigation";
+import { ChevronDown, LogOut, Menu, Plus, Rocket } from "lucide-react";
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   GlassTopBar â€” Floating spatial header
-   Solid glass bg, user avatar, actions
-   Mobile-responsive with hamburger toggle
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+import NotificationBell from "@/components/Notifications/NotificationBell";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  CREATE_PROJECT_EVENT,
+  CREATE_PROJECT_PENDING_KEY,
+} from "@/lib/dashboard-events";
+import { useProjectStore } from "@/store/projectStore";
 
 interface GlassTopBarProps {
   userName?: string | null;
   userEmail?: string | null;
   onLogout: () => void;
-  sidebarCollapsed: boolean;
-  /** Called when the hamburger menu is clicked (mobile) */
   onMenuToggle?: () => void;
-  /** True when viewport < md breakpoint */
-  isMobile?: boolean;
 }
 
 export default function GlassTopBar({
   userName,
   userEmail,
   onLogout,
-  sidebarCollapsed,
   onMenuToggle,
-  isMobile,
 }: GlassTopBarProps) {
+  const pathname = usePathname();
   const router = useRouter();
-  const activeProject = useProjectStore((s) => s.activeProject);
-  const initials = userName
-    ? userName
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
-    : "U";
+  const activeProject = useProjectStore((state) => state.activeProject);
+  const initials = (userName || userEmail || "User")
+    .split(/[\s@]/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const handleCreateProject = () => {
+    if (pathname === "/projects") {
+      globalThis.dispatchEvent(new Event(CREATE_PROJECT_EVENT));
+      return;
+    }
+
+    globalThis.sessionStorage?.setItem(CREATE_PROJECT_PENDING_KEY, "true");
+    router.push("/projects");
+  };
 
   return (
-    <motion.header
-      className="sticky top-0 z-30 flex h-16 items-center justify-between px-4 md:px-6"
-      style={{
-        background: "rgba(10,10,12,0.92)",
-        borderBottom: "1px solid rgba(255,255,255,0.05)",
-      }}
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.4 }}
-    >
-      {/* Left: hamburger (mobile) + connected indicator */}
-      <div className="flex items-center gap-3">
-        {/* Hamburger â€” mobile only */}
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#1a252b] bg-[#080c0f]/95 px-4 backdrop-blur-md md:px-6">
+      <div className="flex min-w-0 items-center gap-3">
         <button
+          type="button"
           onClick={onMenuToggle}
-          className="flex h-9 w-9 items-center justify-center rounded text-white/50 hover:text-white/70 transition-colors md:hidden"
-          style={{ background: "rgba(255,255,255,0.03)" }}
-          aria-label="Open sidebar menu"
+          className="flex size-9 items-center justify-center rounded-[4px] border border-white/[0.07] text-white/55 hover:border-white/15 hover:text-white md:hidden"
+          aria-label="Open navigation"
         >
-          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-          </svg>
+          <Menu className="size-[18px]" aria-hidden="true" />
         </button>
-
-        <div className="flex items-center gap-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-xs text-emerald-400/60 font-medium">Connected</span>
+        <div className="min-w-0">
+          <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-cyan-300/70">
+            Control plane
+          </p>
+          <p className="truncate text-[11px] font-semibold text-white/55">
+            {activeProject?.name ?? "All projects"}
+          </p>
         </div>
       </div>
 
-      {/* Right: actions + user */}
-      <div className="flex items-center gap-2 md:gap-3">
-        {/* Quick action buttons â€” hidden on mobile */}
-        <motion.button
-          className="hidden md:flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium text-white/50 hover:text-white/70 transition-colors"
-          style={{
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.05)",
-          }}
-          whileHover={{ y: -1 }}
-          whileTap={{ scale: 0.97 }}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleCreateProject}
+          className="hidden h-9 items-center gap-2 rounded-[4px] border border-white/[0.08] bg-white/[0.025] px-3 text-[11px] font-bold text-white/55 hover:border-white/15 hover:text-white sm:flex"
         >
-          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          New Project
-        </motion.button>
+          <Plus className="size-3.5" aria-hidden="true" />
+          New project
+        </button>
 
-        <motion.button
-          className="hidden md:flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium text-white/50 hover:text-white/70 transition-colors"
-          style={{
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.05)",
-          }}
-          whileHover={{ y: -1 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={() => {
-            if (activeProject) {
-              router.push(`/projects/${activeProject.id}/deploy`);
-            } else {
-              router.push("/projects");
-            }
-          }}
+        <button
+          type="button"
+          onClick={() =>
+            router.push(
+              activeProject
+                ? `/projects/${activeProject.id}/deploy`
+                : "/projects",
+            )
+          }
+          className="hidden h-9 items-center gap-2 rounded-[4px] border border-cyan-300/20 bg-cyan-300/[0.07] px-3 text-[11px] font-bold text-cyan-200 hover:border-cyan-300/40 lg:flex"
         >
-          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.58-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-          </svg>
+          <Rocket className="size-3.5" aria-hidden="true" />
           Deploy
-        </motion.button>
+        </button>
 
-        {/* Divider â€” hidden on mobile */}
-        <div className="hidden md:block h-6 w-px bg-white/[0.06]" />
+        <NotificationBell />
 
-        {/* Notification bell */}
-        <motion.button
-          className="relative flex h-9 w-9 items-center justify-center rounded text-white/40 hover:text-white/60 transition-colors"
-          style={{ background: "rgba(255,255,255,0.02)" }}
-          whileHover={{ y: -1 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-          </svg>
-          {/* Notification dot */}
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full" style={{ background: "rgba(129,236,255,0.9)" }} />
-        </motion.button>
-
-        {/* User avatar */}
-        <motion.button
-          onClick={onLogout}
-          className="group flex items-center gap-2.5"
-          whileHover={{ scale: 1.02 }}
-          title={`${userName} â€” Click to logout`}
-        >
-          <div
-            className="flex h-9 w-9 items-center justify-center rounded-md text-xs font-bold text-white/80 transition-all"
-            style={{
-              background: "rgba(129,236,255,0.10)",
-              border: "1px solid rgba(129,236,255,0.15)",
-            }}
-          >
-            {initials}
-          </div>
-          <div className="hidden sm:block text-left">
-            <p className="text-xs font-semibold text-white/70 group-hover:text-white/90 transition-colors">
-              {userName || "User"}
-            </p>
-            {userEmail && (
-              <p className="text-[10px] text-white/25 truncate max-w-[120px]">{userEmail}</p>
-            )}
-          </div>
-        </motion.button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="flex h-9 items-center gap-2 rounded-[4px] border border-white/[0.08] bg-white/[0.025] px-1.5 text-white/70 hover:border-white/15"
+              aria-label="Open user menu"
+            >
+              <span className="flex size-6 items-center justify-center rounded-[3px] bg-cyan-300/15 text-[9px] font-extrabold text-cyan-200">
+                {initials}
+              </span>
+              <ChevronDown
+                className="hidden size-3 text-white/35 sm:block"
+                aria-hidden="true"
+              />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuLabel>
+              <span className="block truncate text-xs">
+                {userName || "User"}
+              </span>
+              {userEmail && (
+                <span className="mt-0.5 block truncate text-[10px] font-normal text-muted-foreground">
+                  {userEmail}
+                </span>
+              )}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={onLogout}>
+              <LogOut className="size-4" aria-hidden="true" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-    </motion.header>
+    </header>
   );
 }

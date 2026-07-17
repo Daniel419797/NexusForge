@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useDeployStore } from "@/store/deployStore";
 import { useProjectStore } from "@/store/projectStore";
 import ProjectService, { type ProjectApiDocs } from "@/services/ProjectService";
+import { copyText } from "@/lib/clipboard";
 import TableService, { type CustomTable } from "@/services/TableService";
 import {
     Copy,
@@ -493,11 +494,11 @@ function pythonExample(endpoint: EndpointExample, apiBase: string, token: string
 function CopyBtn({ text }: Readonly<{ text: string }>) {
     const [copied, setCopied] = useState(false);
 
-    const handleCopy = useCallback(() => {
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        const timer = setTimeout(() => setCopied(false), 2000);
-        return () => clearTimeout(timer);
+    const handleCopy = useCallback(async () => {
+        if (await copyText(text)) {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
     }, [text]);
 
     return (

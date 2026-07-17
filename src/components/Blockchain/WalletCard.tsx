@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Wallet } from "@/services/BlockchainService";
+import { copyText } from "@/lib/clipboard";
 
 interface WalletCardProps {
     wallet: Wallet;
@@ -29,7 +30,7 @@ export default function WalletCard({ wallet }: WalletCardProps) {
                         <code className="text-xs text-muted-foreground font-mono bg-muted px-2 py-1 rounded">
                             {wallet.address.slice(0, 8)}...{wallet.address.slice(-6)}
                         </code>
-                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => navigator.clipboard.writeText(wallet.address)}>
+                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => void copyText(wallet.address)}>
                             Copy
                         </Button>
                     </div>

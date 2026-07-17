@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Copy, Check, Settings, User, LogOut } from "lucide-react";
 import { getTestApiUrl, getApiKey } from "@/services/testApi";
+import { copyText } from "@/lib/clipboard";
 
 interface ConfigPanelProps {
   isLoggedIn: boolean;
@@ -22,9 +23,10 @@ export default function ConfigPanel({ isLoggedIn, userEmail, onLogout }: ConfigP
 
   const copyKey = async () => {
     if (!apiKey) return;
-    await navigator.clipboard.writeText(apiKey);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (await copyText(apiKey)) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (

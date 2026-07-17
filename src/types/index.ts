@@ -149,3 +149,105 @@ export interface DeploymentDetail {
     deployment: Deployment;
     logs: DeploymentLog[];
 }
+
+// Frontend integration orchestration
+export type FrontendIntegrationStatus = 'connected' | 'suspended' | 'revoked';
+
+export type FrontendIntegrationRunStatus =
+    | 'queued'
+    | 'scanning'
+    | 'planning'
+    | 'awaiting_approval'
+    | 'patching'
+    | 'validating'
+    | 'pr_created'
+    | 'failed'
+    | 'cancelled';
+
+export type FrontendIntegrationArtifactKind =
+    | 'repo_manifest'
+    | 'backend_context'
+    | 'ai_plan'
+    | 'patch'
+    | 'validation_report'
+    | 'pr_body';
+
+export interface FrontendIntegration {
+    id: string;
+    projectId: string;
+    provider: 'github';
+    repoOwner: string;
+    repoName: string;
+    repoId: string;
+    installationId: string;
+    defaultBranch: string;
+    status: FrontendIntegrationStatus;
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface FrontendIntegrationRun {
+    id: string;
+    integrationId: string;
+    projectId: string;
+    targetBranch: string | null;
+    baseSha: string | null;
+    status: FrontendIntegrationRunStatus;
+    plan: unknown;
+    summary: string | null;
+    prNumber: number | null;
+    prUrl: string | null;
+    errorMessage: string | null;
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface FrontendIntegrationArtifact {
+    id: string;
+    runId: string;
+    kind: FrontendIntegrationArtifactKind;
+    content: unknown;
+    contentHash: string;
+    createdAt: string;
+}
+
+export interface FrontendIntegrationRunDetail {
+    run: FrontendIntegrationRun;
+    artifacts: FrontendIntegrationArtifact[];
+}
+
+export interface FrontendIntegrationRolloutFlags {
+    enabled: boolean;
+    aiPlannerEnabled: boolean;
+    autoOpenPrEnabled: boolean;
+    requireMicroVmSandbox: boolean;
+    allowNetworkInstall: boolean;
+    observabilityEnabled: boolean;
+}
+
+export interface FrontendIntegrationAlertSummary {
+    severity: 'info' | 'warning' | 'critical' | string;
+    type: string;
+    message: string;
+}
+
+export interface FrontendIntegrationObservability {
+    flags: FrontendIntegrationRolloutFlags;
+    summary: {
+        totalRunsWindow: number;
+        byStatus: Record<string, number>;
+        failedRunsWindow: number;
+        prCreatedRunsWindow: number;
+        awaitingApprovalRunsWindow: number;
+    };
+    alerts: FrontendIntegrationAlertSummary[];
+    recentFailures: Array<{
+        runId: string;
+        integrationId: string;
+        errorMessage: string | null;
+        updatedAt: string;
+    }>;
+    recentRuns: FrontendIntegrationRun[];
+}

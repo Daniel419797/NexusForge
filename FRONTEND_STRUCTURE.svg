@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="980" viewBox="0 0 1400 980" role="img" aria-labelledby="title desc">
+  <title id="title">Frontend Folder Structure</title>
+  <desc id="desc">A visual map of the Next.js frontend folder structure used in this repository.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .panel { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; rx: 14; }
+      .root { fill: #0f172a; }
+      .route { fill: #dbeafe; stroke: #60a5fa; }
+      .component { fill: #ecfdf5; stroke: #34d399; }
+      .service { fill: #fff7ed; stroke: #fb923c; }
+      .support { fill: #f5f3ff; stroke: #a78bfa; }
+      .asset { fill: #fefce8; stroke: #eab308; }
+      .text { fill: #0f172a; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 22px; }
+      .small { fill: #334155; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 17px; }
+      .tiny { fill: #475569; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; }
+      .white { fill: #ffffff; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 25px; font-weight: 700; }
+      .line { stroke: #94a3b8; stroke-width: 3; fill: none; }
+      .dash { stroke: #94a3b8; stroke-width: 2; stroke-dasharray: 8 8; fill: none; }
+      .label { fill: #64748b; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1400" height="980"/>
+  <rect class="root" x="70" y="45" width="1260" height="76" rx="18"/>
+  <text class="white" x="100" y="92">frontend/ - Next.js App Router project structure</text>
+
+  <rect class="panel" x="70" y="155" width="1260" height="760" rx="18"/>
+
+  <line class="line" x1="700" y1="121" x2="700" y2="175"/>
+  <line class="line" x1="205" y1="175" x2="1195" y2="175"/>
+  <line class="line" x1="205" y1="175" x2="205" y2="210"/>
+  <line class="line" x1="505" y1="175" x2="505" y2="210"/>
+  <line class="line" x1="805" y1="175" x2="805" y2="210"/>
+  <line class="line" x1="1095" y1="175" x2="1095" y2="210"/>
+
+  <rect class="route" x="110" y="210" width="250" height="86" rx="14"/>
+  <text class="text" x="135" y="247">src/app/</text>
+  <text class="tiny" x="135" y="274">routes, layouts, pages</text>
+
+  <rect class="component" x="405" y="210" width="250" height="86" rx="14"/>
+  <text class="text" x="430" y="247">components/</text>
+  <text class="tiny" x="430" y="274">feature UI + primitives</text>
+
+  <rect class="service" x="700" y="210" width="250" height="86" rx="14"/>
+  <text class="text" x="725" y="247">services/</text>
+  <text class="tiny" x="725" y="274">API clients + guards</text>
+
+  <rect class="support" x="995" y="210" width="250" height="86" rx="14"/>
+  <text class="text" x="1020" y="247">support/</text>
+  <text class="tiny" x="1020" y="274">hooks, lib, store, types</text>
+
+  <line class="line" x1="235" y1="296" x2="235" y2="338"/>
+  <rect class="route" x="105" y="338" width="270" height="266" rx="14"/>
+  <text class="small" x="130" y="371">(auth)</text>
+  <text class="tiny" x="150" y="399">login</text>
+  <text class="tiny" x="150" y="424">register</text>
+  <text class="tiny" x="150" y="449">forgot-password</text>
+  <text class="tiny" x="150" y="474">reset-password</text>
+  <text class="tiny" x="150" y="499">verify-email</text>
+  <text class="small" x="130" y="535">(dashboard)</text>
+  <text class="tiny" x="150" y="563">ai, chat, blockchain</text>
+  <text class="tiny" x="150" y="588">projects/[id]/*</text>
+
+  <rect class="route" x="105" y="632" width="270" height="150" rx="14"/>
+  <text class="small" x="130" y="665">public routes</text>
+  <text class="tiny" x="150" y="694">privacy</text>
+  <text class="tiny" x="150" y="719">terms</text>
+  <text class="tiny" x="150" y="744">unsubscribe</text>
+  <text class="tiny" x="150" y="769">oauth/callback</text>
+
+  <line class="line" x1="530" y1="296" x2="530" y2="338"/>
+  <rect class="component" x="405" y="338" width="270" height="315" rx="14"/>
+  <text class="small" x="430" y="371">feature folders</text>
+  <text class="tiny" x="450" y="399">AI, Auth, Projects</text>
+  <text class="tiny" x="450" y="424">Dashboard, Landing</text>
+  <text class="tiny" x="450" y="449">Chat, Plugins</text>
+  <text class="tiny" x="450" y="474">Blockchain</text>
+  <text class="tiny" x="450" y="499">Notifications</text>
+  <text class="tiny" x="450" y="524">Onboarding</text>
+  <text class="tiny" x="450" y="549">ApiKeys</text>
+  <text class="tiny" x="450" y="574">Shared, TestSite</text>
+  <text class="tiny" x="450" y="599">layout</text>
+  <text class="tiny" x="450" y="624">ui primitives</text>
+
+  <rect class="component" x="405" y="680" width="270" height="102" rx="14"/>
+  <text class="small" x="430" y="714">component rule</text>
+  <text class="tiny" x="430" y="742">Route files stay thin.</text>
+  <text class="tiny" x="430" y="767">Feature UI lives here.</text>
+
+  <line class="line" x1="825" y1="296" x2="825" y2="338"/>
+  <rect class="service" x="700" y="338" width="270" height="266" rx="14"/>
+  <text class="small" x="725" y="371">API layer</text>
+  <text class="tiny" x="745" y="399">api.ts Axios base</text>
+  <text class="tiny" x="745" y="424">AuthService</text>
+  <text class="tiny" x="745" y="449">ProjectService</text>
+  <text class="tiny" x="745" y="474">DeployService</text>
+  <text class="tiny" x="745" y="499">FrontendIntegrationService</text>
+  <text class="tiny" x="745" y="524">Module/Table services</text>
+  <text class="tiny" x="745" y="549">serviceGuards</text>
+  <text class="tiny" x="745" y="574">__tests__</text>
+
+  <rect class="service" x="700" y="632" width="270" height="150" rx="14"/>
+  <text class="small" x="725" y="665">client behavior</text>
+  <text class="tiny" x="725" y="694">/api/v1 base URL</text>
+  <text class="tiny" x="725" y="719">cookies + bearer token</text>
+  <text class="tiny" x="725" y="744">401 refresh handling</text>
+  <text class="tiny" x="725" y="769">503 cold-start retry</text>
+
+  <line class="line" x1="1120" y1="296" x2="1120" y2="338"/>
+  <rect class="support" x="995" y="338" width="270" height="266" rx="14"/>
+  <text class="small" x="1020" y="371">support folders</text>
+  <text class="tiny" x="1040" y="399">hooks/</text>
+  <text class="tiny" x="1060" y="424">useAccessToken</text>
+  <text class="tiny" x="1060" y="449">useWebSocket</text>
+  <text class="tiny" x="1040" y="484">lib/</text>
+  <text class="tiny" x="1060" y="509">utils, authTokens</text>
+  <text class="tiny" x="1060" y="534">security, SDK catalog</text>
+  <text class="tiny" x="1040" y="569">store/, types/, test/</text>
+
+  <rect class="asset" x="995" y="632" width="270" height="150" rx="14"/>
+  <text class="small" x="1020" y="665">root config</text>
+  <text class="tiny" x="1040" y="694">next.config.mjs</text>
+  <text class="tiny" x="1040" y="719">tsconfig.json</text>
+  <text class="tiny" x="1040" y="744">components.json</text>
+  <text class="tiny" x="1040" y="769">vitest.config.ts</text>
+
+  <path class="dash" d="M235 820 H1120"/>
+  <text class="label" x="105" y="858">Rule of thumb: src/app defines routes, components define product UI, services own backend calls, support folders hold shared mechanics.</text>
+  <text class="label" x="105" y="888">Sibling prototype apps live under new-frontend/: lost-and-found, mood-tracker, table-json.</text>
+</svg>

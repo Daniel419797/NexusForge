@@ -2,6 +2,7 @@
 
 import { useProjectStore } from "@/store/projectStore";
 import Link from "next/link";
+import { GitPullRequest } from "lucide-react";
 
 export default function ProjectDashboard() {
     const project = useProjectStore((s) => s.activeProject);
@@ -51,15 +52,23 @@ export default function ProjectDashboard() {
                 </div>
             </div>
 
-            {/* Right: CTA if db not connected */}
-            {!project.config?.dbConnected && (
+            <div className="flex flex-wrap items-center gap-2">
                 <Link
-                    href={`/projects/${project.id}/settings/database`}
-                    className="shrink-0 self-start sm:self-auto text-[11px] font-medium text-amber-400/70 hover:text-amber-400 border border-amber-400/20 hover:border-amber-400/40 px-3 py-1.5 rounded transition-colors"
+                    href={`/projects/${project.id}/frontend-integrations`}
+                    className="inline-flex shrink-0 items-center gap-1.5 self-start rounded border border-cyan-300/20 px-3 py-1.5 text-[11px] font-medium text-cyan-100/80 transition-colors hover:border-cyan-300/40 hover:text-cyan-100 sm:self-auto"
                 >
-                    Connect database →
+                    <GitPullRequest className="h-3.5 w-3.5" />
+                    Frontend PRs
                 </Link>
-            )}
+                {!project.config?.dbConnected && (
+                    <Link
+                        href={`/projects/${project.id}/settings/database`}
+                        className="shrink-0 self-start sm:self-auto text-[11px] font-medium text-amber-400/70 hover:text-amber-400 border border-amber-400/20 hover:border-amber-400/40 px-3 py-1.5 rounded transition-colors"
+                    >
+                        Connect database →
+                    </Link>
+                )}
+            </div>
         </div>
     );
 }

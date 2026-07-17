@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useCallback } from "react";
+import { copyText } from "@/lib/clipboard";
 
 interface KeyRevealModalProps {
     open: boolean;
@@ -47,7 +48,7 @@ export default function KeyRevealModal({ open, onOpenChange, keyValue }: KeyReve
 
                 <DialogFooter>
                     <div className="flex items-center gap-2 w-full justify-end">
-                        <Button onClick={() => { if (keyValue) navigator.clipboard.writeText(keyValue); }} disabled={!keyValue}>
+                        <Button onClick={() => { if (keyValue) void copyText(keyValue); }} disabled={!keyValue}>
                             Copy
                         </Button>
                         <Button onClick={handleDownload} disabled={!keyValue}>
