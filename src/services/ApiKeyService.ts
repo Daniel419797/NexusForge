@@ -7,6 +7,8 @@ export interface ApiKey {
     name: string;
     prefix: string;
     scopes: string[];
+    keyType: "publishable" | "secret" | null;
+    isActive: boolean;
     expiresAt: string | null;
     createdAt: string;
 }
@@ -78,6 +80,13 @@ function asApiKey(value: unknown): ApiKey {
         name,
         prefix,
         scopes: toArray(value.scopes, (item) => String(item)),
+        keyType:
+            value.keyType === "publishable" || value.keyType === "secret"
+                ? value.keyType
+                : value.type === "publishable" || value.type === "secret"
+                  ? value.type
+                  : null,
+        isActive: value.isActive !== false,
         expiresAt: optionalStringOrNull(value.expiresAt) ?? null,
         createdAt,
     };

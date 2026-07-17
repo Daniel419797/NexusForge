@@ -1,0 +1,255 @@
+.missionControl {
+  --mc-bg: #070a0c;
+  --mc-panel: #0b1014;
+  --mc-panel-high: #10171c;
+  --mc-border: #1d2a31;
+  --mc-border-strong: #2c434d;
+  --mc-text: #edf5f7;
+  --mc-muted: #819097;
+  --mc-faint: #6f8088;
+  --mc-cyan: #60ddf4;
+  --mc-cyan-strong: #2fc8e3;
+  --mc-violet: #a58af6;
+  --mc-green: #51d69a;
+  --mc-amber: #f0b65a;
+
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: calc(100vh - 64px);
+  margin: -20px -16px;
+  padding: 28px 20px 48px;
+  color: var(--mc-text);
+  background: var(--mc-bg);
+}
+
+.hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+  width: 100%;
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 8px 4px 10px;
+}
+
+.kicker {
+  margin: 0 0 7px;
+  color: var(--mc-cyan);
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hero h1,
+.statePanel h1 {
+  max-width: 760px;
+  margin: 0;
+  color: var(--mc-text);
+  font-size: clamp(30px, 4vw, 52px);
+  font-weight: 680;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+}
+
+.heroDescription {
+  max-width: 660px;
+  margin: 13px 0 0;
+  color: var(--mc-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.heroActions {
+  min-width: min(100%, 390px);
+}
+
+.heroActions > label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--mc-faint);
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.projectSelectRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.projectSelect {
+  min-width: 190px;
+  height: 40px;
+  color: var(--mc-text) !important;
+  background: var(--mc-panel) !important;
+  border-color: var(--mc-border-strong) !important;
+  border-radius: 5px !important;
+}
+
+.createAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 15px;
+  color: #031014;
+  background: var(--mc-cyan);
+  border: 1px solid var(--mc-cyan);
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 750;
+  transition: background-color 160ms ease;
+}
+
+.createAction:hover {
+  background: #83e8f8;
+}
+
+.createAction svg {
+  width: 15px;
+  height: 15px;
+}
+
+.commandGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 0.75fr);
+  gap: 18px;
+  width: 100%;
+  max-width: 1480px;
+  margin: 0 auto;
+}
+
+.statePanel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  max-width: 1480px;
+  min-height: 430px;
+  margin: 48px auto 0;
+  padding: 48px;
+  color: var(--mc-text);
+  background: var(--mc-panel);
+  border: 1px solid var(--mc-border);
+  border-radius: 7px;
+}
+
+.statePanel > svg {
+  width: 26px;
+  height: 26px;
+  margin-bottom: 20px;
+  color: var(--mc-amber);
+}
+
+.statePanel > p:not(.kicker) {
+  max-width: 580px;
+  margin: 14px 0 24px;
+  color: var(--mc-muted);
+  line-height: 1.6;
+}
+
+.skeletonHero,
+.skeletonRail,
+.skeletonGrid > div,
+.skeletonLedger {
+  width: 100%;
+  max-width: 1480px;
+  margin: 0 auto;
+  background: #0b1014;
+  border: 1px solid #172128;
+  border-radius: 7px;
+  animation: mc-pulse 1.4s ease-in-out infinite;
+}
+
+.skeletonHero {
+  height: 140px;
+}
+.skeletonRail {
+  height: 148px;
+}
+.skeletonLedger {
+  height: 210px;
+}
+
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: 1.7fr 0.75fr;
+  gap: 18px;
+  width: 100%;
+  max-width: 1480px;
+  margin: 0 auto;
+}
+
+.skeletonGrid > div {
+  height: 395px;
+}
+
+@keyframes mc-pulse {
+  50% {
+    background-color: #0e1519;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .heroActions {
+    width: 100%;
+  }
+
+  .commandGrid,
+  .skeletonGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .missionControl {
+    margin: -20px -16px;
+    padding: 22px 14px 38px;
+  }
+
+  .hero h1,
+  .statePanel h1 {
+    font-size: 32px;
+    line-height: 1.05;
+  }
+
+  .projectSelectRow {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .projectSelect,
+  .createAction {
+    width: 100%;
+  }
+
+  .statePanel {
+    min-height: 390px;
+    margin-top: 20px;
+    padding: 28px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonHero,
+  .skeletonRail,
+  .skeletonGrid > div,
+  .skeletonLedger {
+    animation: none;
+  }
+}

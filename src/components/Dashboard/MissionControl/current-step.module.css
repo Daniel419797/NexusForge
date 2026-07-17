@@ -1,0 +1,256 @@
+.currentPanel {
+  width: 100%;
+  min-height: 395px;
+  margin: 0;
+  padding: 22px;
+  color: var(--mc-text);
+  background: var(--mc-panel);
+  border: 1px solid var(--mc-border);
+  border-radius: 7px;
+}
+
+.kicker {
+  margin: 0 0 7px;
+  color: var(--mc-cyan);
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.currentHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.currentHeader > div:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+}
+
+.currentHeader h2 {
+  margin: 0;
+  color: var(--mc-text);
+  font-size: 17px;
+  font-weight: 680;
+  letter-spacing: -0.025em;
+}
+
+.currentIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  color: var(--mc-cyan);
+  background: #0d1a20;
+  border: 1px solid #24414c;
+  border-radius: 5px;
+}
+
+.currentIcon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.stepBadge {
+  align-self: flex-start;
+  padding: 6px 8px;
+  color: var(--mc-cyan);
+  background: #0c171b;
+  border: 1px solid #24414c;
+  border-radius: 4px;
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.currentDescription {
+  max-width: 780px;
+  margin: 22px 0 18px;
+  color: var(--mc-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.taskSection {
+  margin-bottom: 18px;
+}
+
+.taskSection > span {
+  color: var(--mc-faint);
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.taskSection ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin: 9px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.taskSection li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 10px;
+  color: #aebdc2;
+  background: #0a1115;
+  border: 1px solid var(--mc-border);
+  border-radius: 4px;
+  font-size: 10px;
+}
+
+.taskSection li strong {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  color: var(--mc-cyan);
+  border: 1px solid #24414c;
+  border-radius: 3px;
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 9px;
+}
+
+.reasonBox {
+  padding: 14px 16px;
+  background: #091015;
+  border-left: 2px solid var(--mc-violet);
+}
+
+.reasonBox span,
+.unlockSection > span,
+.evidenceLabel {
+  color: var(--mc-faint);
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.reasonBox p {
+  margin: 5px 0 0;
+  color: #bcc8cc;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.unlockSection {
+  margin-top: 18px;
+}
+
+.unlockSection ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 9px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.unlockSection li {
+  padding: 7px 9px;
+  color: #94a5ab;
+  background: #0a1115;
+  border: 1px solid var(--mc-border);
+  border-radius: 4px;
+  font-size: 10px;
+}
+
+.currentFooter {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--mc-border);
+}
+
+.currentFooter > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.currentFooter strong {
+  color: #bdc9cd;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.primaryAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 15px;
+  color: #031014;
+  background: var(--mc-cyan);
+  border: 1px solid var(--mc-cyan);
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 750;
+  transition: background-color 160ms ease;
+}
+
+.primaryAction:hover {
+  background: #83e8f8;
+}
+
+.primaryAction svg {
+  width: 15px;
+  height: 15px;
+}
+
+@media (max-width: 640px) {
+  .currentPanel {
+    min-height: 0;
+    padding: 15px;
+  }
+
+  .currentHeader {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .currentHeader > div:nth-child(2) {
+    grid-column: 2;
+  }
+
+  .stepBadge {
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 8px;
+  }
+
+  .currentFooter {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .taskSection ol {
+    grid-template-columns: 1fr;
+  }
+
+  .primaryAction {
+    width: 100%;
+  }
+}

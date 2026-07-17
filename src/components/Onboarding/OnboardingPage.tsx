@@ -11,6 +11,7 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import { useProjectStore } from "@/store/projectStore";
 import ProjectService from "@/services/ProjectService";
 import type { CategoryTemplate } from "@/services/ProjectService";
+import { copyText } from "@/lib/clipboard";
 import {
     CheckCircle2,
     Loader2,
@@ -139,11 +140,12 @@ export default function OnboardingPage() {
         }
     };
 
-    const handleCopyToken = () => {
+    const handleCopyToken = async () => {
         if (projectToken) {
-            navigator.clipboard.writeText(projectToken);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
+            if (await copyText(projectToken)) {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            }
         }
     };
 

@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import ProjectService, { type IntegrationConfig } from "@/services/ProjectService";
 import X402Service, { type X402Config } from "@/services/X402Service";
 import { useProjectStore } from "@/store/projectStore";
+import { copyText } from "@/lib/clipboard";
 
 const LOGIC_LIMIT_MIN = 5;
 const LOGIC_LIMIT_MAX = 1000;
@@ -541,14 +542,14 @@ export default function ProjectSettingsPage() {
                                 <Label className="text-xs">Base URL</Label>
                                 <div className="flex items-center gap-2">
                                     <Input readOnly value={integrationConfig.sdkConfig.baseUrl} className="font-mono text-xs" />
-                                    <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(integrationConfig.sdkConfig.baseUrl)}>Copy</Button>
+                                    <Button variant="outline" size="sm" onClick={() => void copyText(integrationConfig.sdkConfig.baseUrl)}>Copy</Button>
                                 </div>
                             </div>
                             <div className="space-y-1">
                                 <Label className="text-xs">Project ID</Label>
                                 <div className="flex items-center gap-2">
                                     <Input readOnly value={integrationConfig.sdkConfig.projectId} className="font-mono text-xs" />
-                                    <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(integrationConfig.sdkConfig.projectId)}>Copy</Button>
+                                    <Button variant="outline" size="sm" onClick={() => void copyText(integrationConfig.sdkConfig.projectId)}>Copy</Button>
                                 </div>
                             </div>
                         </div>
@@ -565,7 +566,7 @@ const auth = new NexusForgeAuth({
                                     variant="outline"
                                     size="sm"
                                     className="absolute top-2 right-2 text-xs"
-                                    onClick={() => navigator.clipboard.writeText(
+                                    onClick={() => void copyText(
                                         `import { NexusForgeAuth } from '@nexus-forge-sdk/auth';\n\nconst auth = new NexusForgeAuth({\n  baseUrl: '${integrationConfig.sdkConfig.baseUrl}',\n  projectId: '${integrationConfig.sdkConfig.projectId}',\n});`
                                     )}
                                 >

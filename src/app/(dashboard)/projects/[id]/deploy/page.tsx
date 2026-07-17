@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useDeployStore } from "@/store/deployStore";
 import type { Deployment, DeploymentLog, DeployStep } from "@/types";
+import { copyText } from "@/lib/clipboard";
 
 /* ── Step metadata ── */
 const STEP_LABELS: Record<DeployStep, string> = {
@@ -509,7 +510,7 @@ export default function DeployPage() {
                         <span className="text-xs text-white/25 shrink-0">v{currentDeployment.deployment.version} &middot; API URL</span>
                         <code className="text-xs font-mono text-[#81ecff]/70 flex-1 break-all min-w-0">{currentDeployment.deployment.apiUrl}</code>
                         <button
-                            onClick={() => navigator.clipboard.writeText(currentDeployment.deployment.apiUrl!)}
+                            onClick={() => void copyText(currentDeployment.deployment.apiUrl!)}
                             className="shrink-0 text-[11px] text-white/25 hover:text-white/60 transition-colors"
                         >
                             Copy

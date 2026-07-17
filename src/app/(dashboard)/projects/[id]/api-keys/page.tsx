@@ -11,6 +11,7 @@ import CreateKeyDialog from "@/components/ApiKeys/CreateKeyDialog";
 import KeyRevealModal from "@/components/ApiKeys/KeyRevealModal";
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { copyText } from "@/lib/clipboard";
 
 export default function ApiKeysPage() {
     const params = useParams();
@@ -124,7 +125,7 @@ export default function ApiKeysPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
-                                    navigator.clipboard.writeText(newKeyValue);
+                                    void copyText(newKeyValue);
                                 }}
                             >
                                 Copy
