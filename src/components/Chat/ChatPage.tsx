@@ -45,7 +45,7 @@ export default function ChatPage() {
     const scrollRef = useRef<HTMLDivElement>(null);
     const accessToken = useAccessToken();
 
-    const wsBaseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001/ws";
+    const wsBaseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3000/ws";
     const wsUrl = activeProject?.id
         ? `${wsBaseUrl}${wsBaseUrl.includes("?") ? "&" : "?"}projectId=${encodeURIComponent(activeProject.id)}`
         : wsBaseUrl;
