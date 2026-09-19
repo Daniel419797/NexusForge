@@ -3,55 +3,44 @@
 import { useEffect } from "react";
 import { useAuthStore } from "@/store/authStore";
 import AuthService from "@/services/AuthService";
-import { clearStoredAuthTokens, getStoredAccessToken } from "@/lib/authTokens";
+import { clearStoredAuthTokens, refreshStoredAuthTokens } from "@/lib/authTokens";
 
 /**
- * AuthInitializer — mounted once in the root layout.
- * Restores auth state on every page (including public routes) by
- * checking localStorage for an access token and fetching the profile.
- * Renders nothing — it is purely a side-effect component.
+ * Restores a browser session from httpOnly auth cookies. The access token is
+ * refreshed into memory only so WebSocket clients can authenticate without
+ * persisting JWTs in localStorage/sessionStorage.
  */
 export default function AuthInitializer() {
     const { setUser, setLoading } = useAuthStore();
 
     useEffect(() => {
-        const token = getStoredAccessToken();
+        let cancelled = false;
 
-        if (!token) {
-            setUser(null);
-            return;
-        }
-
-        // Capture the token value before the async call so we can detect
-        // whether it has been replaced (e.g. by a concurrent login) by the
-        // time the response arrives. Stale completions are silently ignored
-        // to avoid overwriting newer auth state.
-        const currentToken = token;
-
-        AuthService.getProfile()
-            .then((profile) => {
-                if (getStoredAccessToken() !== currentToken) return;
-                setUser(profile);
-            })
-            .catch((err) => {
-                if (getStoredAccessToken() !== currentToken) return;
-
-                const status = err?.response?.status;
-                // Only invalidate the session for explicit auth rejections.
-                // 401 is typically already handled by the Axios interceptor
-                // (token refresh / redirect), but guard it here too.
-                // All other failures (network, 5xx, offline) keep the
-                // stored tokens intact so the user isn't logged out
-                // due to a transient infrastructure error.
-                if (status === 401 || status === 403) {
+        const restoreSession = async () => {
+            try {
+                // The refresh cookie is scoped to /api/v1/auth and is never
+                // exposed to JavaScript. This also repopulates the in-memory
+                // access token used by WebSockets after a page reload.
+                await refreshStoredAuthTokens();
+                const profile = await AuthService.getProfile();
+                if (!cancelled) setUser(profile);
+            } catch (err: unknown) {
+                const status = (err as { response?: { status?: number } })?.response?.status;
+                if (status === 401 || status === 403 || err instanceof Error) {
                     clearStoredAuthTokens();
+                }
+                if (!cancelled) {
                     setUser(null);
-                } else {
                     setLoading(false);
                 }
-            });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+            }
+        };
+
+        void restoreSession();
+        return () => {
+            cancelled = true;
+        };
+    }, [setLoading, setUser]);
 
     return null;
 }
