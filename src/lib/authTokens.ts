@@ -11,42 +11,39 @@ type AuthTokenPayload = {
     refreshToken?: string | null;
 };
 
+// Browser auth is cookie-first. Keep the short-lived access token only in memory
+// for WebSocket subprotocol authentication; never persist JWTs in web storage.
+let accessToken: string | null = null;
 let refreshPromise: Promise<string> | null = null;
 
-function emitAuthTokensChanged(accessToken: string | null): void {
+function emitAuthTokensChanged(nextAccessToken: string | null): void {
     if (typeof window === "undefined") return;
     window.dispatchEvent(
         new CustomEvent<AuthTokenChangeDetail>(AUTH_TOKENS_CHANGED_EVENT, {
-            detail: { accessToken },
+            detail: { accessToken: nextAccessToken },
         }),
     );
 }
 
 export function getStoredAccessToken(): string | null {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem("accessToken");
+    return accessToken;
 }
 
+/**
+ * Kept for compatibility with existing callers/tests. Refresh tokens are
+ * intentionally httpOnly-cookie-only and are never exposed to JavaScript.
+ */
 export function getStoredRefreshToken(): string | null {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem("refreshToken");
+    return null;
 }
 
 export function setStoredAuthTokens(tokens: AuthTokenPayload): void {
-    if (typeof window === "undefined") return;
-    localStorage.setItem("accessToken", tokens.accessToken);
-    if (tokens.refreshToken === null) {
-        localStorage.removeItem("refreshToken");
-    } else if (tokens.refreshToken) {
-        localStorage.setItem("refreshToken", tokens.refreshToken);
-    }
-    emitAuthTokensChanged(tokens.accessToken);
+    accessToken = tokens.accessToken;
+    emitAuthTokensChanged(accessToken);
 }
 
 export function clearStoredAuthTokens(): void {
-    if (typeof window === "undefined") return;
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
+    accessToken = null;
     emitAuthTokensChanged(null);
 }
 
@@ -62,7 +59,6 @@ function extractAuthTokens(payload: unknown): AuthTokenPayload | null {
 
     return {
         accessToken: envelope.accessToken,
-        refreshToken: typeof envelope.refreshToken === "string" ? envelope.refreshToken : undefined,
     };
 }
 
@@ -85,12 +81,11 @@ export async function refreshStoredAuthTokens(): Promise<string> {
     }
 
     refreshPromise ??= (async () => {
-        const refreshToken = getStoredRefreshToken();
         const response = await fetch("/api/v1/auth/refresh", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: refreshToken ? JSON.stringify({ refreshToken }) : "{}",
+            body: "{}",
         });
 
         if (!response.ok) {
