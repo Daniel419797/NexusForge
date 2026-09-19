@@ -1,7 +1,7 @@
 import api from './api';
 import { assertProjectId, assertNonEmptyString, isRecord, unwrapDataEnvelope } from './serviceGuards';
 
-const API_TOKEN_STORAGE_KEY = (projectId: string) => `projectToken:${projectId}`;
+const tokenCache = new Map<string, string>();
 
 const decodeJwtPayload = (token: string) => {
     try {
@@ -32,39 +32,22 @@ const ProjectTokenService = {
         const token = isRecord(payload) && typeof payload.token === 'string' ? payload.token : undefined;
         assertNonEmptyString(token ?? '', 'token');
         if (!token) throw new Error('Failed to obtain project token');
-        try {
-            localStorage.setItem(API_TOKEN_STORAGE_KEY(projectId), JSON.stringify({ token, fetchedAt: Date.now() }));
-        } catch {
-            // ignore storage errors
-        }
+        tokenCache.set(projectId, token);
         return token;
     },
 
     async getToken(projectId: string): Promise<string> {
         assertProjectId(projectId);
-        if (typeof window !== 'undefined') {
-            try {
-                const raw = localStorage.getItem(API_TOKEN_STORAGE_KEY(projectId));
-                if (raw) {
-                    const parsed = JSON.parse(raw) as { token: string; fetchedAt: number };
-                    if (parsed?.token && !isTokenExpired(parsed.token)) return parsed.token;
-                }
-            } catch {
-                // continue to fetch if parse/storage fails
-            }
-        }
+        const cached = tokenCache.get(projectId);
+        if (cached && !isTokenExpired(cached)) return cached;
 
-        // Request a fresh project token (requires the user access token to be present)
+        // Request a fresh project token using the authenticated browser session.
         return this.fetchAndStore(projectId);
     },
 
     clearToken(projectId: string): void {
         assertProjectId(projectId);
-        if (typeof window !== 'undefined') {
-            try {
-                localStorage.removeItem(API_TOKEN_STORAGE_KEY(projectId));
-            } catch {}
-        }
+        tokenCache.delete(projectId);
     },
 };
 
