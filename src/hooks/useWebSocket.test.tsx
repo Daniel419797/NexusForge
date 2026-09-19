@@ -66,7 +66,7 @@ describe("useWebSocket", () => {
 
         vi.stubGlobal("WebSocket", WebSocketMock);
         vi.stubGlobal("fetch", fetchMock);
-        setStoredAuthTokens({ accessToken: "old-access", refreshToken: "old-refresh" });
+        setStoredAuthTokens({ accessToken: "old-access" });
 
         renderHook(() => useWebSocket({
             url: "wss://example.test/ws?projectId=p1",
@@ -81,7 +81,7 @@ describe("useWebSocket", () => {
             expect.objectContaining({
                 method: "POST",
                 credentials: "include",
-                body: JSON.stringify({ refreshToken: "old-refresh" }),
+                body: "{}",
             }),
         );
     });

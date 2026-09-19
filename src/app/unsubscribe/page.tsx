@@ -16,10 +16,10 @@ function UnsubscribeContent() {
       return;
     }
 
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-    fetch(`${apiBase}/api/v1/compliance/unsubscribe`, {
+    fetch("/api/v1/compliance/unsubscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ token }),
     })
       .then((res) => {

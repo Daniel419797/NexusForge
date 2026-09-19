@@ -38,7 +38,7 @@ function processDirectory(dirPath) {
     }
 }
 
-const srcDir = path.resolve('c:/Users/HP/Desktop/reuse/frontend/src');
+const srcDir = path.resolve(process.cwd(), 'src');
 console.log(`Processing directory: ${srcDir}`);
 processDirectory(srcDir);
 console.log('Done.');

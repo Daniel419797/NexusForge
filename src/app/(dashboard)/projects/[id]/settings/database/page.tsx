@@ -64,7 +64,7 @@ export default function ProjectDatabaseSettingsPage() {
             process.env.NEXT_PUBLIC_BACKEND_URL ||
             process.env.NEXT_PUBLIC_API_URL ||
             process.env.NEXT_PUBLIC_BASE_URL ||
-            "http://localhost:3001"
+            "http://localhost:3000"
         ).replace(/\/+$/, "");
         const wsBase = httpBase.replace(/^http/, "ws");
         return activeProject

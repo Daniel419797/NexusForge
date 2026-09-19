@@ -59,7 +59,7 @@ export default function ActivityFeed() {
 
   const wsUrl = useMemo(() => {
     if (!activeProjectId) return null;
-    const base = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001/ws";
+    const base = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3000/ws";
     const joiner = base.includes("?") ? "&" : "?";
     return `${base}${joiner}projectId=${encodeURIComponent(activeProjectId)}`;
   }, [activeProjectId]);

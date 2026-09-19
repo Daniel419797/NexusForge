@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { useAuthStore } from "@/store/authStore";
 import { useProjectStore } from "@/store/projectStore";
+import AuthService from "@/services/AuthService";
 import AuthProvider from "@/components/Auth/AuthProvider";
 import GlassSidebar from "@/components/Dashboard/GlassSidebar";
 import GlassTopBar from "@/components/Dashboard/GlassTopBar";
@@ -103,8 +104,12 @@ export default function DashboardLayout({
             userName={user?.name}
             userEmail={user?.email}
             onLogout={() => {
-              logout();
-              globalThis.location.href = "/login";
+              void AuthService.logout()
+                .catch(() => undefined)
+                .finally(() => {
+                  logout();
+                  globalThis.location.href = "/login";
+                });
             }}
             onMenuToggle={toggleMobileDrawer}
           />

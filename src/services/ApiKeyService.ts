@@ -142,10 +142,9 @@ function asApiKeyRotateResult(value: unknown): ApiKeyRotateResult {
 const ApiKeyService = {
     async list(projectId: string): Promise<ApiKey[]> {
         assertProjectId(projectId);
-        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
         const attempt = async (token: string) => {
             assertNonEmptyString(token, "token");
-            const { data } = await axios.get(`${API_BASE_URL}/api/v1/api-keys`, {
+            const { data } = await axios.get(`/api/v1/api-keys`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             return toArray(unwrapDataEnvelope(data), asApiKey);
@@ -168,11 +167,10 @@ const ApiKeyService = {
     async create(projectId: string, payload: CreateApiKeyPayload): Promise<ApiKeyCreateResult> {
         assertProjectId(projectId);
         assertNonEmptyString(payload.name, "name");
-        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
         const body = { ...payload, type: payload.type || 'publishable' } as CreateApiKeyPayload;
         const attempt = async (token: string) => {
             assertNonEmptyString(token, "token");
-            const { data } = await axios.post(`${API_BASE_URL}/api/v1/api-keys`, body, {
+            const { data } = await axios.post(`/api/v1/api-keys`, body, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             return asApiKeyCreateResult(unwrapDataEnvelope(data));
@@ -194,10 +192,9 @@ const ApiKeyService = {
     async revoke(keyId: string, projectId: string): Promise<{ success?: boolean; message?: string }> {
         assertProjectId(projectId);
         assertNonEmptyString(keyId, "keyId");
-        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
         const attempt = async (token: string) => {
             assertNonEmptyString(token, "token");
-            const { data } = await axios.delete(`${API_BASE_URL}/api/v1/api-keys/${keyId}`, {
+            const { data } = await axios.delete(`/api/v1/api-keys/${keyId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             return asRevokeResult(unwrapDataEnvelope(data));
@@ -219,10 +216,9 @@ const ApiKeyService = {
     async rotate(keyId: string, projectId: string): Promise<ApiKeyRotateResult> {
         assertProjectId(projectId);
         assertNonEmptyString(keyId, "keyId");
-        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
         const attempt = async (token: string) => {
             assertNonEmptyString(token, "token");
-            const { data } = await axios.post(`${API_BASE_URL}/api/v1/api-keys/${keyId}/rotate`, null, {
+            const { data } = await axios.post(`/api/v1/api-keys/${keyId}/rotate`, null, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             return asApiKeyRotateResult(unwrapDataEnvelope(data));
