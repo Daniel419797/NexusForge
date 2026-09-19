@@ -15,34 +15,33 @@ function jsonResponse(body: unknown, status = 200): Response {
     });
 }
 
-describe("auth token storage", () => {
+describe("cookie-first auth token handling", () => {
     beforeEach(() => {
+        clearStoredAuthTokens();
         localStorage.clear();
+        sessionStorage.clear();
     });
 
     afterEach(() => {
         vi.unstubAllGlobals();
+        clearStoredAuthTokens();
     });
 
-    it("stores, updates, and clears auth tokens", () => {
+    it("keeps only the access token in memory", () => {
         setStoredAuthTokens({ accessToken: "access-1", refreshToken: "refresh-1" });
 
         expect(getStoredAccessToken()).toBe("access-1");
-        expect(getStoredRefreshToken()).toBe("refresh-1");
-
-        setStoredAuthTokens({ accessToken: "access-2", refreshToken: null });
-
-        expect(getStoredAccessToken()).toBe("access-2");
         expect(getStoredRefreshToken()).toBeNull();
+        expect(localStorage.getItem("accessToken")).toBeNull();
+        expect(localStorage.getItem("refreshToken")).toBeNull();
+        expect(sessionStorage.getItem("accessToken")).toBeNull();
 
         clearStoredAuthTokens();
-
         expect(getStoredAccessToken()).toBeNull();
-        expect(getStoredRefreshToken()).toBeNull();
     });
 
-    it("refreshes tokens once for concurrent callers", async () => {
-        setStoredAuthTokens({ accessToken: "old-access", refreshToken: "old-refresh" });
+    it("refreshes once for concurrent callers using the httpOnly cookie", async () => {
+        setStoredAuthTokens({ accessToken: "old-access" });
         const fetchMock = vi.fn().mockResolvedValue(
             jsonResponse({
                 data: {
@@ -66,30 +65,26 @@ describe("auth token storage", () => {
             expect.objectContaining({
                 method: "POST",
                 credentials: "include",
-                body: JSON.stringify({ refreshToken: "old-refresh" }),
+                body: "{}",
             }),
         );
         expect(getStoredAccessToken()).toBe("new-access");
-        expect(getStoredRefreshToken()).toBe("new-refresh");
-    });
-
-    it("clears stored tokens when refresh is explicitly rejected", async () => {
-        setStoredAuthTokens({ accessToken: "old-access", refreshToken: "old-refresh" });
-        vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ message: "Invalid refresh token" }, 401)));
-
-        await expect(refreshStoredAuthTokens()).rejects.toThrow("Invalid refresh token");
-
-        expect(getStoredAccessToken()).toBeNull();
         expect(getStoredRefreshToken()).toBeNull();
     });
 
-    it("keeps stored tokens on transient refresh failures", async () => {
-        setStoredAuthTokens({ accessToken: "old-access", refreshToken: "old-refresh" });
+    it("clears the in-memory access token when refresh is rejected", async () => {
+        setStoredAuthTokens({ accessToken: "old-access" });
+        vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ message: "Invalid refresh token" }, 401)));
+
+        await expect(refreshStoredAuthTokens()).rejects.toThrow("Invalid refresh token");
+        expect(getStoredAccessToken()).toBeNull();
+    });
+
+    it("keeps the in-memory access token on transient refresh failures", async () => {
+        setStoredAuthTokens({ accessToken: "old-access" });
         vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ message: "Service unavailable" }, 503)));
 
         await expect(refreshStoredAuthTokens()).rejects.toThrow("Service unavailable");
-
         expect(getStoredAccessToken()).toBe("old-access");
-        expect(getStoredRefreshToken()).toBe("old-refresh");
     });
 });
