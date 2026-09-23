@@ -4,43 +4,56 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import AuthService from "@/services/AuthService";
-import { clearStoredAuthTokens, getStoredAccessToken } from "@/lib/authTokens";
+import {
+    clearStoredAuthTokens,
+    getStoredAccessToken,
+    refreshStoredAuthTokens,
+} from "@/lib/authTokens";
 
 /**
  * AuthProvider — wraps protected routes.
- * On mount, attempts to fetch the user profile using the stored JWT.
- * Redirects to /login if unauthenticated.
+ *
+ * Browser auth is cookie-first. The in-memory access token is only an
+ * optimization for API/WebSocket calls and disappears on a full reload, so a
+ * missing in-memory token must not be treated as proof that the user is logged
+ * out. Restore the cookie session first, then verify the profile.
  */
 export default function AuthProvider({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const { user, isLoading, setUser, setLoading } = useAuthStore();
+    const { user, isLoading, setUser } = useAuthStore();
     const router = useRouter();
     const pathname = usePathname();
 
     useEffect(() => {
-        const token = getStoredAccessToken();
+        let cancelled = false;
 
-        if (!token) {
-            setUser(null);
-            router.replace("/login");
-            return;
-        }
+        const ensureSession = async () => {
+            try {
+                if (!getStoredAccessToken()) {
+                    await refreshStoredAuthTokens();
+                }
 
-        // Attempt to fetch user profile
-        AuthService.getProfile()
-            .then((profile) => {
-                setUser(profile);
-            })
-            .catch(() => {
-                setUser(null);
+                const profile = await AuthService.getProfile();
+                if (!cancelled) {
+                    setUser(profile);
+                }
+            } catch {
+                if (cancelled) return;
                 clearStoredAuthTokens();
+                setUser(null);
                 router.replace("/login");
-            });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pathname]);
+            }
+        };
+
+        void ensureSession();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [pathname, router, setUser]);
 
     if (isLoading) {
         return (
