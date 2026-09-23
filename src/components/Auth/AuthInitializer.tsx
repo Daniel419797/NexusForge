@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import AuthService from "@/services/AuthService";
 import { clearStoredAuthTokens, refreshStoredAuthTokens } from "@/lib/authTokens";
@@ -11,9 +12,18 @@ import { clearStoredAuthTokens, refreshStoredAuthTokens } from "@/lib/authTokens
  * persisting JWTs in localStorage/sessionStorage.
  */
 export default function AuthInitializer() {
+    const pathname = usePathname();
     const { setUser, setLoading } = useAuthStore();
 
     useEffect(() => {
+        // OAuth callback owns the session hand-off. Running the global cookie
+        // restore in parallel can race a first-time OAuth exchange: the refresh
+        // request may fail before the callback has set its cookie and then wipe
+        // the newly-authenticated user state.
+        if (pathname === "/oauth/callback") {
+            return;
+        }
+
         let cancelled = false;
 
         const restoreSession = async () => {
@@ -40,7 +50,7 @@ export default function AuthInitializer() {
         return () => {
             cancelled = true;
         };
-    }, [setLoading, setUser]);
+    }, [pathname, setLoading, setUser]);
 
     return null;
 }
