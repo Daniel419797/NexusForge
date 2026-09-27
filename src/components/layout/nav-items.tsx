@@ -11,6 +11,7 @@ import {
   KeyRound,
   LayoutDashboard,
   Map as MapIcon,
+  MessageSquareMore,
   Plug,
   Rocket,
   Settings2,
@@ -77,6 +78,12 @@ export function getProjectNavItems(projectId: string): NavItem[] {
       label: "API Keys",
       href: `${projectBase}/api-keys`,
       icon: <KeyRound className={iconClassName} aria-hidden="true" />,
+    },
+    {
+      label: "Realtime Chat",
+      href: "/chat",
+      exact: true,
+      icon: <MessageSquareMore className={iconClassName} aria-hidden="true" />,
     },
     {
       label: "Automation",
