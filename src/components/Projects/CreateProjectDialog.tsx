@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useProjectStore } from "@/store/projectStore";
 import { useEffect } from "react";
-import { CheckCircle2, KeyRound, Loader2 } from "lucide-react";
+import { Check, CheckCircle2, Copy, KeyRound, Loader2, ShieldAlert } from "lucide-react";
 import { copyText } from "@/lib/clipboard";
 import type { SdkConfig } from "@/services/ProjectService";
 
@@ -38,6 +38,8 @@ export default function CreateProjectDialog({
   const [projectToken, setProjectToken] = useState<string | null>(null);
   const [sdkConfig, setSdkConfig] = useState<SdkConfig | null>(null);
   const [created, setCreated] = useState(false);
+  const [copiedToken, setCopiedToken] = useState(false);
+  const [copiedSnippet, setCopiedSnippet] = useState(false);
 
   const handleDialogOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -47,6 +49,8 @@ export default function CreateProjectDialog({
       setProjectToken(null);
       setSdkConfig(null);
       setCreated(false);
+      setCopiedToken(false);
+      setCopiedSnippet(false);
     }
     onOpenChange(nextOpen);
   };
@@ -90,9 +94,27 @@ export default function CreateProjectDialog({
     }
   };
 
+  const copyProjectToken = async () => {
+    if (!projectToken) return;
+    await copyText(projectToken);
+    setCopiedToken(true);
+    window.setTimeout(() => setCopiedToken(false), 1800);
+  };
+
+  const sdkSnippet = sdkConfig
+    ? `import { NexusForgeAuth } from '@nexus-forge-sdk/auth';\n\nconst auth = new NexusForgeAuth({\n  baseUrl: '${sdkConfig.baseUrl}',\n  projectId: '${sdkConfig.projectId}',\n});`
+    : "";
+
+  const copySdkSnippet = async () => {
+    if (!sdkSnippet) return;
+    await copyText(sdkSnippet);
+    setCopiedSnippet(true);
+    window.setTimeout(() => setCopiedSnippet(false), 1800);
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={created ? "max-h-[88vh] overflow-y-auto sm:max-w-2xl" : "sm:max-w-md"}>
         <DialogHeader>
           <DialogTitle>
             {created ? "Project ready" : "Create New Project"}
@@ -195,80 +217,109 @@ export default function CreateProjectDialog({
         )}
 
         {created && (
-          <div className="mt-4 space-y-3">
-            <div className="flex gap-3 rounded-lg border border-emerald-500/25 bg-emerald-500/5 p-4">
+          <div className="mt-3 space-y-4">
+            <div className="flex gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-4">
               <CheckCircle2
                 className="mt-0.5 size-5 shrink-0 text-emerald-400"
                 aria-hidden="true"
               />
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground">
-                  Project created
+                  Project created successfully
                 </p>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  Your setup map is ready. Save the token before continuing.
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  Your project workspace is ready. Save the project token before moving on to Mission Control.
                 </p>
               </div>
             </div>
 
             {projectToken && (
-              <Card className="border-primary/30 bg-primary/5">
-                <CardContent className="pt-4">
-                  <p className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
-                    <KeyRound className="size-4" aria-hidden="true" />
-                    Project token — shown once
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 break-all rounded-lg border border-border bg-card p-2.5 font-mono text-sm">
-                      {projectToken}
-                    </code>
+              <Card className="overflow-hidden border-cyan-400/25 bg-cyan-400/[0.04]">
+                <CardContent className="space-y-4 p-4 sm:p-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-cyan-400/20 bg-cyan-400/10 text-cyan-300">
+                        <KeyRound className="size-4" aria-hidden="true" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground">Project token</p>
+                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                          This credential is shown only once. Store it securely before leaving this screen.
+                        </p>
+                      </div>
+                    </div>
+
                     <Button
+                      type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => void copyText(projectToken)}
+                      className="shrink-0 gap-2"
+                      onClick={() => void copyProjectToken()}
                     >
-                      Copy
+                      {copiedToken ? <Check className="size-4" /> : <Copy className="size-4" />}
+                      {copiedToken ? "Copied" : "Copy token"}
                     </Button>
+                  </div>
+
+                  <div className="rounded-lg border border-white/[0.08] bg-black/25 p-3">
+                    <code className="block overflow-x-auto whitespace-nowrap pb-1 font-mono text-xs leading-6 text-foreground/90">
+                      {projectToken}
+                    </code>
+                  </div>
+
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/[0.05] p-3">
+                    <ShieldAlert className="mt-0.5 size-4 shrink-0 text-amber-300" aria-hidden="true" />
+                    <p className="text-xs leading-relaxed text-amber-100/75">
+                      Treat this token like a password. Do not commit it to Git, place it in screenshots, or expose it in client-side code.
+                    </p>
                   </div>
                 </CardContent>
               </Card>
             )}
 
             {sdkConfig && (
-              <Card className="border-border bg-card">
-                <CardContent className="pt-4">
-                  <p className="mb-2 text-sm font-medium">SDK Quickstart</p>
-                  <pre className="overflow-x-auto whitespace-pre-wrap break-all rounded-lg bg-muted p-2.5 font-mono text-xs">
-                    {`import { NexusForgeAuth } from '@nexus-forge-sdk/auth';
+              <Card className="overflow-hidden border-border bg-card">
+                <CardContent className="space-y-3 p-4 sm:p-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">SDK quickstart</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Use this starter configuration when wiring the Nexus Forge Auth SDK into your application.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0 gap-2"
+                      onClick={() => void copySdkSnippet()}
+                    >
+                      {copiedSnippet ? <Check className="size-4" /> : <Copy className="size-4" />}
+                      {copiedSnippet ? "Copied" : "Copy snippet"}
+                    </Button>
+                  </div>
 
-const auth = new NexusForgeAuth({
-  baseUrl: '${sdkConfig.baseUrl}',
-  projectId: '${sdkConfig.projectId}',
-});`}
-                  </pre>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 text-xs"
-                    onClick={() =>
-                      void copyText(
-                        `import { NexusForgeAuth } from '@nexus-forge-sdk/auth';\n\nconst auth = new NexusForgeAuth({\n  baseUrl: '${sdkConfig.baseUrl}',\n  projectId: '${sdkConfig.projectId}',\n});`,
-                      )
-                    }
-                  >
-                    Copy Snippet
-                  </Button>
+                  <div className="overflow-hidden rounded-lg border border-white/[0.08] bg-black/25">
+                    <div className="border-b border-white/[0.06] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      TypeScript
+                    </div>
+                    <pre className="overflow-x-auto p-3 font-mono text-xs leading-6 text-foreground/90">
+                      <code>{sdkSnippet}</code>
+                    </pre>
+                  </div>
                 </CardContent>
               </Card>
             )}
 
-            <Button
-              type="button"
-              className="w-full"
-              onClick={() => handleDialogOpenChange(false)}
-            >
-              Continue to Mission Control
-            </Button>
+            <div className="flex flex-col-reverse gap-2 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-end">
+              <Button
+                type="button"
+                className="sm:min-w-52"
+                onClick={() => handleDialogOpenChange(false)}
+              >
+                Continue to Mission Control
+              </Button>
+            </div>
           </div>
         )}
       </DialogContent>
