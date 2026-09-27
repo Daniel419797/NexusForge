@@ -79,7 +79,7 @@ export default function ProjectPluginsPage() {
             toast(
                 (plugin.displayName || plugin.name) + " requires a " +
                 (plugin.requiredProjectCategory || "different") + " project.",
-                "warning",
+                "info",
             );
             return;
         }
