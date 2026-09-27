@@ -21,7 +21,7 @@ export interface ChatMessage {
     content: string;
     type: string;
     createdAt: string;
-    updatedAt?: string;
+    editedAt?: string;
     sender?: {
         id: string;
         name: string | null;
@@ -61,7 +61,7 @@ function asChatMessage(value: unknown): ChatMessage {
         content: requiredString(value.content, "message.content"),
         type: requiredString(value.type, "message.type"),
         createdAt: requiredString(value.createdAt, "message.createdAt"),
-        updatedAt: value.updatedAt == null ? undefined : requiredString(value.updatedAt, "message.updatedAt"),
+        editedAt: value.editedAt == null ? undefined : requiredString(value.editedAt, "message.editedAt"),
         sender: sender == null
             ? undefined
             : {
@@ -72,10 +72,11 @@ function asChatMessage(value: unknown): ChatMessage {
     };
 }
 
-function asSuccessResult(value: unknown): { success: boolean } {
-    assert(isRecord(value), "Invalid action response");
+function asDeleteResult(value: unknown): { id: string; deleted: boolean } {
+    assert(isRecord(value), "Invalid delete response");
     return {
-        success: Boolean(value.success),
+        id: requiredString(value.id, "delete.id"),
+        deleted: value.deleted === true,
     };
 }
 
@@ -120,13 +121,13 @@ const ChatService = {
         return asChatRoom(unwrapDataEnvelope(data));
     },
 
-    async deleteRoom(roomId: string, projectId: string): Promise<{ success: boolean }> {
+    async deleteRoom(roomId: string, projectId: string): Promise<{ id: string; deleted: boolean }> {
         assertProjectId(projectId);
         assertNonEmptyString(roomId, "roomId");
         const { data } = await api.delete(`/channels/${roomId}`, {
             headers: { "x-project-id": projectId },
         });
-        return asSuccessResult(unwrapDataEnvelope(data));
+        return asDeleteResult(unwrapDataEnvelope(data));
     },
 
     // Messages
@@ -161,14 +162,14 @@ const ChatService = {
         return asChatMessage(unwrapDataEnvelope(data));
     },
 
-    async deleteMessage(roomId: string, messageId: string, projectId: string): Promise<{ success: boolean }> {
+    async deleteMessage(roomId: string, messageId: string, projectId: string): Promise<{ id: string; deleted: boolean }> {
         assertProjectId(projectId);
         assertNonEmptyString(roomId, "roomId");
         assertNonEmptyString(messageId, "messageId");
         const { data } = await api.delete(`/channels/${roomId}/messages/${messageId}`, {
             headers: { "x-project-id": projectId },
         });
-        return asSuccessResult(unwrapDataEnvelope(data));
+        return asDeleteResult(unwrapDataEnvelope(data));
     },
 };
 
