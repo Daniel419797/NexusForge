@@ -65,6 +65,8 @@ export interface ChatRoom {
     id: string;
     name: string;
     type: "public" | "private" | "direct";
+    createdBy: string | null;
+    description?: string | null;
     createdAt: string;
 }
 
@@ -76,6 +78,11 @@ export interface ChatMessage {
     type: string;
     createdAt: string;
     editedAt?: string;
+    sender?: {
+        id: string;
+        name: string | null;
+        email: string;
+    };
 }
 
 // ── Deploy types ────────────────────────────────────────────────────────────
