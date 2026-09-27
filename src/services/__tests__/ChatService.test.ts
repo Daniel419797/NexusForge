@@ -4,10 +4,12 @@ import ChatService from "@/services/ChatService";
 vi.mock("@/services/api", () => {
     const mockGet = vi.fn();
     const mockPost = vi.fn();
+    const mockDelete = vi.fn();
     return {
         default: {
             get: mockGet,
             post: mockPost,
+            delete: mockDelete,
         },
     };
 });
@@ -16,6 +18,7 @@ import api from "@/services/api";
 
 const mockGet = vi.mocked(api.get);
 const mockPost = vi.mocked(api.post);
+const mockDelete = vi.mocked(api.delete);
 
 const projectId = "11111111-1111-4111-8111-111111111111";
 const roomId = "22222222-2222-4222-8222-222222222222";
@@ -83,6 +86,21 @@ describe("ChatService", () => {
         expect(page.messages[0].content).toBe("Hello from Nexus Forge");
         expect(page.nextCursor).toBe("55555555-5555-4555-8555-555555555555");
         expect(page.hasMore).toBe(true);
+    });
+
+    it("parses backend delete responses without inventing a success flag", async () => {
+        mockDelete.mockResolvedValue({
+            data: {
+                data: {
+                    id: roomId,
+                    deleted: true,
+                },
+            },
+        });
+
+        const result = await ChatService.deleteRoom(roomId, projectId);
+
+        expect(result).toEqual({ id: roomId, deleted: true });
     });
 
     it("creates a public chat room using the backend room vocabulary", async () => {
