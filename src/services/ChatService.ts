@@ -5,7 +5,18 @@ export interface ChatRoom {
     id: string;
     name: string;
     type: "public" | "private" | "direct";
+    createdBy: string;
+    description?: string | null;
     createdAt: string;
+}
+
+export interface RoomParticipant {
+    id: string;
+    email: string;
+    name: string | null;
+    avatarUrl?: string | null;
+    role: string;
+    joinedAt: string;
 }
 
 export interface ChatMessagePage {
@@ -43,6 +54,8 @@ function asChatRoom(value: unknown): ChatRoom {
         id: requiredString(value.id, "room.id"),
         name: requiredString(value.name, "room.name"),
         type,
+        createdBy: requiredString(value.createdBy, "room.createdBy"),
+        description: value.description == null ? undefined : requiredString(value.description, "room.description"),
         createdAt: requiredString(value.createdAt, "room.createdAt"),
     };
 }
@@ -80,6 +93,26 @@ function asDeleteResult(value: unknown): { id: string; deleted: boolean } {
     };
 }
 
+function asRoomParticipant(value: unknown): RoomParticipant {
+    assert(isRecord(value), "Invalid room participant response");
+    return {
+        id: requiredString(value.id, "participant.id"),
+        email: requiredString(value.email, "participant.email"),
+        name: value.name == null ? null : requiredString(value.name, "participant.name"),
+        avatarUrl: value.avatarUrl == null ? undefined : requiredString(value.avatarUrl, "participant.avatarUrl"),
+        role: requiredString(value.role, "participant.role"),
+        joinedAt: requiredString(value.joinedAt, "participant.joinedAt"),
+    };
+}
+
+function asRemovedParticipant(value: unknown): { userId: string; removed: boolean } {
+    assert(isRecord(value), "Invalid remove participant response");
+    return {
+        userId: requiredString(value.userId, "participant.userId"),
+        removed: value.removed === true,
+    };
+}
+
 function asChatMessagePage(value: unknown): ChatMessagePage {
     assert(isRecord(value), "Invalid message page response");
     return {
@@ -102,7 +135,10 @@ const ChatService = {
         return toArray(unwrapDataEnvelope(data), asChatRoom);
     },
 
-    async createRoom(projectId: string, payload: { name: string; type: ChatRoom["type"] }): Promise<ChatRoom> {
+    async createRoom(
+        projectId: string,
+        payload: { name: string; type: ChatRoom["type"]; memberIds?: string[]; description?: string },
+    ): Promise<ChatRoom> {
         assertProjectId(projectId);
         assertNonEmptyString(payload.name, "name");
         assertNonEmptyString(payload.type, "type");
@@ -119,6 +155,40 @@ const ChatService = {
             headers: { "x-project-id": projectId },
         });
         return asChatRoom(unwrapDataEnvelope(data));
+    },
+
+    async getRoomMembers(roomId: string, projectId: string): Promise<RoomParticipant[]> {
+        assertProjectId(projectId);
+        assertNonEmptyString(roomId, "roomId");
+        const { data } = await api.get(`/channels/${roomId}/members`, {
+            headers: { "x-project-id": projectId },
+        });
+        return toArray(unwrapDataEnvelope(data), asRoomParticipant);
+    },
+
+    async addRoomMembers(roomId: string, projectId: string, userIds: string[]): Promise<RoomParticipant[]> {
+        assertProjectId(projectId);
+        assertNonEmptyString(roomId, "roomId");
+        const { data } = await api.post(
+            `/channels/${roomId}/members`,
+            { userIds },
+            { headers: { "x-project-id": projectId } },
+        );
+        return toArray(unwrapDataEnvelope(data), asRoomParticipant);
+    },
+
+    async removeRoomMember(
+        roomId: string,
+        projectId: string,
+        userId: string,
+    ): Promise<{ userId: string; removed: boolean }> {
+        assertProjectId(projectId);
+        assertNonEmptyString(roomId, "roomId");
+        assertNonEmptyString(userId, "userId");
+        const { data } = await api.delete(`/channels/${roomId}/members/${userId}`, {
+            headers: { "x-project-id": projectId },
+        });
+        return asRemovedParticipant(unwrapDataEnvelope(data));
     },
 
     async deleteRoom(roomId: string, projectId: string): Promise<{ id: string; deleted: boolean }> {
