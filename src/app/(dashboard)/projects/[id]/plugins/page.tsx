@@ -6,6 +6,8 @@ import PluginService, { type PluginMeta, type InstalledPlugin } from "@/services
 import MarketplaceGrid from "@/components/Plugins/MarketplaceGrid";
 import ConfigPanel from "@/components/Plugins/ConfigPanel";
 import IdeaSubmissionDialog from "@/components/Plugins/IdeaSubmissionDialog";
+import { MfaStepUpCancelledError, useMfaStepUp } from "@/components/Auth/MfaStepUpProvider";
+import { useToast } from "@/components/ui/toast-provider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -13,7 +15,8 @@ import { Plus } from "lucide-react";
 export default function ProjectPluginsPage() {
     const params = useParams();
     const projectId = params.id as string | undefined;
-
+    const { runWithMfa } = useMfaStepUp();
+    const { toast } = useToast();
     const [available, setAvailable] = useState<PluginMeta[]>([]);
     const [installed, setInstalled] = useState<InstalledPlugin[]>([]);
     const [loadingInitial, setLoadingInitial] = useState(true);
@@ -33,15 +36,18 @@ export default function ProjectPluginsPage() {
             ]);
             setAvailable(avail);
             setInstalled(inst);
-        } catch {
-            // ignore
         } finally {
             setLoadingInitial(false);
         }
     }, [projectId]);
 
+    const refreshInstalled = useCallback(async () => {
+        if (!projectId) return;
+        setInstalled(await PluginService.getInstalled(projectId));
+    }, [projectId]);
+
     useEffect(() => {
-        fetchData();
+        void fetchData();
     }, [fetchData]);
 
     const setItemLoading = (name: string, stat: boolean) => {
@@ -52,11 +58,13 @@ export default function ProjectPluginsPage() {
         if (!projectId) return;
         setItemLoading(name, true);
         try {
-            const mfaCode = globalThis.window?.prompt("Enter MFA code for sensitive action (leave blank if not required)")?.trim();
-            await PluginService.install(projectId, name, { mfaCode: mfaCode || undefined });
-            fetchData();
-        } catch {
-            // ignore
+            await runWithMfa((stepUpToken) =>
+                PluginService.install(projectId, name, { stepUpToken }),
+            );
+            await refreshInstalled();
+            toast(name + " installed successfully.", "success");
+        } catch (err) {
+            if (err instanceof MfaStepUpCancelledError) return;
         } finally {
             setItemLoading(name, false);
         }
@@ -64,14 +72,17 @@ export default function ProjectPluginsPage() {
 
     const handleUninstall = async (name: string) => {
         if (!projectId) return;
-        if (!confirm(`Are you sure you want to uninstall ${name}?`)) return;
+        if (!confirm("Are you sure you want to uninstall " + name + "?")) return;
 
         setItemLoading(name, true);
         try {
-            await PluginService.uninstall(projectId, name);
-            fetchData();
-        } catch {
-            // ignore
+            await runWithMfa((stepUpToken) =>
+                PluginService.uninstall(projectId, name, { stepUpToken }),
+            );
+            await refreshInstalled();
+            toast(name + " removed successfully.", "success");
+        } catch (err) {
+            if (err instanceof MfaStepUpCancelledError) return;
         } finally {
             setItemLoading(name, false);
         }
@@ -84,12 +95,11 @@ export default function ProjectPluginsPage() {
 
     const handleSaveConfig = async (name: string, config: Record<string, unknown>) => {
         if (!projectId) return;
-        try {
-            await PluginService.updateConfig(projectId, name, config);
-            fetchData();
-        } catch {
-            throw new Error("Failed to save config");
-        }
+        await runWithMfa((stepUpToken) =>
+            PluginService.updateConfig(projectId, name, config, { stepUpToken }),
+        );
+        await refreshInstalled();
+        toast(name + " configuration saved.", "success");
     };
 
     if (!projectId) {
@@ -142,7 +152,7 @@ export default function ProjectPluginsPage() {
                                 </div>
                             ) : (
                                 <MarketplaceGrid
-                                    available={available.filter(a => installed.some(i => i.name === a.name))}
+                                    available={available.filter((plugin) => installed.some((item) => item.name === plugin.name))}
                                     installed={installed}
                                     onInstall={handleInstall}
                                     onUninstall={handleUninstall}
