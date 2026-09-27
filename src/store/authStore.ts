@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { clearStoredAuthTokens } from "@/lib/authTokens";
+import { clearStoredMfaStepUpToken } from "@/lib/mfaStepUp";
 import type { User } from "@/types";
 
 interface AuthState {
@@ -20,6 +21,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     setLoading: (isLoading) => set({ isLoading }),
     logout: () => {
         clearStoredAuthTokens();
+        clearStoredMfaStepUpToken();
         set({ user: null, isAuthenticated: false, isLoading: false });
     },
 }));
