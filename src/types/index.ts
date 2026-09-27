@@ -64,7 +64,7 @@ export interface Notification {
 export interface ChatRoom {
     id: string;
     name: string;
-    type: "public" | "private" | "dm";
+    type: "public" | "private" | "direct";
     createdAt: string;
 }
 
