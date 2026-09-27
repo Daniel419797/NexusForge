@@ -397,20 +397,20 @@ export default function ChatPage() {
     return (
         <>
             <ScrollReveal direction="up">
-                <div className="space-y-4">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0 space-y-4">
+                    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                         <div>
                             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-300/70">
                                 Realtime communication
                             </p>
-                            <h1 className="mt-1 text-2xl font-bold text-white">Project Chat</h1>
-                            <p className="mt-1 text-sm text-white/40">
+                            <h1 className="mt-1 text-2xl font-bold text-white sm:text-3xl">Project Chat</h1>
+                            <p className="mt-1 max-w-2xl text-sm leading-6 text-white/40">
                                 Project-scoped rooms with persisted history and live WebSocket updates.
                             </p>
                         </div>
                         <div
                             className={
-                                "inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 text-xs " +
+                                "inline-flex w-fit shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs " +
                                 (isConnected
                                     ? "border-emerald-400/20 bg-emerald-400/[0.06] text-emerald-300"
                                     : "border-amber-400/20 bg-amber-400/[0.06] text-amber-300")
@@ -438,7 +438,7 @@ export default function ChatPage() {
                     )}
 
                     <div
-                        className="flex h-[calc(100vh-14rem)] min-h-[560px] overflow-hidden rounded-2xl"
+                        className="flex h-[68dvh] min-h-[520px] w-full min-w-0 flex-col overflow-hidden rounded-2xl md:h-[calc(100vh-14rem)] md:min-h-[560px] md:flex-row"
                         style={{
                             background: "linear-gradient(170deg, rgba(14,16,34,0.92) 0%, rgba(8,10,25,0.88) 100%)",
                             border: "1px solid rgba(255,255,255,0.06)",
@@ -457,9 +457,9 @@ export default function ChatPage() {
                             onCreateRoom={() => setCreateRoomOpen(true)}
                         />
 
-                        <div className="flex min-w-0 flex-1 flex-col">
-                            <div className="border-b border-white/[0.06] p-4" style={{ background: "rgba(10,12,28,0.6)" }}>
-                                <div className="flex items-center justify-between gap-2">
+                        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+                            <div className="border-b border-white/[0.06] px-3 py-3 sm:p-4" style={{ background: "rgba(10,12,28,0.6)" }}>
+                                <div className="flex min-w-0 items-center justify-between gap-3">
                                     <div className="min-w-0">
                                         <h2 className="truncate font-semibold text-white">
                                             {activeRoom ? "# " + activeRoom.name : "Select a channel"}
@@ -473,7 +473,7 @@ export default function ChatPage() {
                                     {activeRoom && (
                                         <ElectricRippleButton
                                             accent="amber"
-                                            className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/20"
+                                            className="shrink-0 rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-1.5 text-[11px] text-red-300 hover:bg-red-500/20 sm:px-3 sm:text-xs"
                                             onClick={handleDeleteRoom}
                                         >
                                             Delete Room
@@ -482,7 +482,7 @@ export default function ChatPage() {
                                 </div>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto p-4" ref={scrollRef}>
+                            <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 sm:p-4" ref={scrollRef}>
                                 {loadingMessages ? (
                                     <div className="space-y-4">
                                         <Skeleton className="h-12 w-3/4 rounded-lg bg-white/[0.04]" />
@@ -531,7 +531,7 @@ export default function ChatPage() {
                             </div>
 
                             {typingUsers.size > 0 && activeRoomId && (
-                                <div className="px-4 pb-1 text-[11px] text-cyan-200/60">
+                                <div className="px-3 pb-1 text-[11px] text-cyan-200/60 sm:px-4">
                                     {typingUsers.size === 1
                                         ? "Someone is typing…"
                                         : String(typingUsers.size) + " people are typing…"}
