@@ -75,7 +75,7 @@ export interface ChatMessage {
     content: string;
     type: string;
     createdAt: string;
-    updatedAt?: string;
+    editedAt?: string;
 }
 
 // ── Deploy types ────────────────────────────────────────────────────────────
