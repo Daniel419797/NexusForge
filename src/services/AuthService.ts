@@ -35,6 +35,20 @@ export interface UpdateProfilePayload {
     newPassword?: string;
 }
 
+export interface MfaStatus {
+    enabled: boolean;
+}
+
+export interface MfaSetup {
+    otpauthUrl: string;
+    manualEntrySecret: string;
+}
+
+export interface MfaStepUpResult {
+    stepUpToken: string;
+    expiresInSeconds: number;
+}
+
 function requiredString(value: unknown, fieldName: string): string {
     assert(typeof value === "string" && value.trim().length > 0, `${fieldName} is required`);
     return value;
@@ -77,6 +91,30 @@ function asMessageAction(value: unknown): { message?: string } {
     };
 }
 
+function asMfaStatus(value: unknown): MfaStatus {
+    assert(isRecord(value), "Invalid MFA status response");
+    assert(typeof value.enabled === "boolean", "Invalid MFA enabled state");
+    return { enabled: value.enabled };
+}
+
+function asMfaSetup(value: unknown): MfaSetup {
+    assert(isRecord(value), "Invalid MFA setup response");
+    return {
+        otpauthUrl: requiredString(value.otpauthUrl, "mfa.otpauthUrl"),
+        manualEntrySecret: requiredString(value.manualEntrySecret, "mfa.manualEntrySecret"),
+    };
+}
+
+function asMfaStepUpResult(value: unknown): MfaStepUpResult {
+    assert(isRecord(value), "Invalid MFA step-up response");
+    const expiresInSeconds = value.expiresInSeconds;
+    assert(typeof expiresInSeconds === "number" && Number.isFinite(expiresInSeconds) && expiresInSeconds > 0, "Invalid MFA step-up expiry");
+    return {
+        stepUpToken: requiredString(value.stepUpToken, "mfa.stepUpToken"),
+        expiresInSeconds,
+    };
+}
+
 const AuthService = {
     async login(payload: LoginPayload) {
         assertNonEmptyString(payload.email, "email");
@@ -110,6 +148,34 @@ const AuthService = {
 
     async deleteAccount(): Promise<void> {
         await api.delete("/auth/me");
+    },
+
+    async getMfaStatus(): Promise<MfaStatus> {
+        const { data } = await api.get("/auth/mfa/totp/status");
+        return asMfaStatus(unwrapDataEnvelope(data));
+    },
+
+    async setupMfa(): Promise<MfaSetup> {
+        const { data } = await api.post("/auth/mfa/totp/setup");
+        return asMfaSetup(unwrapDataEnvelope(data));
+    },
+
+    async enableMfa(code: string): Promise<MfaStatus> {
+        assertNonEmptyString(code, "code");
+        const { data } = await api.post("/auth/mfa/totp/enable", { code });
+        return asMfaStatus(unwrapDataEnvelope(data));
+    },
+
+    async disableMfa(code: string): Promise<MfaStatus> {
+        assertNonEmptyString(code, "code");
+        const { data } = await api.post("/auth/mfa/totp/disable", { code });
+        return asMfaStatus(unwrapDataEnvelope(data));
+    },
+
+    async createMfaStepUp(code: string): Promise<MfaStepUpResult> {
+        assertNonEmptyString(code, "code");
+        const { data } = await api.post("/auth/mfa/totp/step-up", { code });
+        return asMfaStepUpResult(unwrapDataEnvelope(data));
     },
 
     getGoogleAuthUrl() {
