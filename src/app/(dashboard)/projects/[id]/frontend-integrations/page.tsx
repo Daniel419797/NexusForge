@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import FrontendIntegrationService, {
     type GitHubRepositorySummary,
 } from "@/services/FrontendIntegrationService";
+import { MfaStepUpCancelledError, useMfaStepUp } from "@/components/Auth/MfaStepUpProvider";
 import type {
     FrontendIntegration,
     FrontendIntegrationArtifact,
@@ -19,6 +20,13 @@ import type {
 } from "@/types";
 
 const TERMINAL_STATUSES = new Set<FrontendIntegrationRunStatus>(["pr_created", "failed", "cancelled"]);
+
+function getApiErrorCode(error: unknown): string | undefined {
+    const response = error && typeof error === "object" && "response" in error
+        ? (error as { response?: { data?: { error?: unknown } } }).response
+        : undefined;
+    return typeof response?.data?.error === "string" ? response.data.error : undefined;
+}
 
 const STATUS_CLASS: Record<string, string> = {
     connected: "border-emerald-400/20 text-emerald-300 bg-emerald-400/10",
@@ -199,6 +207,7 @@ function ListBlock({ label, values }: Readonly<{ label: string; values: string[]
 
 function FrontendIntegrationsPageContent() {
     const params = useParams();
+    const { runWithMfa } = useMfaStepUp();
     const pathname = usePathname();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -405,17 +414,37 @@ function FrontendIntegrationsPageContent() {
         setBusy("open-pr");
         setError(null);
         try {
-            const run = await FrontendIntegrationService.openPullRequest(
+            const openPr = (stepUpToken?: string) => FrontendIntegrationService.openPullRequest(
                 projectId,
                 activeRun.run.integrationId,
                 activeRun.run.id,
+                {},
+                stepUpToken ? { stepUpToken } : undefined,
             );
+
+            let run: FrontendIntegrationRun;
+            try {
+                run = await openPr();
+            } catch (err) {
+                const code = getApiErrorCode(err);
+                if (code !== "MFA_STEP_UP_REQUIRED" && code !== "MFA_STEP_UP_INVALID" && code !== "MFA_NOT_ENABLED") {
+                    throw err;
+                }
+                run = await runWithMfa((stepUpToken) => openPr(stepUpToken));
+            }
+
             const detail = await FrontendIntegrationService.getRunDetail(projectId, run.integrationId, run.id);
             setActiveRun(detail);
             await refreshRunHistory();
             await refreshObservability();
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to open pull request");
+            if (err instanceof MfaStepUpCancelledError) return;
+            const response = err && typeof err === "object" && "response" in err
+                ? (err as { response?: { data?: { message?: unknown } } }).response
+                : undefined;
+            setError(typeof response?.data?.message === "string"
+                ? response.data.message
+                : err instanceof Error ? err.message : "Failed to open pull request");
             await refreshRun();
         } finally {
             setBusy(null);
