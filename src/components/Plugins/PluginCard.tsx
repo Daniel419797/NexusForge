@@ -23,6 +23,8 @@ export default function PluginCard({
     loading,
 }: PluginCardProps) {
     const isInstalled = !!installed;
+    const isCompatible = meta.compatible !== false;
+    const needsConfiguration = (meta.configFields ?? []).some((field) => field.required);
     const pluginTitle = meta.displayName || meta.name;
     const pluginAuthor = meta.author || "Built-in";
 
@@ -46,6 +48,14 @@ export default function PluginCard({
             </CardHeader>
             <CardContent className="flex-1">
                 <p className="text-sm text-muted-foreground">{meta.description}</p>
+                {!isCompatible && meta.requiredProjectCategory && (
+                    <p className="mt-3 text-xs text-amber-400">
+                        Requires a {meta.requiredProjectCategory} project.
+                    </p>
+                )}
+                {isCompatible && !isInstalled && needsConfiguration && (
+                    <p className="mt-3 text-xs text-cyan-300/70">Configuration required before installation.</p>
+                )}
                 {meta.tags && meta.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-4">
                         {meta.tags.map(tag => (
@@ -78,9 +88,9 @@ export default function PluginCard({
                     <Button
                         className="w-full"
                         onClick={() => onInstall(meta.name)}
-                        disabled={loading}
+                        disabled={loading || !isCompatible}
                     >
-                        {loading ? "Installing..." : "Install Plugin"}
+                        {loading ? "Installing..." : !isCompatible ? "Not compatible" : "Install Plugin"}
                     </Button>
                 )}
             </CardFooter>
