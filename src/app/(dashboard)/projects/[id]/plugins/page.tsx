@@ -6,6 +6,7 @@ import PluginService, { type PluginMeta, type InstalledPlugin } from "@/services
 import MarketplaceGrid from "@/components/Plugins/MarketplaceGrid";
 import ConfigPanel from "@/components/Plugins/ConfigPanel";
 import IdeaSubmissionDialog from "@/components/Plugins/IdeaSubmissionDialog";
+import PluginInstallDialog from "@/components/Plugins/PluginInstallDialog";
 import { MfaStepUpCancelledError, useMfaStepUp } from "@/components/Auth/MfaStepUpProvider";
 import { useToast } from "@/components/ui/toast-provider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,6 +25,8 @@ export default function ProjectPluginsPage() {
 
     const [configPlugin, setConfigPlugin] = useState<InstalledPlugin | null>(null);
     const [isConfigOpen, setIsConfigOpen] = useState(false);
+    const [installPlugin, setInstallPlugin] = useState<PluginMeta | null>(null);
+    const [isInstallOpen, setIsInstallOpen] = useState(false);
     const [isIdeaDialogOpen, setIsIdeaDialogOpen] = useState(false);
 
     const fetchData = useCallback(async () => {
@@ -54,19 +57,44 @@ export default function ProjectPluginsPage() {
         setLoadingItems((prev) => ({ ...prev, [name]: stat }));
     };
 
-    const handleInstall = async (name: string) => {
+    const performInstall = async (plugin: PluginMeta, config: Record<string, unknown>) => {
         if (!projectId) return;
-        setItemLoading(name, true);
+        setItemLoading(plugin.name, true);
         try {
             await runWithMfa((stepUpToken) =>
-                PluginService.install(projectId, name, { stepUpToken }),
+                PluginService.install(projectId, plugin.name, { stepUpToken, config }),
             );
             await refreshInstalled();
-            toast(name + " installed successfully.", "success");
+            toast((plugin.displayName || plugin.name) + " installed successfully.", "success");
+        } finally {
+            setItemLoading(plugin.name, false);
+        }
+    };
+
+    const handleInstall = async (name: string) => {
+        const plugin = available.find((item) => item.name === name);
+        if (!plugin || !projectId) return;
+
+        if (plugin.compatible === false) {
+            toast(
+                (plugin.displayName || plugin.name) + " requires a " +
+                (plugin.requiredProjectCategory || "different") + " project.",
+                "warning",
+            );
+            return;
+        }
+
+        if ((plugin.configFields ?? []).length > 0) {
+            setInstallPlugin(plugin);
+            setIsInstallOpen(true);
+            return;
+        }
+
+        try {
+            await performInstall(plugin, {});
         } catch (err) {
             if (err instanceof MfaStepUpCancelledError) return;
-        } finally {
-            setItemLoading(name, false);
+            // The shared API interceptor displays non-MFA backend errors.
         }
     };
 
@@ -164,6 +192,19 @@ export default function ProjectPluginsPage() {
                     </>
                 )}
             </Tabs>
+
+            <PluginInstallDialog
+                plugin={installPlugin}
+                open={isInstallOpen}
+                onOpenChange={(open) => {
+                    setIsInstallOpen(open);
+                    if (!open) setInstallPlugin(null);
+                }}
+                onInstall={async (config) => {
+                    if (!installPlugin) return;
+                    await performInstall(installPlugin, config);
+                }}
+            />
 
             <ConfigPanel
                 plugin={configPlugin}
