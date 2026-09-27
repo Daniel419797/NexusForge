@@ -4,8 +4,14 @@ import { assert, assertNonEmptyString, assertProjectId, isRecord, toArray, unwra
 export interface ChatRoom {
     id: string;
     name: string;
-    type: "public" | "private" | "dm";
+    type: "public" | "private" | "direct";
     createdAt: string;
+}
+
+export interface ChatMessagePage {
+    messages: ChatMessage[];
+    nextCursor?: string;
+    hasMore: boolean;
 }
 
 export interface ChatMessage {
@@ -31,7 +37,7 @@ function requiredString(value: unknown, fieldName: string): string {
 function asChatRoom(value: unknown): ChatRoom {
     assert(isRecord(value), "Invalid chat room response");
     const type = value.type;
-    assert(type === "public" || type === "private" || type === "dm", "Invalid room type");
+    assert(type === "public" || type === "private" || type === "direct", "Invalid room type");
 
     return {
         id: requiredString(value.id, "room.id"),
@@ -73,6 +79,18 @@ function asSuccessResult(value: unknown): { success: boolean } {
     };
 }
 
+function asChatMessagePage(value: unknown): ChatMessagePage {
+    assert(isRecord(value), "Invalid message page response");
+    return {
+        messages: toArray(value.messages, asChatMessage),
+        nextCursor:
+            value.nextCursor == null
+                ? undefined
+                : requiredString(value.nextCursor, "messages.nextCursor"),
+        hasMore: value.hasMore === true,
+    };
+}
+
 const ChatService = {
     // Rooms
     async getRooms(projectId: string): Promise<ChatRoom[]> {
@@ -83,7 +101,7 @@ const ChatService = {
         return toArray(unwrapDataEnvelope(data), asChatRoom);
     },
 
-    async createRoom(projectId: string, payload: { name: string; type: string }): Promise<ChatRoom> {
+    async createRoom(projectId: string, payload: { name: string; type: ChatRoom["type"] }): Promise<ChatRoom> {
         assertProjectId(projectId);
         assertNonEmptyString(payload.name, "name");
         assertNonEmptyString(payload.type, "type");
@@ -112,14 +130,14 @@ const ChatService = {
     },
 
     // Messages
-    async getMessages(roomId: string, projectId: string, params?: { cursor?: string; limit?: number }): Promise<ChatMessage[]> {
+    async getMessages(roomId: string, projectId: string, params?: { cursor?: string; limit?: number }): Promise<ChatMessagePage> {
         assertProjectId(projectId);
         assertNonEmptyString(roomId, "roomId");
         const { data } = await api.get(`/channels/${roomId}/messages`, {
             headers: { "x-project-id": projectId },
             params,
         });
-        return toArray(unwrapDataEnvelope(data), asChatMessage);
+        return asChatMessagePage(unwrapDataEnvelope(data));
     },
 
     async sendMessage(roomId: string, projectId: string, payload: { content: string }): Promise<ChatMessage> {
