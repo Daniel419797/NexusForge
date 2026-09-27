@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Globe2, LockKeyhole, UserPlus, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -69,6 +70,7 @@ function participantLabel(member: { name: string | null; email: string }): strin
 }
 
 export default function ChatPage() {
+    const router = useRouter();
     const { activeProject } = useProjectStore();
     const { user } = useAuthStore();
     const [rooms, setRooms] = useState<ChatRoom[]>([]);
@@ -124,6 +126,31 @@ export default function ChatPage() {
         reconnect: Boolean(activeProject?.id && accessToken),
         onMessage: (value: unknown) => {
             if (!isServerEnvelope(value)) return;
+
+            if (
+                value.event === "room:access-revoked" &&
+                typeof value.data.roomId === "string"
+            ) {
+                const revokedRoomId = value.data.roomId;
+                setRooms((current) => current.filter((room) => room.id !== revokedRoomId));
+                setActiveRoomId((current) => current === revokedRoomId ? null : current);
+                if (activeRoomId === revokedRoomId) {
+                    setMessages([]);
+                    setParticipants([]);
+                    setChatError("Your access to this private room was removed.");
+                }
+                return;
+            }
+
+            if (value.event === "project:access-revoked") {
+                setRooms([]);
+                setMessages([]);
+                setParticipants([]);
+                setActiveRoomId(null);
+                setChatError("Your access to this project was removed.");
+                router.replace("/projects");
+                return;
+            }
 
             if (value.event === "message:new" && isChatMessagePayload(value.data)) {
                 const incoming = value.data;
