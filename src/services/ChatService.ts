@@ -5,7 +5,7 @@ export interface ChatRoom {
     id: string;
     name: string;
     type: "public" | "private" | "direct";
-    createdBy: string;
+    createdBy: string | null;
     description?: string | null;
     createdAt: string;
 }
@@ -54,7 +54,7 @@ function asChatRoom(value: unknown): ChatRoom {
         id: requiredString(value.id, "room.id"),
         name: requiredString(value.name, "room.name"),
         type,
-        createdBy: requiredString(value.createdBy, "room.createdBy"),
+        createdBy: value.createdBy == null ? null : requiredString(value.createdBy, "room.createdBy"),
         description: value.description == null ? undefined : requiredString(value.description, "room.description"),
         createdAt: requiredString(value.createdAt, "room.createdAt"),
     };
