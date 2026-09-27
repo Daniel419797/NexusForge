@@ -32,6 +32,18 @@ export default function ChannelList({
             </div>
             <ScrollArea className="flex-1 p-2">
                 {loadingRooms && <Skeleton className="h-10 w-full rounded-md mb-2" />}
+                {!loadingRooms && rooms.length === 0 && (
+                    <div className="px-3 py-8 text-center">
+                        <p className="text-xs font-medium text-muted-foreground">No channels yet</p>
+                        <button
+                            type="button"
+                            onClick={onCreateRoom}
+                            className="mt-2 text-[11px] text-cyan-300/70 hover:text-cyan-200"
+                        >
+                            Create the first room
+                        </button>
+                    </div>
+                )}
                 {!loadingRooms &&
                     rooms.map((room) => (
                         <button
