@@ -14,6 +14,18 @@ interface ConfigPanelProps {
     onSave: (pluginName: string, config: Record<string, unknown>) => Promise<void>;
 }
 
+function getSaveErrorMessage(error: unknown): string {
+    if (error instanceof SyntaxError) return "Invalid JSON format";
+    const response = error && typeof error === "object" && "response" in error
+        ? (error as { response?: { data?: { message?: unknown } } }).response
+        : undefined;
+    return typeof response?.data?.message === "string"
+        ? response.data.message
+        : error instanceof Error && error.message
+            ? error.message
+            : "Failed to save plugin configuration.";
+}
+
 export default function ConfigPanel({ plugin, open, onOpenChange, onSave }: ConfigPanelProps) {
     const [configStr, setConfigStr] = useState("");
     const [saving, setSaving] = useState(false);
@@ -37,8 +49,8 @@ export default function ConfigPanel({ plugin, open, onOpenChange, onSave }: Conf
             setError("");
             await onSave(plugin.name, parsed as Record<string, unknown>);
             onOpenChange(false);
-        } catch {
-            setError("Invalid JSON format");
+        } catch (err: unknown) {
+            setError(getSaveErrorMessage(err));
         } finally {
             setSaving(false);
         }
