@@ -75,6 +75,52 @@ describe('AuthService', () => {
         });
     });
 
+    describe('MFA', () => {
+        it('fetches MFA status', async () => {
+            mockGet.mockResolvedValue({ data: { data: { enabled: true } } });
+            const result = await AuthService.getMfaStatus();
+            expect(mockGet).toHaveBeenCalledWith('/auth/mfa/totp/status');
+            expect(result).toEqual({ enabled: true });
+        });
+
+        it('starts TOTP setup', async () => {
+            mockPost.mockResolvedValue({
+                data: {
+                    data: {
+                        otpauthUrl: 'otpauth://totp/Nexus%20Forge:test%40test.com?secret=ABC123',
+                        manualEntrySecret: 'ABC123',
+                    },
+                },
+            });
+            const result = await AuthService.setupMfa();
+            expect(mockPost).toHaveBeenCalledWith('/auth/mfa/totp/setup');
+            expect(result.manualEntrySecret).toBe('ABC123');
+        });
+
+        it('enables TOTP with a six digit code', async () => {
+            mockPost.mockResolvedValue({ data: { data: { enabled: true } } });
+            const result = await AuthService.enableMfa('123456');
+            expect(mockPost).toHaveBeenCalledWith('/auth/mfa/totp/enable', { code: '123456' });
+            expect(result).toEqual({ enabled: true });
+        });
+
+        it('creates a short-lived MFA step-up credential', async () => {
+            mockPost.mockResolvedValue({
+                data: { data: { stepUpToken: 'step-token', expiresInSeconds: 600 } },
+            });
+            const result = await AuthService.createMfaStepUp('123456');
+            expect(mockPost).toHaveBeenCalledWith('/auth/mfa/totp/step-up', { code: '123456' });
+            expect(result).toEqual({ stepUpToken: 'step-token', expiresInSeconds: 600 });
+        });
+
+        it('disables TOTP with the current code', async () => {
+            mockPost.mockResolvedValue({ data: { data: { enabled: false } } });
+            const result = await AuthService.disableMfa('654321');
+            expect(mockPost).toHaveBeenCalledWith('/auth/mfa/totp/disable', { code: '654321' });
+            expect(result).toEqual({ enabled: false });
+        });
+    });
+
     describe('OAuth URLs', () => {
         it('returns google auth URL', () => {
             const url = AuthService.getGoogleAuthUrl();
