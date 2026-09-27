@@ -92,6 +92,7 @@ export default function ChatPage() {
     const [manageParticipantsOpen, setManageParticipantsOpen] = useState(false);
     const [managedMemberIds, setManagedMemberIds] = useState<Set<string>>(new Set());
     const [savingParticipants, setSavingParticipants] = useState(false);
+    const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
 
     const scrollRef = useRef<HTMLDivElement>(null);
     const joinedRoomRef = useRef<string | null>(null);
@@ -184,8 +185,6 @@ export default function ChatPage() {
             }
         },
     });
-
-    const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         if (!activeProject?.id) {
