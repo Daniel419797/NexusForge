@@ -30,10 +30,13 @@ beforeEach(() => {
 
 describe("PluginService sensitive actions", () => {
     it("sends a step-up token when installing a plugin", async () => {
-        await PluginService.install(projectId, "wallet-connect", { stepUpToken: "step-token" });
+        await PluginService.install(projectId, "wallet-connect", {
+            stepUpToken: "step-token",
+            config: { walletConnectProjectId: "wc-project" },
+        });
         expect(mockPost).toHaveBeenCalledWith(
             "/plugins/install",
-            { name: "wallet-connect" },
+            { name: "wallet-connect", config: { walletConnectProjectId: "wc-project" } },
             { headers: { "x-project-id": projectId, "x-mfa-step-up-token": "step-token" } },
         );
     });
