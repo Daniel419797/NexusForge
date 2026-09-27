@@ -278,6 +278,18 @@ function projectHeaders(projectId: string): { "x-project-id": string } {
     return { "x-project-id": projectId };
 }
 
+interface SensitiveActionOptions {
+    stepUpToken?: string;
+    mfaCode?: string;
+}
+
+function sensitiveProjectHeaders(projectId: string, options?: SensitiveActionOptions): Record<string, string> {
+    const headers: Record<string, string> = projectHeaders(projectId);
+    if (options?.stepUpToken) headers["x-mfa-step-up-token"] = options.stepUpToken;
+    if (options?.mfaCode) headers["x-mfa-code"] = options.mfaCode;
+    return headers;
+}
+
 const BlockchainService = {
     // Wallets
     async getWallets(projectId: string, params?: { chain?: string; limit?: number; cursor?: string }): Promise<Wallet[]> {
@@ -505,12 +517,12 @@ const BlockchainService = {
         to: string;
         value?: string;
         data?: string;
-    }, options?: { mfaCode?: string }): Promise<SignerTransactionResult> {
+    }, options?: SensitiveActionOptions): Promise<SignerTransactionResult> {
         assertNonEmptyString(payload.hotWalletId, "hotWalletId");
         assertNonEmptyString(payload.to, "to");
-        const headers: Record<string, string> = projectHeaders(projectId);
-        if (options?.mfaCode) headers["x-mfa-code"] = options.mfaCode;
-        const { data } = await api.post("/blockchain/signer/send", payload, { headers });
+        const { data } = await api.post("/blockchain/signer/send", payload, {
+            headers: sensitiveProjectHeaders(projectId, options),
+        });
         return asSignerTransactionResult(unwrapDataEnvelope(data));
     },
 
@@ -522,13 +534,13 @@ const BlockchainService = {
         functionName: string;
         args?: unknown[];
         value?: string;
-    }, options?: { mfaCode?: string }): Promise<SignerTransactionResult> {
+    }, options?: SensitiveActionOptions): Promise<SignerTransactionResult> {
         assertNonEmptyString(payload.hotWalletId, "hotWalletId");
         assertNonEmptyString(payload.contractAddress, "contractAddress");
         assertNonEmptyString(payload.functionName, "functionName");
-        const headers: Record<string, string> = projectHeaders(projectId);
-        if (options?.mfaCode) headers["x-mfa-code"] = options.mfaCode;
-        const { data } = await api.post("/blockchain/signer/write", payload, { headers });
+        const { data } = await api.post("/blockchain/signer/write", payload, {
+            headers: sensitiveProjectHeaders(projectId, options),
+        });
         return asSignerTransactionResult(unwrapDataEnvelope(data));
     },
 
