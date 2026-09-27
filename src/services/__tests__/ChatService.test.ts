@@ -36,6 +36,7 @@ describe("ChatService", () => {
                         id: roomId,
                         name: "Support",
                         type: "direct",
+                        createdBy: "44444444-4444-4444-8444-444444444444",
                         createdAt: "2026-09-27T10:00:00.000Z",
                     },
                 ],
@@ -48,6 +49,8 @@ describe("ChatService", () => {
                 id: roomId,
                 name: "Support",
                 type: "direct",
+                createdBy: "44444444-4444-4444-8444-444444444444",
+                description: undefined,
                 createdAt: "2026-09-27T10:00:00.000Z",
             },
         ]);
@@ -103,6 +106,57 @@ describe("ChatService", () => {
         expect(result).toEqual({ id: roomId, deleted: true });
     });
 
+    it("loads room participants", async () => {
+        mockGet.mockResolvedValue({
+            data: {
+                data: [
+                    {
+                        id: "44444444-4444-4444-8444-444444444444",
+                        email: "owner@example.com",
+                        name: "Project Owner",
+                        role: "owner",
+                        joinedAt: "2026-09-27T09:00:00.000Z",
+                    },
+                ],
+            },
+        });
+
+        const members = await ChatService.getRoomMembers(roomId, projectId);
+
+        expect(mockGet).toHaveBeenCalledWith(
+            "/channels/" + roomId + "/members",
+            { headers: { "x-project-id": projectId } },
+        );
+        expect(members[0].name).toBe("Project Owner");
+    });
+
+    it("creates a private room with selected project members", async () => {
+        const memberId = "55555555-5555-4555-8555-555555555555";
+        mockPost.mockResolvedValue({
+            data: {
+                data: {
+                    id: roomId,
+                    name: "private-support",
+                    type: "private",
+                    createdBy: "44444444-4444-4444-8444-444444444444",
+                    createdAt: "2026-09-27T10:00:00.000Z",
+                },
+            },
+        });
+
+        await ChatService.createRoom(projectId, {
+            name: "private-support",
+            type: "private",
+            memberIds: [memberId],
+        });
+
+        expect(mockPost).toHaveBeenCalledWith(
+            "/channels",
+            { name: "private-support", type: "private", memberIds: [memberId] },
+            { headers: { "x-project-id": projectId } },
+        );
+    });
+
     it("creates a public chat room using the backend room vocabulary", async () => {
         mockPost.mockResolvedValue({
             data: {
@@ -110,6 +164,7 @@ describe("ChatService", () => {
                     id: roomId,
                     name: "e-commerce-support",
                     type: "public",
+                    createdBy: "44444444-4444-4444-8444-444444444444",
                     createdAt: "2026-09-27T10:00:00.000Z",
                 },
             },
