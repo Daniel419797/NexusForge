@@ -119,7 +119,7 @@ export default function ChatPage() {
                             ? {
                                 ...message,
                                 content: contentValue,
-                                updatedAt: editedAt ?? message.updatedAt,
+                                editedAt: editedAt ?? message.editedAt,
                             }
                             : message,
                     ),
