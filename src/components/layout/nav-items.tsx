@@ -81,7 +81,7 @@ export function getProjectNavItems(projectId: string): NavItem[] {
     },
     {
       label: "Realtime Chat",
-      href: "/chat",
+      href: `${projectBase}/chat`,
       exact: true,
       icon: <MessageSquareMore className={iconClassName} aria-hidden="true" />,
     },
