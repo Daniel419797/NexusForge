@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronDown, LogOut, Menu, Plus, Rocket } from "lucide-react";
+import { ChevronDown, LogOut, Menu, Plus, Rocket, ShieldCheck } from "lucide-react";
 
 import NotificationBell from "@/components/Notifications/NotificationBell";
 import {
@@ -127,6 +127,11 @@ export default function GlassTopBar({
                 </span>
               )}
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => router.push("/account/security")}>
+              <ShieldCheck className="size-4" aria-hidden="true" />
+              Security
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={onLogout}>
               <LogOut className="size-4" aria-hidden="true" />
