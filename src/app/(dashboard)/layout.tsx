@@ -7,6 +7,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useProjectStore } from "@/store/projectStore";
 import AuthService from "@/services/AuthService";
 import AuthProvider from "@/components/Auth/AuthProvider";
+import { MfaStepUpProvider } from "@/components/Auth/MfaStepUpProvider";
 import GlassSidebar from "@/components/Dashboard/GlassSidebar";
 import GlassTopBar from "@/components/Dashboard/GlassTopBar";
 import {
@@ -82,6 +83,7 @@ export default function DashboardLayout({
 
   return (
     <AuthProvider>
+      <MfaStepUpProvider>
       <div className="relative z-10 flex min-h-screen bg-[#070a0c]">
         <GlassSidebar
           items={navItems}
@@ -118,6 +120,7 @@ export default function DashboardLayout({
           </main>
         </div>
       </div>
+      </MfaStepUpProvider>
     </AuthProvider>
   );
 }
