@@ -14,6 +14,7 @@ import ProjectService from "@/services/ProjectService";
 import ModuleService, { type ModuleInfo } from "@/services/ModuleService";
 import { useAccessToken } from "@/hooks/useAccessToken";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { MfaStepUpCancelledError, useMfaStepUp } from "@/components/Auth/MfaStepUpProvider";
 
 type SupportedDbType = "postgresql" | "supabase" | "mssql" | "mongodb";
 
@@ -26,6 +27,7 @@ function normalizeDbType(value: string | null | undefined): SupportedDbType {
 
 export default function ProjectDatabaseSettingsPage() {
     const router = useRouter();
+    const { runWithMfa } = useMfaStepUp();
     const activeProject = useProjectStore((s) => s.activeProject);
     const [dbType, setDbType] = useState<SupportedDbType>("postgresql");
     const [dbUrl, setDbUrl] = useState<string>("");
@@ -499,17 +501,25 @@ export default function ProjectDatabaseSettingsPage() {
                                         setRotating(false);
                                         return;
                                     }
-                                    const mfaCode = globalThis.window?.prompt("Enter MFA code for sensitive action (leave blank if not required)")?.trim();
-                                    const { dbUrl: newUrl } = await ProjectService.rotateDbUrl(activeProject.id, {
-                                        dbUrl: dbUrl.trim(),
-                                        dbType,
-                                    }, {
-                                        mfaCode: mfaCode || undefined,
-                                    });
+                                    const { dbUrl: newUrl } = await runWithMfa((stepUpToken) =>
+                                        ProjectService.rotateDbUrl(activeProject.id, {
+                                            dbUrl: dbUrl.trim(),
+                                            dbType,
+                                        }, { stepUpToken }),
+                                    );
                                     setDbUrl(newUrl);
                                     setRotateMessage("Database URL rotated successfully.");
-                                } catch {
-                                    setRotateMessage("Error: failed to rotate database URL.");
+                                } catch (err) {
+                                    if (err instanceof MfaStepUpCancelledError) {
+                                        setRotateMessage(null);
+                                        return;
+                                    }
+                                    const response = err && typeof err === "object" && "response" in err
+                                        ? (err as { response?: { data?: { message?: unknown } } }).response
+                                        : undefined;
+                                    setRotateMessage(typeof response?.data?.message === "string"
+                                        ? `Error: ${response.data.message}`
+                                        : "Error: failed to rotate database URL.");
                                 } finally {
                                     setRotating(false);
                                 }
