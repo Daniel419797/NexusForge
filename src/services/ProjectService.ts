@@ -564,11 +564,12 @@ const ProjectService = {
       dbUrl: string;
       dbType?: "postgresql" | "supabase" | "mssql" | "mongodb";
     },
-    options?: { mfaCode?: string },
+    options?: { stepUpToken?: string; mfaCode?: string },
   ): Promise<{ dbUrl: string }> {
     assertProjectId(projectId);
     assertNonEmptyString(payload.dbUrl, "dbUrl");
     const headers: Record<string, string> = {};
+    if (options?.stepUpToken) headers["x-mfa-step-up-token"] = options.stepUpToken;
     if (options?.mfaCode) headers["x-mfa-code"] = options.mfaCode;
     const { data } = await api.post(
       `/projects/${projectId}/rotate-db-url`,
