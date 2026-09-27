@@ -22,6 +22,18 @@ export interface InstalledPlugin {
     updatedAt?: string;
 }
 
+export interface SensitiveActionOptions {
+    stepUpToken?: string;
+    mfaCode?: string;
+}
+
+function sensitiveHeaders(projectId: string, options?: SensitiveActionOptions): Record<string, string> {
+    const headers: Record<string, string> = { "x-project-id": projectId };
+    if (options?.stepUpToken) headers["x-mfa-step-up-token"] = options.stepUpToken;
+    if (options?.mfaCode) headers["x-mfa-code"] = options.mfaCode;
+    return headers;
+}
+
 function extractPluginsArray(payload: unknown): Record<string, unknown>[] {
     if (Array.isArray(payload)) {
         return payload as Record<string, unknown>[];
@@ -81,35 +93,33 @@ const PluginService = {
     },
 
     // Install a plugin
-    async install(projectId: string, pluginName: string, options?: { mfaCode?: string }): Promise<void> {
+    async install(projectId: string, pluginName: string, options?: SensitiveActionOptions): Promise<void> {
         assertProjectId(projectId);
         assertNonEmptyString(pluginName, "pluginName");
-        const headers: Record<string, string> = { "x-project-id": projectId };
-        if (options?.mfaCode) headers["x-mfa-code"] = options.mfaCode;
         await api.post(
             "/plugins/install",
             { name: pluginName },
-            { headers }
+            { headers: sensitiveHeaders(projectId, options) }
         );
     },
 
     // Uninstall a plugin
-    async uninstall(projectId: string, pluginName: string): Promise<void> {
+    async uninstall(projectId: string, pluginName: string, options?: SensitiveActionOptions): Promise<void> {
         assertProjectId(projectId);
         assertNonEmptyString(pluginName, "pluginName");
         await api.delete(`/plugins/${pluginName}/uninstall`, {
-            headers: { "x-project-id": projectId },
+            headers: sensitiveHeaders(projectId, options),
         });
     },
 
     // Update plugin config
-    async updateConfig(projectId: string, pluginName: string, config: Record<string, unknown>): Promise<void> {
+    async updateConfig(projectId: string, pluginName: string, config: Record<string, unknown>, options?: SensitiveActionOptions): Promise<void> {
         assertProjectId(projectId);
         assertNonEmptyString(pluginName, "pluginName");
         await api.patch(
             `/plugins/${pluginName}/config`,
             { config },
-            { headers: { "x-project-id": projectId } }
+            { headers: sensitiveHeaders(projectId, options) }
         );
     },
 
