@@ -132,6 +132,22 @@ describe("FrontendIntegrationService", () => {
 
 
     it("adds an MFA step-up token when opening a protected PR", async () => {
+        const runFixture = {
+            id: runId,
+            integrationId,
+            projectId,
+            targetBranch: "platform/wire-backend",
+            baseSha: null,
+            status: "pr_created",
+            plan: {},
+            summary: "PR created",
+            prNumber: 42,
+            prUrl: "https://github.com/acme/web/pull/42",
+            errorMessage: null,
+            createdBy: "44444444-4444-4444-8444-444444444444",
+            createdAt: "2026-05-16T00:00:00.000Z",
+            updatedAt: "2026-05-16T00:00:00.000Z",
+        };
         mockPost.mockResolvedValue({ data: { data: runFixture } });
         await FrontendIntegrationService.openPullRequest(
             projectId,
