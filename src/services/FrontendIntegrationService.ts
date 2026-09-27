@@ -320,14 +320,18 @@ const FrontendIntegrationService = {
         integrationId: string,
         runId: string,
         payload: OpenFrontendIntegrationPrPayload = {},
+        options?: { stepUpToken?: string },
     ): Promise<FrontendIntegrationRun> {
         assertProjectId(projectId);
         assertUuid(integrationId, "integrationId");
         assertUuid(runId, "runId");
         if (payload.title != null) assertNonEmptyString(payload.title, "title");
+        const headers: Record<string, string> = {};
+        if (options?.stepUpToken) headers["x-mfa-step-up-token"] = options.stepUpToken;
         const { data } = await api.post(
             `/frontend-integrations/projects/${projectId}/integrations/${integrationId}/runs/${runId}/open-pr`,
             payload,
+            { headers },
         );
         return asFrontendIntegrationRun(unwrapDataEnvelope(data));
     },
