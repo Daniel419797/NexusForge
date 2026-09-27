@@ -62,8 +62,10 @@ api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
+        const responseErrorCode = error.response?.data?.error;
+        const isMfaError = typeof responseErrorCode === "string" && responseErrorCode.startsWith("MFA_");
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (error.response?.status === 401 && !isMfaError && !originalRequest._retry) {
             if (isRefreshing) {
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
