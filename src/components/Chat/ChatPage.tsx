@@ -93,11 +93,12 @@ export default function ChatPage() {
             if (!isServerEnvelope(value)) return;
 
             if (value.event === "message:new" && isChatMessagePayload(value.data)) {
-                if (value.data.roomId !== activeRoomId) return;
+                const incoming = value.data;
+                if (incoming.roomId !== activeRoomId) return;
                 setMessages((current) =>
-                    current.some((message) => message.id === value.data.id)
+                    current.some((message) => message.id === incoming.id)
                         ? current
-                        : [...current, value.data],
+                        : [...current, incoming],
                 );
                 return;
             }
@@ -109,16 +110,16 @@ export default function ChatPage() {
                 typeof value.data.content === "string" &&
                 value.data.roomId === activeRoomId
             ) {
+                const messageId = value.data.messageId;
+                const contentValue = value.data.content;
+                const editedAt = typeof value.data.editedAt === "string" ? value.data.editedAt : undefined;
                 setMessages((current) =>
                     current.map((message) =>
-                        message.id === value.data.messageId
+                        message.id === messageId
                             ? {
                                 ...message,
-                                content: value.data.content as string,
-                                updatedAt:
-                                    typeof value.data.editedAt === "string"
-                                        ? value.data.editedAt
-                                        : message.updatedAt,
+                                content: contentValue,
+                                updatedAt: editedAt ?? message.updatedAt,
                             }
                             : message,
                     ),
@@ -132,8 +133,9 @@ export default function ChatPage() {
                 typeof value.data.roomId === "string" &&
                 value.data.roomId === activeRoomId
             ) {
+                const messageId = value.data.messageId;
                 setMessages((current) =>
-                    current.filter((message) => message.id !== value.data.messageId),
+                    current.filter((message) => message.id !== messageId),
                 );
                 return;
             }
@@ -145,10 +147,12 @@ export default function ChatPage() {
                 value.data.roomId === activeRoomId &&
                 value.data.userId !== user?.id
             ) {
+                const typingUserId = value.data.userId;
+                const isTyping = value.data.isTyping;
                 setTypingUsers((current) => {
                     const next = new Set(current);
-                    if (value.data.isTyping) next.add(value.data.userId as string);
-                    else next.delete(value.data.userId as string);
+                    if (isTyping) next.add(typingUserId);
+                    else next.delete(typingUserId);
                     return next;
                 });
             }
