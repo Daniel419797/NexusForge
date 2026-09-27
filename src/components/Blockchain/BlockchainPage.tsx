@@ -17,6 +17,7 @@ import NFTGallery from "@/components/Blockchain/NFTGallery";
 import EventTable from "@/components/Blockchain/EventTable";
 import ElectricRippleButton from "@/components/Dashboard/ElectricRippleButton";
 import ScrollReveal from "@/components/Dashboard/ScrollReveal";
+import { MfaStepUpCancelledError, useMfaStepUp } from "@/components/Auth/MfaStepUpProvider";
 
 function randomHexAddress(): string {
     const alphabet = "0123456789abcdef";
@@ -29,6 +30,7 @@ function randomHexAddress(): string {
 
 export default function BlockchainPage() {
     const { activeProject } = useProjectStore();
+    const { runWithMfa } = useMfaStepUp();
     const [wallets, setWallets] = useState<Wallet[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [nfts, setNfts] = useState<NFT[]>([]);
@@ -169,20 +171,25 @@ export default function BlockchainPage() {
             return;
         }
         try {
-            const mfaCode = globalThis.window?.prompt("Enter MFA code for sensitive action (leave blank if not required)")?.trim();
-            await BlockchainService.sendSignerTransaction(activeProject.id, {
-                hotWalletId: signerHotWalletId,
-                chain: hotWalletChain,
-                to: signerTo.trim(),
-                value: signerValue || undefined,
-                data: signerData || undefined,
-            }, {
-                mfaCode: mfaCode || undefined,
-            });
+            await runWithMfa((stepUpToken) =>
+                BlockchainService.sendSignerTransaction(activeProject.id, {
+                    hotWalletId: signerHotWalletId,
+                    chain: hotWalletChain,
+                    to: signerTo.trim(),
+                    value: signerValue || undefined,
+                    data: signerData || undefined,
+                }, { stepUpToken }),
+            );
             setOpsMessage("Signer transaction submitted.");
             await fetchData();
-        } catch {
-            setOpsMessage("Failed to submit signer transaction.");
+        } catch (err) {
+            if (err instanceof MfaStepUpCancelledError) return;
+            const response = err && typeof err === "object" && "response" in err
+                ? (err as { response?: { data?: { message?: unknown } } }).response
+                : undefined;
+            setOpsMessage(typeof response?.data?.message === "string"
+                ? response.data.message
+                : "Failed to submit signer transaction.");
         }
     };
 
