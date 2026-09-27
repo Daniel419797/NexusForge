@@ -12,16 +12,16 @@ interface ChatInputProps {
 
 export default function ChatInput({ value, onChange, onSend, disabled }: ChatInputProps) {
     return (
-        <div className="p-4 border-t border-border bg-background/50">
-            <form onSubmit={onSend} className="flex gap-2">
+        <div className="border-t border-border bg-background/50 p-3 sm:p-4">
+            <form onSubmit={onSend} className="flex min-w-0 gap-2">
                 <Input
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 bg-card"
+                    className="min-w-0 flex-1 bg-card"
                     disabled={disabled}
                 />
-                <Button type="submit" disabled={disabled || !value.trim()}>
+                <Button type="submit" className="shrink-0 px-4" disabled={disabled || !value.trim()}>
                     Send
                 </Button>
             </form>
