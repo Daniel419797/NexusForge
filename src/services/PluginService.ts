@@ -1,6 +1,18 @@
 import api from "./api";
 import { assertNonEmptyString, assertProjectId, unwrapDataEnvelope } from "./serviceGuards";
 
+export type PluginConfigFieldType = "text" | "url" | "number" | "number-array";
+
+export interface PluginConfigField {
+    key: string;
+    label: string;
+    type: PluginConfigFieldType;
+    required?: boolean;
+    description?: string;
+    placeholder?: string;
+    defaultValue?: string | number | number[];
+}
+
 export interface PluginMeta {
     name: string;
     version: string;
@@ -8,6 +20,8 @@ export interface PluginMeta {
     author?: string;
     displayName?: string;
     requiredProjectCategory?: string | null;
+    compatible?: boolean;
+    configFields?: PluginConfigField[];
     category?: string;
     icon?: string;
     tags?: string[];
@@ -25,6 +39,7 @@ export interface InstalledPlugin {
 export interface SensitiveActionOptions {
     stepUpToken?: string;
     mfaCode?: string;
+    config?: Record<string, unknown>;
 }
 
 function sensitiveHeaders(projectId: string, options?: SensitiveActionOptions): Record<string, string> {
@@ -49,6 +64,33 @@ function extractPluginsArray(payload: unknown): Record<string, unknown>[] {
     return [];
 }
 
+function mapConfigFields(value: unknown): PluginConfigField[] {
+    if (!Array.isArray(value)) return [];
+    return value.flatMap((field): PluginConfigField[] => {
+        if (!field || typeof field !== "object") return [];
+        const raw = field as Record<string, unknown>;
+        const type = raw.type;
+        if (
+            typeof raw.key !== "string" ||
+            typeof raw.label !== "string" ||
+            (type !== "text" && type !== "url" && type !== "number" && type !== "number-array")
+        ) return [];
+        const defaultValue = typeof raw.defaultValue === "string" || typeof raw.defaultValue === "number" ||
+            (Array.isArray(raw.defaultValue) && raw.defaultValue.every((item) => typeof item === "number"))
+            ? raw.defaultValue as string | number | number[]
+            : undefined;
+        return [{
+            key: raw.key,
+            label: raw.label,
+            type,
+            required: raw.required === true,
+            description: typeof raw.description === "string" ? raw.description : undefined,
+            placeholder: typeof raw.placeholder === "string" ? raw.placeholder : undefined,
+            defaultValue,
+        }];
+    });
+}
+
 function mapAvailablePlugin(plugin: Record<string, unknown>): PluginMeta {
     return {
         name: typeof plugin.name === "string" ? plugin.name : "",
@@ -60,6 +102,8 @@ function mapAvailablePlugin(plugin: Record<string, unknown>): PluginMeta {
             typeof plugin.requiredProjectCategory === "string" || plugin.requiredProjectCategory === null
                 ? plugin.requiredProjectCategory
                 : undefined,
+        compatible: typeof plugin.compatible === "boolean" ? plugin.compatible : undefined,
+        configFields: mapConfigFields(plugin.configFields),
         category: typeof plugin.category === "string" ? plugin.category : undefined,
         icon: typeof plugin.icon === "string" ? plugin.icon : undefined,
         tags: Array.isArray(plugin.tags) ? plugin.tags.filter((tag): tag is string => typeof tag === "string") : undefined,
@@ -98,7 +142,7 @@ const PluginService = {
         assertNonEmptyString(pluginName, "pluginName");
         await api.post(
             "/plugins/install",
-            { name: pluginName },
+            { name: pluginName, config: options?.config ?? {} },
             { headers: sensitiveHeaders(projectId, options) }
         );
     },
