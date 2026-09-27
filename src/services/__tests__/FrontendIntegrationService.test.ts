@@ -129,4 +129,21 @@ describe("FrontendIntegrationService", () => {
         expect(result.summary.prCreatedRunsWindow).toBe(2);
         expect(result.alerts[0].type).toBe("recent_failures");
     });
+
+
+    it("adds an MFA step-up token when opening a protected PR", async () => {
+        mockPost.mockResolvedValue({ data: { data: runFixture } });
+        await FrontendIntegrationService.openPullRequest(
+            projectId,
+            integrationId,
+            runId,
+            {},
+            { stepUpToken: "mfa-step-up-token" },
+        );
+        expect(mockPost).toHaveBeenCalledWith(
+            `/frontend-integrations/projects/${projectId}/integrations/${integrationId}/runs/${runId}/open-pr`,
+            {},
+            { headers: { "x-mfa-step-up-token": "mfa-step-up-token" } },
+        );
+    });
 });
