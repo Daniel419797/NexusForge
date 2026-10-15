@@ -6,6 +6,15 @@ import { useAuthStore } from "@/store/authStore";
 import AuthService from "@/services/AuthService";
 import { clearStoredAuthTokens, refreshStoredAuthTokens } from "@/lib/authTokens";
 
+const PUBLIC_AUTH_PATHS = new Set([
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+    "/verify-email",
+    "/oauth/callback",
+]);
+
 /**
  * Restores a browser session from httpOnly auth cookies. The access token is
  * refreshed into memory only so WebSocket clients can authenticate without
@@ -16,11 +25,11 @@ export default function AuthInitializer() {
     const { setUser, setLoading } = useAuthStore();
 
     useEffect(() => {
-        // OAuth callback owns the session hand-off. Running the global cookie
-        // restore in parallel can race a first-time OAuth exchange: the refresh
-        // request may fail before the callback has set its cookie and then wipe
-        // the newly-authenticated user state.
-        if (pathname === "/oauth/callback") {
+        // Public auth screens do not need a session restore. In particular,
+        // the OAuth callback owns its own session hand-off, and calling
+        // /auth/refresh before that exchange completes creates a spurious 400.
+        if (PUBLIC_AUTH_PATHS.has(pathname)) {
+            setLoading(false);
             return;
         }
 
