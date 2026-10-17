@@ -2,6 +2,14 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@/test/test-utils";
 import FrontendIntegrationsPage from "../page";
 
+vi.mock("@/components/Auth/MfaStepUpProvider", () => ({
+    useMfaStepUp: () => ({
+        requireMfa: vi.fn(),
+        runWithMfa: (action: (token: string) => unknown) => action("test-step-up-token"),
+        invalidateMfa: vi.fn(),
+    }),
+}));
+
 vi.mock("next/navigation", () => ({
     useParams: () => ({ id: "11111111-1111-4111-8111-111111111111" }),
     usePathname: () => "/projects/11111111-1111-4111-8111-111111111111/frontend-integrations",
