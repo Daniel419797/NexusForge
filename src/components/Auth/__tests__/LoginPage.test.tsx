@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@/test/test-utils';
 import LoginPage from '@/components/Auth/LoginPage';
+import { clearStoredAuthTokens, getStoredAccessToken, getStoredRefreshToken } from '@/lib/authTokens';
 
 // Mock AuthService
 const mockLogin = vi.fn();
@@ -31,6 +32,7 @@ vi.mock('next/navigation', async () => {
 
 beforeEach(() => {
     vi.clearAllMocks();
+    clearStoredAuthTokens();
     localStorage.clear();
 });
 
@@ -79,8 +81,10 @@ describe('LoginPage', () => {
         await waitFor(() => {
             expect(mockPush).toHaveBeenCalledWith('/projects');
         });
-        expect(localStorage.getItem('accessToken')).toBe('tok');
-        expect(localStorage.getItem('refreshToken')).toBe('ref');
+        expect(getStoredAccessToken()).toBe('tok');
+        expect(getStoredRefreshToken()).toBeNull();
+        expect(localStorage.getItem('accessToken')).toBeNull();
+        expect(localStorage.getItem('refreshToken')).toBeNull();
     });
 
     it('shows error message on login failure', async () => {
